@@ -93,4 +93,4 @@ async def listen():
         except:
             pass
 
-scheduler.add_job(listen)
+scheduler.add_job(listen, "interval", minutes=1)
