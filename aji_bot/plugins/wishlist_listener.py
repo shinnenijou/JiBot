@@ -6,7 +6,9 @@ from nonebot.plugin import require
 # 乙女音
 #url = "https://www.amazon.co.jp/hz/wishlist/ls/1JL7SPMBV2XB2?ref_=wl_fv_le"
 # 咪太君
-url = "https://www.amazon.co.jp/gp/aw/ls/ref=aw_wl_lol_wl?ie=UTF8&lid=WQJIE8LKY4EB"
+#url = "https://www.amazon.co.jp/gp/aw/ls/ref=aw_wl_lol_wl?ie=UTF8&lid=WQJIE8LKY4EB"
+# test
+url = "https://www.amazon.jp/hz/wishlist/ls/1BXUQQ5TL2GDO?ref_=wl_share"
 ########################
 
 ########## Var #########
