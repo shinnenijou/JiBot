@@ -18,13 +18,13 @@ wish_list = []
 ########################
 
 def find_item(string, begin):
-    item_beg = string.find("itemName", begin, len(resp))
+    item_beg = string.find("itemName", begin, len(string))
     if item_beg == -1:
         item_title = ""
         title_end = -1
     else:
-        title_beg = string.find("title", item_beg, len(resp))
-        title_end = string.find("href", title_beg, len(resp))
+        title_beg = string.find("title", item_beg, len(string))
+        title_end = string.find("href", title_beg, len(string))
         item_title = string[title_beg + 7: title_end - 2].strip()
     return item_title, title_end
 
@@ -47,7 +47,6 @@ def check_new_list(url):
         while begin != -1:
             # 查找愿望单中是否有物品
             item_title, begin = find_item(resp, begin)
-            print(item_title)
             if item_title:
                 wishlist.append(item_title)
     return wishlist
@@ -56,15 +55,15 @@ def check_items(list1, list2):
     # 比对两个列表，找出list1中不在list2中的元素
     not_include = []
     for item in list1:
-        if item not in list:
+        if item not in list2:
             not_include.append(item)
     return not_include
 
 scheduler = require("nonebot_plugin_apscheduler").scheduler
-@scheduler.scheduled_job(
-    "interval",
-    minutes=10
-)
+# @scheduler.scheduled_job(
+#     "interval",
+#     minutes=1
+# )
 
 async def listen():
     global prev_list
