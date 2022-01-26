@@ -10,6 +10,7 @@ from nonebot.plugin import require
 name = "mitagun"
 url = "https://www.amazon.co.jp/gp/aw/ls/ref=aw_wl_lol_wl?ie=UTF8&lid=WQJIE8LKY4EB"
 # test
+#name = "阿鸡"
 #url = "https://www.amazon.jp/hz/wishlist/ls/1BXUQQ5TL2GDO?ref_=wl_share"
 ########################
 
@@ -89,7 +90,7 @@ async def listen():
             pass
     if buyed_items:
         buyed_msg = f"检测到 {name} 的愿望单以下物品被清: \r\n"
-        for item in new_items:
+        for item in buyed_items:
             buyed_msg += item + "\r\n"
         try:
             await bot.send_group_msg(group_id = 235976635, message = buyed_msg)
