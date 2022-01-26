@@ -4,8 +4,10 @@ from nonebot.plugin import require
 
 ########## URL #########
 # 乙女音
+#name = "乙女音"
 #url = "https://www.amazon.co.jp/hz/wishlist/ls/1JL7SPMBV2XB2?ref_=wl_fv_le"
 # 咪太君
+name = "mitagun"
 url = "https://www.amazon.co.jp/gp/aw/ls/ref=aw_wl_lol_wl?ie=UTF8&lid=WQJIE8LKY4EB"
 # test
 #url = "https://www.amazon.jp/hz/wishlist/ls/1BXUQQ5TL2GDO?ref_=wl_share"
@@ -74,24 +76,23 @@ async def listen():
     buyed_items = []
     bot = nonebot.get_bot()
     wish_list = check_new_list(url)
-    if wish_list:
-        new_items = check_items(wish_list, prev_list)
-        buyed_items = check_items(prev_list, wish_list)
+    new_items = check_items(wish_list, prev_list)
+    buyed_items = check_items(prev_list, wish_list)
     prev_list = wish_list
     if new_items:
-        new_msg = "检测到愿望单新添加如下物品: \r\n"
+        new_msg = f"检测到 {name} 的愿望单新添加如下物品: \r\n"
         for item in new_items:
             new_msg += item + "\r\n"
         try:
-            await bot.send_private_msg(user_id = 598374876, message = new_msg)
+            await bot.send_group_msg(group_id = 235976635, message = new_msg)
         except:
             pass
     if buyed_items:
-        buyed_msg = "检测到愿望单以下物品被清: \r\n"
+        buyed_msg = f"检测到 {name} 的愿望单以下物品被清: \r\n"
         for item in new_items:
             buyed_msg += item + "\r\n"
         try:
-            await bot.send_private_msg(user_id = 598374876, message = buyed_msg)
+            await bot.send_group_msg(group_id = 235976635, message = buyed_msg)
         except:
             pass
 
