@@ -6,9 +6,9 @@ from nonebot.plugin import require
 # 乙女音
 #url = "https://www.amazon.co.jp/hz/wishlist/ls/1JL7SPMBV2XB2?ref_=wl_fv_le"
 # 咪太君
-#url = "https://www.amazon.co.jp/gp/aw/ls/ref=aw_wl_lol_wl?ie=UTF8&lid=WQJIE8LKY4EB"
+url = "https://www.amazon.co.jp/gp/aw/ls/ref=aw_wl_lol_wl?ie=UTF8&lid=WQJIE8LKY4EB"
 # test
-url = "https://www.amazon.jp/hz/wishlist/ls/1BXUQQ5TL2GDO?ref_=wl_share"
+#url = "https://www.amazon.jp/hz/wishlist/ls/1BXUQQ5TL2GDO?ref_=wl_share"
 ########################
 
 ########## Var #########
@@ -79,19 +79,19 @@ async def listen():
         buyed_items = check_items(prev_list, wish_list)
     prev_list = wish_list
     if new_items:
-        mymsg = "检测到愿望单新添加如下物品: \r\n"
+        new_msg = "检测到愿望单新添加如下物品: \r\n"
         for item in new_items:
-            mymsg += item + "\r\n"
+            new_msg += item + "\r\n"
         try:
-            await bot.send_private_msg(user_id = 598374876, message = mymsg)
+            await bot.send_private_msg(user_id = 598374876, message = new_msg)
         except:
             pass
     if buyed_items:
-        mymsg = "检测到愿望单以下物品被清: \r\n"
+        buyed_msg = "检测到愿望单以下物品被清: \r\n"
         for item in new_items:
-            mymsg += item + "\r\n"
+            buyed_msg += item + "\r\n"
         try:
-            await bot.send_private_msg(user_id = 598374876, message = mymsg)
+            await bot.send_private_msg(user_id = 598374876, message = buyed_msg)
         except:
             pass
 
