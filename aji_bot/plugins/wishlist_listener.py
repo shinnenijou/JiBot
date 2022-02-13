@@ -1,6 +1,5 @@
 import requests
 import nonebot
-import time
 from nonebot.plugin import require
 
 ########## URL #########
@@ -79,19 +78,13 @@ def print_items(bot, items, str):
         for item in items:
             msg += item + "\r\n"
         try:
-            print(msg)
-            #bot.send_group_msg(group_id = 235976635, message = new_msg)
+            #print(msg)
+            bot.send_group_msg(group_id = 235976635, message = msg)
         except:
             pass
  
 def check_clear(string):
     return string.find("このリストにはアイテムはありません") == -1
-
-scheduler = require("nonebot_plugin_apscheduler").scheduler
-# @scheduler.scheduled_job(
-#     "interval",
-#     minutes=1
-# )
 
 async def listen():
     global prev_list
@@ -111,4 +104,5 @@ async def listen():
     except:
         pass
 
+scheduler = require("nonebot_plugin_apscheduler").scheduler
 scheduler.add_job(listen, "interval", minutes=10)
