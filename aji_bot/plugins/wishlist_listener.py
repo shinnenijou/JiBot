@@ -87,7 +87,7 @@ def check_clear(string):
     # pattern found
     return string.find("このリストにはアイテムはありません") != -1
 
-def listen():
+async def listen():
     global prev_list
     global wish_list
     try:
@@ -100,8 +100,8 @@ def listen():
         new_items = check_items(wish_list, prev_list)
         buyed_items = check_items(prev_list, wish_list)
         prev_list = wish_list
-        print_items(bot, new_items, "添加")
-        print_items(bot, buyed_items, "清除")
+        await print_items(bot, new_items, "添加")
+        await print_items(bot, buyed_items, "清除")
     except:
         pass
 
