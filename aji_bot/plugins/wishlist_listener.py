@@ -11,7 +11,7 @@ from nonebot.plugin import require
 #URL = "https://www.amazon.co.jp/gp/aw/ls/ref=aw_wl_lol_wl?ie=UTF8&lid=WQJIE8LKY4EB"
 # test
 name = "阿鸡"
-url = "https://www.amazon.co.jp/hz/wishlist/ls/1BXUQQ5TL2GDO?ref_=wl_share"
+URL = "https://www.amazon.co.jp/hz/wishlist/ls/1BXUQQ5TL2GDO?ref_=wl_share"
 ########################
 
 ########## Var #########
