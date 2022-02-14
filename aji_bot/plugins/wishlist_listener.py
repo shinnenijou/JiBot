@@ -7,11 +7,11 @@ from nonebot.plugin import require
 #name = "乙女音"
 #URL = "https://www.amazon.co.jp/hz/wishlist/ls/1JL7SPMBV2XB2?ref_=wl_fv_le"
 # 咪太君
-#name = "mitagun"
-#URL = "https://www.amazon.co.jp/gp/aw/ls/ref=aw_wl_lol_wl?ie=UTF8&lid=WQJIE8LKY4EB"
+name = "mitagun"
+URL = "https://www.amazon.co.jp/gp/aw/ls/ref=aw_wl_lol_wl?ie=UTF8&lid=WQJIE8LKY4EB"
 # test
-name = "阿鸡"
-URL = "https://www.amazon.co.jp/hz/wishlist/ls/1BXUQQ5TL2GDO?ref_=wl_share"
+#name = "阿鸡"
+#URL = "https://www.amazon.co.jp/hz/wishlist/ls/1BXUQQ5TL2GDO?ref_=wl_share"
 ########################
 
 ########## Var #########
@@ -72,14 +72,14 @@ def check_items(list1, list2):
             not_include.append(item)
     return not_include
 
-def print_items(bot, items, str):
+async def print_items(bot, items, str):
     if items:
         msg = f"检测到 {name} 的愿望单以下物品被{str}: \r\n"
         for item in items:
             msg += item + "\r\n"
         try:
             #print(msg)
-            bot.send_group_msg(group_id = 235976635, message = msg)
+            await bot.send_group_msg(group_id = 235976635, message = msg)
         except:
             pass
  
@@ -87,7 +87,7 @@ def check_clear(string):
     # pattern found
     return string.find("このリストにはアイテムはありません") != -1
 
-async def listen():
+def listen():
     global prev_list
     global wish_list
     try:
