@@ -76,7 +76,13 @@ def check_clear(string):
 async def listen():
     bot = nonebot.get_bot()
     with open(f"./aji_bot/plugins/wishlist_listener/listen_list.json", "r") as file:
-        for key, value in json.loads(file.read()).items():
+        targets_config = json.loads(file.read())
+        # 删除不在监听列表中的目标
+        for key, value in targets.items():
+            if key not in targets_config:
+                del targets[key]
+        # 增加新增的目标
+        for key, value in targets_config.items():
             if key not in targets:
                 targets[key] = value
                 targets[key]["PREV_LISTS"] = []
