@@ -1,6 +1,6 @@
 import requests
 from nonebot.plugin import require
-import os
+import nonebot
 import json
 
 ########## Var #########
@@ -74,8 +74,7 @@ def check_clear(string):
     return string.find("このリストにはアイテムはありません") != -1
 
 async def listen():
-    #bot = nonebot.get_bot()
-    bot = 1
+    bot = nonebot.get_bot()
     with open(f"./aji_bot/plugins/wishlist_listener/listen_list.json", "r") as file:
         for key, value in json.loads(file.read()).items():
             if key not in targets:
