@@ -1,26 +1,12 @@
 import requests
-import nonebot
 from nonebot.plugin import require
-
-########## URL #########
-# 乙女音
-#name = "乙女音"
-#URL = "https://www.amazon.co.jp/hz/wishlist/ls/1JL7SPMBV2XB2?ref_=wl_fv_le"
-# 咪太君
-name = "mitagun"
-URL = "https://www.amazon.co.jp/gp/aw/ls/ref=aw_wl_lol_wl?ie=UTF8&lid=WQJIE8LKY4EB"
-# test
-#name = "阿鸡"
-#URL = "https://www.amazon.co.jp/hz/wishlist/ls/1BXUQQ5TL2GDO?ref_=wl_share"
-########################
+import os
+import json
 
 ########## Var #########
-global prev_list
-global wish_list
-# 保存上一次请求得到的愿望单物品数据
-prev_list = []
-# 保存本次请求得到的愿望单物品数据
-wish_list = []
+# 保存每个被监听的人的信息
+# [NAME]{URL, GROUP_ID, PREV_LIST, CURR_LIST}
+targets = {}
 # 用于HTTP请求的请求头
 HEADERS = {}
 HEADERS["Host"] = "www.amazon.co.jp"
@@ -72,14 +58,14 @@ def check_items(list1, list2):
             not_include.append(item)
     return not_include
 
-async def print_items(bot, items, str):
+async def print_items(bot, items, str, name, group_id):
     if items:
-        msg = f"检测到 {name} 的愿望单以下物品被{str}: \r\n"
+        msg = f"{name}の欲しいものリストに以下の商品が{str}ました: \r\n"
         for item in items:
             msg += item + "\r\n"
         try:
             #print(msg)
-            await bot.send_group_msg(group_id = 235976635, message = msg)
+            await bot.send_group_msg(group_id = group_id, message = msg)
         except:
             pass
  
@@ -88,22 +74,28 @@ def check_clear(string):
     return string.find("このリストにはアイテムはありません") != -1
 
 async def listen():
-    global prev_list
-    global wish_list
-    try:
-        bot = nonebot.get_bot()
-        text = request(URL, HEADERS)
-        wish_list = find_items(text)
-        # 如果愿望单突然完全清空，则检查文本中是否确实包含无物品信息
-        if not wish_list and not check_clear(text):
-            wish_list = prev_list
-        new_items = check_items(wish_list, prev_list)
-        buyed_items = check_items(prev_list, wish_list)
-        prev_list = wish_list
-        await print_items(bot, new_items, "添加")
-        await print_items(bot, buyed_items, "清除")
-    except:
-        pass
+    #bot = nonebot.get_bot()
+    bot = 1
+    with open(f"./aji_bot/plugins/wishlist_listener/listen_list.json", "r") as file:
+        for key, value in json.loads(file.read()).items():
+            if key not in targets:
+                targets[key] = value
+                targets[key]["PREV_LISTS"] = []
+                targets[key]["CURR_LISTS"] = []
+    for key, value in targets.items():
+        try:
+            text = request(value["URL"], HEADERS)
+            targets[key]["CURR_LISTS"] = find_items(text)
+            # 如果愿望单突然完全清空，则检查文本中是否确实包含无物品信息
+            if not targets[key]["CURR_LISTS"] and not check_clear(text):
+                targets[key]["CURR_LISTS"] = targets[key]["PREV_LISTS"]
+            new_items = check_items(targets[key]["CURR_LISTS"], targets[key]["PREV_LISTS"])
+            buyed_items = check_items(targets[key]["PREV_LISTS"], targets[key]["CURR_LISTS"])
+            targets[key]["PREV_LISTS"] = targets[key]["CURR_LISTS"]
+            await print_items(bot, new_items, "追加され", key, value["GROUP_ID"])
+            await print_items(bot, buyed_items, "削除され", key, value["GROUP_ID"])
+        except:
+            pass
 
 scheduler = require("nonebot_plugin_apscheduler").scheduler
-scheduler.add_job(listen, "interval", minutes=10)
+scheduler.add_job(listen, "interval", minutes=1)
