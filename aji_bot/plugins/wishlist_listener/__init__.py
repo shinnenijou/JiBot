@@ -60,7 +60,7 @@ def check_items(list1, list2):
 
 async def print_items(bot, items, str, name, group_id):
     if items:
-        msg = f"{name}の欲しいものリストに以下の商品が{str}ました: \r\n"
+        msg = f"{name}のほしい物リストに以下の商品が{str}ました: \r\n"
         for item in items:
             msg += item + "\r\n"
         try:
