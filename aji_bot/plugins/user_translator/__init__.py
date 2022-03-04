@@ -1,12 +1,14 @@
-import nonebot
 from tencentcloud.common import credential
 from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
 from tencentcloud.tmt.v20180321 import tmt_client, models
 from tencentcloud.common.profile.http_profile import HttpProfile
 from tencentcloud.common.profile.client_profile import ClientProfile
+
+import nonebot
 from nonebot import on_message, on_command
 from nonebot.permission import SUPERUSER, USER
 from nonebot.adapters.onebot.v11 import GroupMessageEvent
+
 import json
 
 # set Tencent TMT API
@@ -32,6 +34,14 @@ try:
 except FileNotFoundError:
     TRANSLATE_USERS = ()
 
+# DEBUG
+matcher = on_command(cmd="已开启",temp=False, priority=1, block=True,
+    permission=SUPERUSER)
+@matcher.handle()
+async def del_user(event:GroupMessageEvent):
+    global TRANSLATE_USERS
+    print(TRANSLATE_USERS)
+
 # EVENT: add translate user
 matcher = on_command(cmd="开启翻译",temp=False, priority=1, block=True,
     permission=SUPERUSER)
@@ -56,6 +66,7 @@ async def add_user(event:GroupMessageEvent):
             file.close()
             await matcher.send(f"成功开启 QQ{cmd} 的发言翻译功能")
             TRANSLATE_USERS = tuple(config)
+            print(TRANSLATE_USERS)
         else:
             await matcher.send(f"QQ{cmd} 的发言翻译功能正在运行")
 
@@ -83,21 +94,22 @@ async def del_user(event:GroupMessageEvent):
             await matcher.send(f"成功关闭 QQ{cmd} 的发言翻译功能")
             file.close()
             TRANSLATE_USERS = tuple(config)
+            print(TRANSLATE_USERS)
         else:
             await matcher.send(f"QQ{cmd} 的发言翻译功能未开启")
 
 # Event: translate for particular users
-matcher = on_message(temp=False, priority=2, block=True,
-    permission=USER(*TRANSLATE_USERS))
+matcher = on_message(temp=False, priority=2, block=True)
 @matcher.handle()
 async def translate(event:GroupMessageEvent):
-    req.SourceText = event.get_plaintext()
-    try:
-        resp = client.TextTranslate(req)
-        msg = json.loads(resp.to_json_string())['TargetText']
-        await matcher.send(msg)
-    except TencentCloudSDKException as err:
-        await nonebot.get_bot().send_group_msg(
-            group_id=nonebot.get_driver().config.dict()["admin_group"],
-            message=str(err)
-        )
+    if event.get_session_id() in TRANSLATE_USERS:
+        req.SourceText = event.get_plaintext()
+        try:
+            resp = client.TextTranslate(req)
+            msg = "【机翻】" + json.loads(resp.to_json_string())['TargetText']
+            await matcher.send(msg)
+        except TencentCloudSDKException as err:
+            await nonebot.get_bot().send_group_msg(
+                group_id=nonebot.get_driver().config.dict()["admin_group"],
+                message=str(err)
+            )
