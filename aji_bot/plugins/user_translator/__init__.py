@@ -5,7 +5,7 @@ from tencentcloud.tmt.v20180321 import tmt_client, models
 from tencentcloud.common.profile.http_profile import HttpProfile
 from tencentcloud.common.profile.client_profile import ClientProfile
 from nonebot import on_message, on_command
-from nonebot.permission import Permission, User, SUPERUSER, USER
+from nonebot.permission import SUPERUSER, USER
 from nonebot.adapters.onebot.v11 import GroupMessageEvent
 import json
 
@@ -19,7 +19,7 @@ clientProfile = ClientProfile(
     language="en-US",
     httpProfile=httpProfile
 )
-client = tmt_client.TmtClient(cred, "ap-shanghai", clientProfile)
+client = tmt_client.TmtClient(cred, "ap-seoul", clientProfile)
 req = models.TextTranslateRequest()
 req.Source = "ja"
 req.Target = "zh"
