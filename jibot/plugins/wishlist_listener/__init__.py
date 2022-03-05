@@ -25,7 +25,7 @@ HEADERS["Accept"] = "text/html"
 HEADERS["Accept-Language"] = "ja-JP"
 HEADERS["Connection"] = "close"
 ########################
-admin = on_command(cmd="查看愿望单", temp=False, priority=1, block=True,
+admin = on_command(cmd="愿望单状态", temp=False, priority=1, block=True,
     permission=SUPERUSER)
 @admin.handle()
 async def print_targets(event:GroupMessageEvent):
