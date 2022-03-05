@@ -107,7 +107,7 @@ async def del_user(event:GroupMessageEvent):
             await matcher.send(f"QQ{user_id} 的发言翻译功能未开启")
 
 # Event: translate for particular users
-matcher = on_message(temp=False, priority=2, block=True)
+matcher = on_message(temp=False, priority=2, block=False)
 @matcher.handle()
 async def translate(event:GroupMessageEvent):
     if event.get_session_id() in TRANSLATE_USERS:
