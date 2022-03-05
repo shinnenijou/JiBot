@@ -1,11 +1,22 @@
-import requests
-from nonebot.plugin import require
+from tokenize import group
 import nonebot
+from nonebot.plugin import require
+from nonebot import on_command
+from nonebot.permission import SUPERUSER
+from nonebot.adapters.onebot.v11 import GroupMessageEvent
+
+import requests
 import json
 
 ########## Var #########
 # 保存每个被监听的人的信息
 # [NAME]{URL, GROUP_ID, PREV_LIST, CURR_LIST}
+try:
+    with open(f"./jibot/plugins/wishlist_listener/config.json", "x") as file:
+        file.write("{}")
+        pass
+except:
+    pass
 targets = {}
 # 用于HTTP请求的请求头
 HEADERS = {}
@@ -14,6 +25,60 @@ HEADERS["Accept"] = "text/html"
 HEADERS["Accept-Language"] = "ja-JP"
 HEADERS["Connection"] = "close"
 ########################
+admin = on_command(cmd="查看愿望单", temp=False, priority=1, block=True,
+    permission=SUPERUSER)
+@admin.handle()
+async def print_targets(event:GroupMessageEvent):
+    group_id = int(event.get_session_id().rpartition('_')[0][6:])
+    with open(f"./jibot/plugins/wishlist_listener/config.json", "r") as file:
+        config = json.loads(file.read())
+    msg = "已开启以下对象愿望的监听: "
+    for name, info in config.items():
+        if group_id in info["GROUP_ID"]:
+            msg += f"\r\n{name}"
+    await admin.send(msg)
+
+admin = on_command(cmd="添加愿望单",temp=False, priority=1, block=True,
+    permission=SUPERUSER)
+@admin.handle()
+async def add_target(event:GroupMessageEvent):
+    cmd = event.get_plaintext().split()
+    if len(cmd) == 3:
+        name = cmd[1]
+        url = cmd[2]
+        group_id = int(event.get_session_id().rpartition('_')[0][6:])
+        with open(f"./jibot/plugins/wishlist_listener/config.json", "r") as file:
+            config = json.loads(file.read())
+        if name not in config:
+            config[name] = {"URL":url, "GROUP_ID":[group_id]}
+            await admin.send("添加成功")
+        elif group_id not in config[name]["GROUP_ID"]:
+            config[name]["GROUP_ID"].append(group_id)
+            await admin.send("添加成功")
+        else:
+            await admin.send("已存在")
+        with open(f"./jibot/plugins/wishlist_listener/config.json", "w") as file:
+                file.write(json.dumps(config))
+
+admin = on_command(cmd="删除愿望单",temp=False, priority=1, block=True,
+    permission=SUPERUSER)
+@admin.handle()
+async def add_target(event:GroupMessageEvent):
+    cmd = event.get_plaintext().split()
+    if len(cmd) == 2:
+        name = cmd[1]
+        group_id = int(event.get_session_id().rpartition('_')[0][6:])
+        with open(f"./jibot/plugins/wishlist_listener/config.json", "r") as file:
+            config = json.loads(file.read())
+        if name in config and group_id in config[name]["GROUP_ID"]:
+            config[name]["GROUP_ID"].remove(group_id)
+            await admin.send("已删除")
+            if not config[name]["GROUP_ID"]:
+                del config[name]
+        else:
+            await admin.send("未找到")
+        with open(f"./jibot/plugins/wishlist_listener/config.json", "w") as file:
+            file.write(json.dumps(config))
 
 def request(url, headers):
     try:
@@ -25,7 +90,6 @@ def request(url, headers):
         # 发生任何异常都跳出
         resp = ""
     return resp
-
 def find_item(string, begin):
     item_beg = string.find("itemName", begin, len(string))
     if item_beg == -1:
@@ -36,7 +100,6 @@ def find_item(string, begin):
         title_end = string.find("href", title_beg, len(string))
         item_title = string[title_beg + 7: title_end - 2].strip()
     return item_title, title_end
-
 def find_items(string):
     temp_list = []
     if string:
@@ -49,7 +112,6 @@ def find_items(string):
             if item_title:
                 temp_list.append(item_title)
     return temp_list
-
 def check_items(list1, list2):
     # 比对两个列表，找出list1中不在list2中的元素
     not_include = []
@@ -57,22 +119,20 @@ def check_items(list1, list2):
         if item not in list2:
             not_include.append(item)
     return not_include
-
-async def print_items(bot, items, str, name, group_id):
+async def print_items(bot, items, str, name, groups):
     if items:
         msg = f"{name}のほしい物リストに以下の商品が{str}ました: \r\n"
         for item in items:
             msg += item + "\r\n"
         try:
             #print(msg)
-            await bot.send_group_msg(group_id = group_id, message = msg)
+            for group_id in groups:
+                await bot.send_group_msg(group_id = group_id, message = msg)
         except:
             pass
- 
 def check_clear(string):
     # pattern found
     return string.find("このリストにはアイテムはありません") != -1
-
 async def listen():
     global targets
     bot = nonebot.get_bot()
@@ -104,4 +164,4 @@ async def listen():
             pass
 
 scheduler = require("nonebot_plugin_apscheduler").scheduler
-scheduler.add_job(listen, "interval", minutes=10)
+scheduler.add_job(listen, "interval", minutes=1)
