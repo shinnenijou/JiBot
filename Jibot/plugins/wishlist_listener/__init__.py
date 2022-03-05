@@ -75,7 +75,7 @@ def check_clear(string):
 
 async def listen():
     bot = nonebot.get_bot()
-    with open(f"./JiBot/plugins/wishlist_listener/listen_list.json", "r") as file:
+    with open(f"./jibot/plugins/wishlist_listener/listen_list.json", "r") as file:
         targets_config = json.loads(file.read())
         # 删除不在监听列表中的目标
         for key, value in targets.items():
