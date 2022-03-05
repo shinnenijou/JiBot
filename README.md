@@ -9,6 +9,7 @@
 3. 定时任务需要额外安装一项计时器,可以通过NoneBot2的脚手架nb进行安装(详见文档[NoneBot2](https://v2.nonebot.dev/docs/advanced/scheduler))
 >nb plugin install nonebot_plugin_apscheduler
 4. 根据插件情况分别需要一些额外依赖
+
 wishlist_listener: requests
 >pip install requests
 
