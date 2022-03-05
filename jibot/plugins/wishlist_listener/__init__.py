@@ -164,4 +164,4 @@ async def listen():
             pass
 
 scheduler = require("nonebot_plugin_apscheduler").scheduler
-scheduler.add_job(listen, "interval", minutes=1)
+scheduler.add_job(listen, "interval", minutes=10)
