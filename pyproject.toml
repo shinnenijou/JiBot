@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "aji_bot"
+name = "JiBot"
 version = "0.1.0"
-description = "aji_bot"
+description = "JiBot"
 authors = []
 readme = "README.md"
 
@@ -14,7 +14,7 @@ nb-cli = "^0.6.0"
 
 [tool.nonebot]
 plugins = []
-plugin_dirs = ["aji_bot/plugins"]
+plugin_dirs = ["JiBot/plugins"]
 
 [build-system]
 requires = ["poetry_core>=1.0.0"]
