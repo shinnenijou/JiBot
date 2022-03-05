@@ -44,7 +44,8 @@ API_REGION=str       请求的地域，部分API将会有区域化数据。
 ```
 
 2. 在本文件目录运行bot
-```nb run
+```
+nb run
 ```
 
 ## Documentation: 参考文档
