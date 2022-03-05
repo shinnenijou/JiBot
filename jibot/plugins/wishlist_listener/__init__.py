@@ -6,7 +6,7 @@ import json
 ########## Var #########
 # 保存每个被监听的人的信息
 # [NAME]{URL, GROUP_ID, PREV_LIST, CURR_LIST}
-TARGETS = {}
+targets = {}
 # 用于HTTP请求的请求头
 HEADERS = {}
 HEADERS["Host"] = "www.amazon.co.jp"
@@ -74,30 +74,30 @@ def check_clear(string):
     return string.find("このリストにはアイテムはありません") != -1
 
 async def listen():
-    global TARGETS
+    global targets
     bot = nonebot.get_bot()
     with open(f"./jibot/plugins/wishlist_listener/config.json", "r") as file:
         targets_config = json.loads(file.read())
         # 删除不在监听列表中的目标
-        for key, value in TARGETS.items():
+        for key, value in targets.items():
             if key not in targets_config:
-                del TARGETS[key]
+                del targets[key]
         # 增加新增的目标
         for key, value in targets_config.items():
-            if key not in TARGETS:
-                TARGETS[key] = value
-                TARGETS[key]["PREV_LISTS"] = []
-                TARGETS[key]["CURR_LISTS"] = []
-    for key, value in TARGETS.items():
+            if key not in targets:
+                targets[key] = value
+                targets[key]["PREV_LISTS"] = []
+                targets[key]["CURR_LISTS"] = []
+    for key, value in targets.items():
         try:
             text = request(value["URL"], HEADERS)
-            TARGETS[key]["CURR_LISTS"] = find_items(text)
+            targets[key]["CURR_LISTS"] = find_items(text)
             # 如果愿望单突然完全清空，则检查文本中是否确实包含无物品信息
-            if not TARGETS[key]["CURR_LISTS"] and not check_clear(text):
-                TARGETS[key]["CURR_LISTS"] = TARGETS[key]["PREV_LISTS"]
-            new_items = check_items(TARGETS[key]["CURR_LISTS"], TARGETS[key]["PREV_LISTS"])
-            buyed_items = check_items(TARGETS[key]["PREV_LISTS"], TARGETS[key]["CURR_LISTS"])
-            TARGETS[key]["PREV_LISTS"] = TARGETS[key]["CURR_LISTS"]
+            if not targets[key]["CURR_LISTS"] and not check_clear(text):
+                targets[key]["CURR_LISTS"] = targets[key]["PREV_LISTS"]
+            new_items = check_items(targets[key]["CURR_LISTS"], targets[key]["PREV_LISTS"])
+            buyed_items = check_items(targets[key]["PREV_LISTS"], targets[key]["CURR_LISTS"])
+            targets[key]["PREV_LISTS"] = targets[key]["CURR_LISTS"]
             await print_items(bot, new_items, "追加され", key, value["GROUP_ID"])
             await print_items(bot, buyed_items, "削除され", key, value["GROUP_ID"])
         except:
