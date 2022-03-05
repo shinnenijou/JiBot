@@ -1,3 +1,4 @@
+from posixpath import split
 from tencentcloud.common import credential
 from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
 from tencentcloud.tmt.v20180321 import tmt_client, models
@@ -8,9 +9,48 @@ import nonebot
 from nonebot.matcher import Matcher
 from nonebot import on_message, on_command
 from nonebot.permission import SUPERUSER, USER
-from nonebot.adapters.onebot.v11 import GroupMessageEvent
+from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment
+
+import emoji
 
 import json
+
+# tools function/class
+import emoji
+# tools function/class
+class EmojiStr:
+    def __init__(self, string:str, plist: list = []) -> None:
+        self.string = string
+        self.emojis = plist
+
+def extract_emoji(estr:EmojiStr):
+    # beg indicates valid chars' begin
+    beg = 0
+    new_estr = EmojiStr("", estr.emojis[:])
+    emojis = emoji.emoji_lis(estr.string)
+    for e in emojis:
+        new_estr.string += estr.string[beg: e['location']] + f"[{len(new_estr.emojis)}]"
+        new_estr.emojis.append(e['emoji'])
+        beg = e['location'] + 1
+    new_estr.string += estr.string[beg:]
+    return new_estr
+
+def recover_str(estr:EmojiStr):
+    # end indicates valid chars' end, and beg indicates valid chars' begin
+    beg, end = 0, 0
+    new_estr = EmojiStr("")
+    while end != -1 and beg < len(estr.string) - 1:
+        end = estr.string.find('[', beg)
+        if end != -1:
+            new_estr.string += estr.string[beg : end]
+            beg = estr.string.find(']', end)
+            if beg != -1:
+                new_estr.string += estr.emojis[int(estr.string[end + 1:beg])]
+                beg += 1
+            else:
+                break
+    new_estr.string += estr.string[beg:]
+    return new_estr.string
 
 # set Tencent TMT API
 SECRETID = str(nonebot.get_driver().config.dict()["api_secretid"])
@@ -113,15 +153,37 @@ async def update(matcher:Matcher):
 
 @translator.handle()
 async def translate(event:GroupMessageEvent):
-    req.SourceText = event.get_plaintext()
-    req.Source = TRANSLATE_USERS[event.get_session_id()]["source"]
-    req.Target = TRANSLATE_USERS[event.get_session_id()]["target"]
-    try:
-        resp = client.TextTranslate(req)
-        msg = "【自動翻訳】" + json.loads(resp.to_json_string())['TargetText']
-        await admin.send(msg)
-    except TencentCloudSDKException as err:
-        await nonebot.get_bot().send_group_msg(
-            group_id=nonebot.get_driver().config.dict()["admin_group"],
-            message=str(err)
-        )
+    msg = event.get_message()
+    source_text = ""
+    for seg in msg:
+        if "text" in seg.data:
+            source_text += seg.data["text"]
+        elif "id" in seg.data:
+            source_text += "|@-@|"
+    print(source_text)
+    if source_text:
+        extractedMsg =  extract_emoji(EmojiStr(source_text))
+        req.SourceText =extractedMsg.string
+        req.Source = TRANSLATE_USERS[event.get_session_id()]["source"]
+        req.Target = TRANSLATE_USERS[event.get_session_id()]["target"]
+        try:
+            resp = client.TextTranslate(req)
+            extractedMsg.string = json.loads(resp.to_json_string())['TargetText']
+            target_texts = recover_str(extractedMsg).split('|@-@|')
+            i, j = 0, 0
+            while i != len(msg):
+                if "text" in msg[i].data:
+                    msg[i].data["text"] = target_texts[j]
+                    i += 1
+                    j += 1
+                elif "id" not in msg[i].data:
+                    msg.remove(msg[i])
+                    i -= 1
+                i += 1
+            msg.insert(0, MessageSegment(type='text', data={'text': '【机翻】'}))
+            await translator.send(msg)
+        except TencentCloudSDKException as err:
+            await nonebot.get_bot().send_group_msg(
+                group_id=nonebot.get_driver().config.dict()["admin_group"],
+                message=str(err)
+            )
