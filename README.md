@@ -3,17 +3,22 @@
 ## Overview： 环境依赖
 本bot基于[NoneBot2](https://github.com/nonebot/nonebot2)与[go-cqhttp](https://github.com/Mrs4s/go-cqhttp)开发，配置启动需要安装以下环境
    1. NoneBot2主框架，可以通过pip等工具安装（详见文档[NoneBot2](https://v2.nonebot.dev/docs/start/installation)）
+
    `pip install nb-cli`
    2. 协议适配器，可以通过NoneBot2的脚手架nb进行安装（详见文档[OneBot v11](https://adapter-onebot.netlify.app/docs/guide/installation)）
+
    `nb adapter install nonebot-adpater-onebot`
    3. 定时任务需要额外安装一项计时器,可以通过NoneBot2的脚手架nb进行安装(详见文档[NoneBot2](https://v2.nonebot.dev/docs/advanced/scheduler))
+
    `nb plugin install nonebot_plugin_apscheduler`
    4. 根据插件情况分别需要一些额外依赖
 
       wishlist_listener: requests
+
       `pip install requests`
 
       user_translator: 由于翻译接口使用腾讯云API，需要安装腾讯云SDK方便请求（详见[腾讯云API中心](https://cloud.tencent.com/document/sdk/Python)）
+
       `pip install --upgrade tencentcloud-sdk-python`
 
 ## Function: 主要功能
@@ -36,11 +41,12 @@ API_REGION=str       请求的地域，部分API将会有区域化数据。
 ```
 
 2. 在本文件目录运行bot
->`nb run`
+
+`nb run`
 
 ## Documentation
 See [NoneBot2](https://v2.nonebot.dev/)
 
 see [go-cqhttp](https://docs.go-cqhttp.org/)
 
-see[TMT文本翻译](https://cloud.tencent.com/document/api/551/15619)
+see [TMT文本翻译](https://cloud.tencent.com/document/api/551/15619)
