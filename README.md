@@ -14,7 +14,9 @@
    ```
    nb plugin install nonebot_plugin_apscheduler
    ```
-   4. 根据插件情况分别需要一些额外依赖
+   4. 安装协议端go-cqhttp，下载对应平台build的文件解压即可(详见[go-cqhttp release](https://github.com/Mrs4s/go-cqhttp/releases))
+   
+   5. 根据插件情况分别需要一些额外依赖
 
       wishlist_listener: requests
       ```
@@ -47,6 +49,7 @@ API_REGION=str       请求的地域，部分API将会有区域化数据。
 ```
 nb run
 ```
+3. （可选）将Jibot与go-cqhttps
 
 ## Documentation: 参考文档
 See [NoneBot2](https://v2.nonebot.dev/)
