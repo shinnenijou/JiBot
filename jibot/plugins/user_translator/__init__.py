@@ -5,8 +5,9 @@ from tencentcloud.common.profile.http_profile import HttpProfile
 from tencentcloud.common.profile.client_profile import ClientProfile
 
 import nonebot
+from nonebot.matcher import Matcher
 from nonebot import on_message, on_command
-from nonebot.permission import SUPERUSER
+from nonebot.permission import SUPERUSER, USER
 from nonebot.adapters.onebot.v11 import GroupMessageEvent
 
 import json
@@ -32,19 +33,25 @@ try:
         TRANSLATE_USERS = json.loads(file.read())
 except FileNotFoundError:
     TRANSLATE_USERS = {}
+    with open("./jibot/plugins/user_translator/config.ini", "w") as file:
+        file.write(json.dumps(TRANSLATE_USERS))
 
 # DEBUG
-matcher = on_command(cmd="已开启",temp=False, priority=1, block=True,
+admin = on_command(cmd="翻译状态",temp=False, priority=1, block=True,
     permission=SUPERUSER)
-@matcher.handle()
+@admin.handle()
 async def del_user(event:GroupMessageEvent):
-    global TRANSLATE_USERS
-    print(TRANSLATE_USERS)
+    group_id = event.get_session_id().partition('_')[1]
+    msg = "以下成员的发言翻译功能正在运行: "
+    for key, value in TRANSLATE_USERS.items():
+        if group_id in key:
+            msg += f"\r\nQQ{key.rpartition('_')[2]}: {value['source']}->{value['target']}"
+    await admin.send(msg)
 
 # EVENT: add translate user
-matcher = on_command(cmd="开启翻译",temp=False, priority=1, block=True,
+admin = on_command(cmd="开启翻译",temp=False, priority=1, block=True,
     permission=SUPERUSER)
-@matcher.handle()
+@admin.handle()
 async def add_user(event:GroupMessageEvent):
     global TRANSLATE_USERS
     try:
@@ -57,28 +64,23 @@ async def add_user(event:GroupMessageEvent):
         isValidCmd = False
     if isValidCmd:
         session_id = f"{event.get_session_id().rpartition('_')[0]}_{user_id}"
-        try:
-            file = open("./jibot/plugins/user_translator/config.ini", "r")
+        with open("./jibot/plugins/user_translator/config.ini", "r") as file:
             config = json.loads(file.read())
-        except:
-            file = open("./jibot/plugins/user_translator/config.ini", "w")
-            config = {}
-            file.write(json.dumps(config))
-        file.close()
         if session_id not in config:
             config[session_id] = {"source":source, "target":target}
             file = open("./jibot/plugins/user_translator/config.ini", "w")
             file.write(json.dumps(config))
             file.close()
-            await matcher.send(f"成功开启 QQ{user_id} 的发言翻译功能")
+            await admin.send(f"成功开启 QQ{user_id} 的发言翻译功能")
             TRANSLATE_USERS = config
+            translator.permission = USER(*TRANSLATE_USERS.keys())
         else:
-            await matcher.send(f"QQ{user_id} 的发言翻译功能正在运行")
+            await admin.send(f"QQ{user_id} 的发言翻译功能正在运行")
 
 # EVENT: delete translate user
-matcher = on_command(cmd="关闭翻译",temp=False, priority=1, block=True,
+admin = on_command(cmd="关闭翻译",temp=False, priority=1, block=True,
     permission=SUPERUSER)
-@matcher.handle()
+@admin.handle()
 async def del_user(event:GroupMessageEvent):
     global TRANSLATE_USERS
     try:
@@ -88,38 +90,38 @@ async def del_user(event:GroupMessageEvent):
         isValidCmd = False
     if isValidCmd:
         session_id = f"{event.get_session_id().rpartition('_')[0]}_{user_id}"
-        try:
-            file = open("./jibot/plugins/user_translator/config.ini", "r")
+        with open("./jibot/plugins/user_translator/config.ini", "r") as file:
             config = json.loads(file.read())
-        except:
-            file = open("./jibot/plugins/user_translator/config.ini", "w")
-            config = {}
-            file.write(json.dumps(config))
-        file.close()
         if session_id in config:
             del config[session_id]
             file = open("./jibot/plugins/user_translator/config.ini", "w")
             file.write(json.dumps(config))
-            await matcher.send(f"成功关闭 QQ{user_id} 的发言翻译功能")
+            await admin.send(f"成功关闭 QQ{user_id} 的发言翻译功能")
             file.close()
             TRANSLATE_USERS = config
+            translator.permission = USER(*TRANSLATE_USERS.keys())
         else:
-            await matcher.send(f"QQ{user_id} 的发言翻译功能未开启")
+            await admin.send(f"QQ{user_id} 的发言翻译功能未开启")
 
 # Event: translate for particular users
-matcher = on_message(temp=False, priority=2, block=False)
-@matcher.handle()
+translator = on_message(temp=False, priority=2, block=True,
+    permission=USER(*TRANSLATE_USERS.keys()))
+
+@translator.permission_updater
+async def update(matcher:Matcher):
+    return matcher.permission
+
+@translator.handle()
 async def translate(event:GroupMessageEvent):
-    if event.get_session_id() in TRANSLATE_USERS:
-        req.SourceText = event.get_plaintext()
-        req.Source = TRANSLATE_USERS[event.get_session_id()]["source"]
-        req.Target = TRANSLATE_USERS[event.get_session_id()]["target"]
-        try:
-            resp = client.TextTranslate(req)
-            msg = "【自動翻訳】" + json.loads(resp.to_json_string())['TargetText']
-            await matcher.send(msg)
-        except TencentCloudSDKException as err:
-            await nonebot.get_bot().send_group_msg(
-                group_id=nonebot.get_driver().config.dict()["admin_group"],
-                message=str(err)
-            )
+    req.SourceText = event.get_plaintext()
+    req.Source = TRANSLATE_USERS[event.get_session_id()]["source"]
+    req.Target = TRANSLATE_USERS[event.get_session_id()]["target"]
+    try:
+        resp = client.TextTranslate(req)
+        msg = "【自動翻訳】" + json.loads(resp.to_json_string())['TargetText']
+        await admin.send(msg)
+    except TencentCloudSDKException as err:
+        await nonebot.get_bot().send_group_msg(
+            group_id=nonebot.get_driver().config.dict()["admin_group"],
+            message=str(err)
+        )
