@@ -11,6 +11,7 @@
 4. 根据插件情况分别需要一些额外依赖
 wishlist_listener: requests
 >pip install requests
+
 user_translator: 由于翻译接口使用腾讯云API，需要安装腾讯云SDK方便请求（详见[腾讯云API中心](https://cloud.tencent.com/document/sdk/Python)）
 >pip install --upgrade tencentcloud-sdk-python
 
