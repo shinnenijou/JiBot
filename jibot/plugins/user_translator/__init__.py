@@ -158,10 +158,10 @@ async def translate(event:GroupMessageEvent):
     for seg in msg:
         if "text" in seg.data:
             source_text += seg.data["text"]
-        elif "id" in seg.data:
+        else:
             source_text += "|@-@|"
     print(source_text)
-    if source_text:
+    if source_text != "|@-@|":
         extractedMsg =  extract_emoji(EmojiStr(source_text))
         req.SourceText =extractedMsg.string
         req.Source = TRANSLATE_USERS[event.get_session_id()]["source"]
@@ -174,7 +174,6 @@ async def translate(event:GroupMessageEvent):
             while i != len(msg):
                 if "text" in msg[i].data:
                     msg[i].data["text"] = target_texts[j]
-                    i += 1
                     j += 1
                 elif "id" not in msg[i].data:
                     msg.remove(msg[i])
@@ -182,8 +181,8 @@ async def translate(event:GroupMessageEvent):
                 i += 1
             msg.insert(0, MessageSegment(type='text', data={'text': '【机翻】'}))
             await translator.send(msg)
-        except TencentCloudSDKException as err:
+        except Exception as err:
             await nonebot.get_bot().send_group_msg(
                 group_id=nonebot.get_driver().config.dict()["admin_group"],
-                message=str(err)
+                message=event.get_plaintext() + "\r\nError: " + str(err)
             )
