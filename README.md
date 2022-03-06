@@ -23,7 +23,6 @@
       pip install requests
       ```
       * user_translator: 由于翻译接口使用腾讯云API，需要安装腾讯云SDK方便请求（详见[腾讯云API中心](https://cloud.tencent.com/document/sdk/Python))
-      
       在文本处理时对文本中的emoji进行了替换处理需要使用第三方库emoji
       ```
       pip install --upgrade tencentcloud-sdk-python
@@ -37,7 +36,7 @@
 ## Function: 主要功能
 1. wishlist_listener: 监听Amazon愿望单中物品变化情况并发送至指定群
 2. user_translator: 指定源语言与目标语言对特定用户的所有发言进行翻译
-3. nonebot_plugins_status: 已发布插件，远程查询服务器cpu·内存·硬盘等使用百分比（详见[nonebot_plusins_status](https://github.com/cscs181/QQ-GitHub-Bot/tree/master/src/plugins/nonebot_plugin_status)）
+3. nonebot_plugins_status: 已发布插件，远程查询服务器cpu·内存·硬盘等使用百分比（详见[status](https://github.com/cscs181/QQ-GitHub-Bot/tree/master/src/plugins/nonebot_plugin_status)）
 
 ## Guide： 启用方法
 1. 安装依赖，将本仓库克隆至本地后，在本文件目录内配置.env.prod。必须进行配置的项目
@@ -53,11 +52,11 @@ API_SECRETKEY=str    腾讯云API的SecretKey，必需。需要在腾讯云控�
 API_REGION=str       请求的地域，部分API将会有区域化数据。
 ```
 
-2. 在本文件目录运行bot
+2. 在本文件目录运行nonebot
 ```
 nb run
 ```
-3. （可选）将Jibot与go-cqhttps
+3. （可选）将Jibot与go-cqhttps配置为systemd service并设置开机启动
 
 ## Documentation: 参考文档
 See [NoneBot2](https://v2.nonebot.dev/)
@@ -65,3 +64,5 @@ See [NoneBot2](https://v2.nonebot.dev/)
 see [go-cqhttp](https://docs.go-cqhttp.org/)
 
 see [TMT文本翻译](https://cloud.tencent.com/document/api/551/15619)
+
+see [nonebot_plugins_status](https://github.com/cscs181/QQ-GitHub-Bot/tree/master/src/plugins/nonebot_plugin_status)
