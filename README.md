@@ -1,7 +1,7 @@
 # JiBot(鸡器人)
 
 ## Overview： 环境依赖
-本bot基于[NoneBot2](https://github.com/nonebot/nonebot2)与[go-cqhttp](https://github.com/Mrs4s/go-cqhttp)开发，配置启动需要安装以下环境
+本bot基于[NoneBot2](https://github.com/nonebot/nonebot2)与[go-cqhttp](https://github.com/Mrs4s/go-cqhttp)开发，部分插件使用现有的开源插件，配置启动需要安装以下环境
    1. NoneBot2主框架，可以通过pip等工具安装（详见文档[NoneBot2](https://v2.nonebot.dev/docs/start/installation)）
    ```
    pip install nb-cli
@@ -22,14 +22,22 @@
       ```
       pip install requests
       ```
-      user_translator: 由于翻译接口使用腾讯云API，需要安装腾讯云SDK方便请求（详见[腾讯云API中心](https://cloud.tencent.com/document/sdk/Python)）
+      user_translator: 由于翻译接口使用腾讯云API，需要安装腾讯云SDK方便请求（详见[腾讯云API中心]
+      (https://cloud.tencent.com/document/sdk/Python)）在文本处理时对文本中的emoji进行了替换处理
+      需要使用第三方库emoji
       ```
       pip install --upgrade tencentcloud-sdk-python
+      pip install emoji
+      ```
+      plugins_status: 需要使用第三方库psutil查询服务器运行状态
+      ```
+      pip instal psutil
       ```
 
 ## Function: 主要功能
 1. wishlist_listener: 监听Amazon愿望单中物品变化情况并发送至指定群
 2. user_translator: 指定源语言与目标语言对特定用户的所有发言进行翻译
+3. nonebot_plugins_status: 已发布插件，远程查询服务器cpu·内存·硬盘等使用百分比（详见[nonebot_plusins_status](https://github.com/cscs181/QQ-GitHub-Bot/tree/master/src/plugins/nonebot_plugin_status)）
 
 ## Guide： 启用方法
 1. 安装依赖，将本仓库克隆至本地后，在本文件目录内配置.env.prod。必须进行配置的项目
