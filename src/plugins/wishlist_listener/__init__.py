@@ -177,7 +177,8 @@ async def listen():
             await print_items(bot, buyed_items, "削除され", key, value["URL"], value["GROUP_ID"])
         except:
             pass
-    with open(f"./data/wishlist_listener/config.ini", "r") as file:
+        targets[key]['CURR_LISTS'] = []
+    with open(f"./data/wishlist_listener/config.ini", "w") as file:
         file.write(json.dumps(targets))
 
 scheduler = require("nonebot_plugin_apscheduler").scheduler
