@@ -23,7 +23,7 @@ try:
         pass
 except:
     pass
-targets = {}
+
 # 用于HTTP请求的请求头
 HEADERS = {}
 HEADERS["Host"] = "www.amazon.co.jp"
@@ -69,7 +69,12 @@ async def add_target(event:GroupMessageEvent):
         with open(f"./data/wishlist_listener/config.ini", "r") as file:
             config = json.loads(file.read())
         if name not in config:
-            config[name] = {"URL":url, "GROUP_ID":[group_id]}
+            config[name] = {
+                "URL":url,
+                "GROUP_ID":[group_id],
+                "CURR_LISTS":[],
+                "PREV_LISTS":[]
+            }
             await add.send("添加成功")
         elif group_id not in config[name]["GROUP_ID"]:
             config[name]["GROUP_ID"].append(group_id)
@@ -155,20 +160,9 @@ def check_clear(string):
     # pattern found
     return string.find("このリストにはアイテムはありません") != -1
 async def listen():
-    global targets
     bot = nonebot.get_bot()
     with open(f"./data/wishlist_listener/config.ini", "r") as file:
-        targets_config = json.loads(file.read())
-        # 删除不在监听列表中的目标
-        for key, value in targets.items():
-            if key not in targets_config:
-                del targets[key]
-        # 增加新增的目标
-        for key, value in targets_config.items():
-            if key not in targets:
-                targets[key] = value
-                targets[key]["PREV_LISTS"] = []
-                targets[key]["CURR_LISTS"] = []
+        targets = json.loads(file.read())
     for key, value in targets.items():
         try:
             text = request(value["URL"], HEADERS)
@@ -183,6 +177,8 @@ async def listen():
             await print_items(bot, buyed_items, "削除され", key, value["URL"], value["GROUP_ID"])
         except:
             pass
+    with open(f"./data/wishlist_listener/config.ini", "r") as file:
+        file.write(json.dumps(targets))
 
 scheduler = require("nonebot_plugin_apscheduler").scheduler
 scheduler.add_job(listen, "interval",
