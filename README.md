@@ -22,9 +22,7 @@
       ```
       pip install requests
       ```
-      * user_translator: 由于翻译接口使用腾讯云API，需要安装腾讯云SDK方便请求（详见[腾讯云API中心]
-      (https://cloud.tencent.com/document/sdk/Python)）在文本处理时对文本中的emoji进行了替换处理
-      需要使用第三方库emoji
+      * user_translator: 由于翻译接口使用腾讯云API，需要安装腾讯云SDK方便请求（详见[腾讯云API中心](https://cloud.tencent.com/document/sdk/Python)）在文本处理时对文本中的emoji进行了替换处理需要使用第三方库emoji
       ```
       pip install --upgrade tencentcloud-sdk-python
       pip install emoji
