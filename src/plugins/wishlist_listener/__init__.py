@@ -31,7 +31,19 @@ HEADERS["Accept"] = "text/html"
 HEADERS["Accept-Language"] = "ja-JP"
 HEADERS["Connection"] = "close"
 ########################
-admin = on_command(cmd="愿望单列表", temp=False, priority=1, block=True,
+# HELP
+helper = on_command(cmd="愿望单帮助", temp=False, priority=2, block=True,
+    permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
+@helper.handle()
+async def help_menu():
+    menu = '愿望单模块目前支持的功能:\n\n'
+    menu += '命令格式: "愿望单列表"\n'
+    menu += '命令格式: "愿望单关注 名称 URL"\n'
+    menu += '命令格式: "愿望单取关 名称"'
+    await helper.finish(menu)
+
+# STATUS
+admin = on_command(cmd="愿望单列表", temp=False, priority=2, block=True,
     permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
 @admin.handle()
 async def print_targets(event:GroupMessageEvent):
@@ -44,7 +56,8 @@ async def print_targets(event:GroupMessageEvent):
             msg += f"\r\n{name}"
     await admin.send(msg)
 
-add = on_command(cmd="愿望单关注",temp=False, priority=1, block=True,
+# ADD
+add = on_command(cmd="愿望单关注",temp=False, priority=2, block=True,
     permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
 @add.handle()
 async def add_target(event:GroupMessageEvent):
@@ -66,7 +79,8 @@ async def add_target(event:GroupMessageEvent):
         with open(f"./data/wishlist_listener/config.ini", "w") as file:
                 file.write(json.dumps(config))
 
-delete = on_command(cmd="愿望单取关",temp=False, priority=1, block=True,
+# DELETE
+delete = on_command(cmd="愿望单取关",temp=False, priority=2, block=True,
     permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
 @delete.handle()
 async def add_target(event:GroupMessageEvent):

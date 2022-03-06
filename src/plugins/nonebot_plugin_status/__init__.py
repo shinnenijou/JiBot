@@ -62,7 +62,7 @@ else:
             or str(event.user_id) in global_config.superusers
         )
 
-    group_poke = on_notice(_group_poke, priority=10, block=True)
+    group_poke = on_notice(_group_poke, priority=1, block=True)
     group_poke.handle()(server_status)
 
     async def _poke(event: PrivateMessageEvent) -> bool:
@@ -71,6 +71,6 @@ else:
     poke = on_message(
         _poke,
         permission=(status_config.server_status_only_superusers or None) and SUPERUSER,
-        priority=10,
+        priority=1,
     )
     poke.handle()(server_status)

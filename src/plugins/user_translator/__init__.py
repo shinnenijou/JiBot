@@ -78,8 +78,19 @@ except FileNotFoundError:
     with open("./data/user_translator/config.ini", "w") as file:
         file.write(json.dumps(TRANSLATE_USERS))
 
-# DEBUG
-admin = on_command(cmd="翻译列表",temp=False, priority=1, block=True,
+# HELP
+helper = on_command(cmd="发言翻译帮助",temp=False, priority=2, block=True,
+    permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
+@helper.handle()
+async def send_help():
+    menu = '发言翻译模块目前支持的功能:\n\n'
+    menu += '命令格式: "发言翻译列表"\n'
+    menu += '命令格式: "开启发言翻译 QQ号 源语言->目标语言"\n'
+    menu += '命令格式: "关闭发言翻译 QQ号"'
+    await helper.finish(menu)
+
+# STATUS
+admin = on_command(cmd="发言翻译列表",temp=False, priority=2, block=True,
     permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
 @admin.handle()
 async def del_user(event:GroupMessageEvent):
@@ -91,7 +102,7 @@ async def del_user(event:GroupMessageEvent):
     await admin.send(msg)
 
 # EVENT: add translate user
-admin = on_command(cmd="翻译关注",temp=False, priority=1, block=True,
+admin = on_command(cmd="开启发言翻译",temp=False, priority=2, block=True,
     permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
 @admin.handle()
 async def add_user(event:GroupMessageEvent):
@@ -120,7 +131,7 @@ async def add_user(event:GroupMessageEvent):
             await admin.send(f"QQ{user_id} 的发言翻译功能正在运行")
 
 # EVENT: delete translate user
-admin = on_command(cmd="翻译取关",temp=False, priority=1, block=True,
+admin = on_command(cmd="关闭发言翻译",temp=False, priority=2, block=True,
     permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
 @admin.handle()
 async def del_user(event:GroupMessageEvent):
