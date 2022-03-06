@@ -7,7 +7,8 @@ from tencentcloud.common.profile.client_profile import ClientProfile
 import nonebot
 from nonebot.matcher import Matcher
 from nonebot import on_message, on_command
-from nonebot.permission import SUPERUSER, USER
+from nonebot.permission import USER, SUPERUSER
+from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER, PRIVATE_FRIEND
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment
 
 import emoji
@@ -78,8 +79,8 @@ except FileNotFoundError:
         file.write(json.dumps(TRANSLATE_USERS))
 
 # DEBUG
-admin = on_command(cmd="翻译状态",temp=False, priority=1, block=True,
-    permission=SUPERUSER)
+admin = on_command(cmd="翻译列表",temp=False, priority=1, block=True,
+    permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
 @admin.handle()
 async def del_user(event:GroupMessageEvent):
     group_id = event.get_session_id().partition('_')[1]
@@ -90,8 +91,8 @@ async def del_user(event:GroupMessageEvent):
     await admin.send(msg)
 
 # EVENT: add translate user
-admin = on_command(cmd="开启翻译",temp=False, priority=1, block=True,
-    permission=SUPERUSER)
+admin = on_command(cmd="翻译关注",temp=False, priority=1, block=True,
+    permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
 @admin.handle()
 async def add_user(event:GroupMessageEvent):
     global TRANSLATE_USERS
@@ -119,8 +120,8 @@ async def add_user(event:GroupMessageEvent):
             await admin.send(f"QQ{user_id} 的发言翻译功能正在运行")
 
 # EVENT: delete translate user
-admin = on_command(cmd="关闭翻译",temp=False, priority=1, block=True,
-    permission=SUPERUSER)
+admin = on_command(cmd="翻译取关",temp=False, priority=1, block=True,
+    permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
 @admin.handle()
 async def del_user(event:GroupMessageEvent):
     global TRANSLATE_USERS

@@ -3,6 +3,7 @@ import nonebot
 from nonebot.plugin import require
 from nonebot import on_command
 from nonebot.permission import SUPERUSER
+from nonebot.adapters.onebot.v11 import GROUP_OWNER, GROUP_ADMIN, PRIVATE_FRIEND
 from nonebot.adapters.onebot.v11 import GroupMessageEvent
 
 import requests
@@ -30,8 +31,8 @@ HEADERS["Accept"] = "text/html"
 HEADERS["Accept-Language"] = "ja-JP"
 HEADERS["Connection"] = "close"
 ########################
-admin = on_command(cmd="愿望单状态", temp=False, priority=1, block=True,
-    permission=SUPERUSER)
+admin = on_command(cmd="愿望单列表", temp=False, priority=1, block=True,
+    permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
 @admin.handle()
 async def print_targets(event:GroupMessageEvent):
     group_id = int(event.get_session_id().rpartition('_')[0][6:])
@@ -43,9 +44,9 @@ async def print_targets(event:GroupMessageEvent):
             msg += f"\r\n{name}"
     await admin.send(msg)
 
-admin = on_command(cmd="添加愿望单",temp=False, priority=1, block=True,
-    permission=SUPERUSER)
-@admin.handle()
+add = on_command(cmd="愿望单关注",temp=False, priority=1, block=True,
+    permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
+@add.handle()
 async def add_target(event:GroupMessageEvent):
     cmd = event.get_plaintext().split()
     if len(cmd) == 3:
@@ -56,18 +57,18 @@ async def add_target(event:GroupMessageEvent):
             config = json.loads(file.read())
         if name not in config:
             config[name] = {"URL":url, "GROUP_ID":[group_id]}
-            await admin.send("添加成功")
+            await add.send("添加成功")
         elif group_id not in config[name]["GROUP_ID"]:
             config[name]["GROUP_ID"].append(group_id)
-            await admin.send("添加成功")
+            await add.send("添加成功")
         else:
-            await admin.send("已存在")
+            await add.send("已存在")
         with open(f"./data/wishlist_listener/config.ini", "w") as file:
                 file.write(json.dumps(config))
 
-admin = on_command(cmd="删除愿望单",temp=False, priority=1, block=True,
-    permission=SUPERUSER)
-@admin.handle()
+delete = on_command(cmd="愿望单取关",temp=False, priority=1, block=True,
+    permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
+@delete.handle()
 async def add_target(event:GroupMessageEvent):
     cmd = event.get_plaintext().split()
     if len(cmd) == 2:
@@ -77,11 +78,11 @@ async def add_target(event:GroupMessageEvent):
             config = json.loads(file.read())
         if name in config and group_id in config[name]["GROUP_ID"]:
             config[name]["GROUP_ID"].remove(group_id)
-            await admin.send("已删除")
+            await delete.send("已删除")
             if not config[name]["GROUP_ID"]:
                 del config[name]
         else:
-            await admin.send("未找到")
+            await delete.send("未找到")
         with open(f"./data/wishlist_listener/config.ini", "w") as file:
             file.write(json.dumps(config))
 
