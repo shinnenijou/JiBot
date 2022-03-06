@@ -69,11 +69,11 @@ req.ProjectId = 0
 
 # load translate users config
 try:
-    with open("./jibot/plugins/user_translator/config.ini", "r") as file:
+    with open("./src/plugins/user_translator/config.ini", "r") as file:
         TRANSLATE_USERS = json.loads(file.read())
 except FileNotFoundError:
     TRANSLATE_USERS = {}
-    with open("./jibot/plugins/user_translator/config.ini", "w") as file:
+    with open("./src/plugins/user_translator/config.ini", "w") as file:
         file.write(json.dumps(TRANSLATE_USERS))
 
 # DEBUG
@@ -104,11 +104,11 @@ async def add_user(event:GroupMessageEvent):
         isValidCmd = False
     if isValidCmd:
         session_id = f"{event.get_session_id().rpartition('_')[0]}_{user_id}"
-        with open("./jibot/plugins/user_translator/config.ini", "r") as file:
+        with open("./src/plugins/user_translator/config.ini", "r") as file:
             config = json.loads(file.read())
         if session_id not in config:
             config[session_id] = {"source":source, "target":target}
-            file = open("./jibot/plugins/user_translator/config.ini", "w")
+            file = open("./src/plugins/user_translator/config.ini", "w")
             file.write(json.dumps(config))
             file.close()
             await admin.send(f"成功开启 QQ{user_id} 的发言翻译功能")
@@ -130,11 +130,11 @@ async def del_user(event:GroupMessageEvent):
         isValidCmd = False
     if isValidCmd:
         session_id = f"{event.get_session_id().rpartition('_')[0]}_{user_id}"
-        with open("./jibot/plugins/user_translator/config.ini", "r") as file:
+        with open("./src/plugins/user_translator/config.ini", "r") as file:
             config = json.loads(file.read())
         if session_id in config:
             del config[session_id]
-            file = open("./jibot/plugins/user_translator/config.ini", "w")
+            file = open("./src/plugins/user_translator/config.ini", "w")
             file.write(json.dumps(config))
             await admin.send(f"成功关闭 QQ{user_id} 的发言翻译功能")
             file.close()

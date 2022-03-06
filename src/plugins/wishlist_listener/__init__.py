@@ -12,7 +12,7 @@ import json
 # 保存每个被监听的人的信息
 # [NAME]{URL, GROUP_ID, PREV_LIST, CURR_LIST}
 try:
-    with open(f"./jibot/plugins/wishlist_listener/config.json", "x") as file:
+    with open(f"./src/plugins/wishlist_listener/config.ini", "x") as file:
         file.write("{}")
         pass
 except:
@@ -30,7 +30,7 @@ admin = on_command(cmd="愿望单状态", temp=False, priority=1, block=True,
 @admin.handle()
 async def print_targets(event:GroupMessageEvent):
     group_id = int(event.get_session_id().rpartition('_')[0][6:])
-    with open(f"./jibot/plugins/wishlist_listener/config.json", "r") as file:
+    with open(f"./src/plugins/wishlist_listener/config.ini", "r") as file:
         config = json.loads(file.read())
     msg = "已开启以下对象愿望的监听: "
     for name, info in config.items():
@@ -47,7 +47,7 @@ async def add_target(event:GroupMessageEvent):
         name = cmd[1]
         url = cmd[2]
         group_id = int(event.get_session_id().rpartition('_')[0][6:])
-        with open(f"./jibot/plugins/wishlist_listener/config.json", "r") as file:
+        with open(f"./src/plugins/wishlist_listener/config.ini", "r") as file:
             config = json.loads(file.read())
         if name not in config:
             config[name] = {"URL":url, "GROUP_ID":[group_id]}
@@ -57,7 +57,7 @@ async def add_target(event:GroupMessageEvent):
             await admin.send("添加成功")
         else:
             await admin.send("已存在")
-        with open(f"./jibot/plugins/wishlist_listener/config.json", "w") as file:
+        with open(f"./src/plugins/wishlist_listener/config.ini", "w") as file:
                 file.write(json.dumps(config))
 
 admin = on_command(cmd="删除愿望单",temp=False, priority=1, block=True,
@@ -68,7 +68,7 @@ async def add_target(event:GroupMessageEvent):
     if len(cmd) == 2:
         name = cmd[1]
         group_id = int(event.get_session_id().rpartition('_')[0][6:])
-        with open(f"./jibot/plugins/wishlist_listener/config.json", "r") as file:
+        with open(f"./src/plugins/wishlist_listener/config.ini", "r") as file:
             config = json.loads(file.read())
         if name in config and group_id in config[name]["GROUP_ID"]:
             config[name]["GROUP_ID"].remove(group_id)
@@ -77,7 +77,7 @@ async def add_target(event:GroupMessageEvent):
                 del config[name]
         else:
             await admin.send("未找到")
-        with open(f"./jibot/plugins/wishlist_listener/config.json", "w") as file:
+        with open(f"./src/plugins/wishlist_listener/config.ini", "w") as file:
             file.write(json.dumps(config))
 
 def request(url, headers):
@@ -136,7 +136,7 @@ def check_clear(string):
 async def listen():
     global targets
     bot = nonebot.get_bot()
-    with open(f"./jibot/plugins/wishlist_listener/config.json", "r") as file:
+    with open(f"./src/plugins/wishlist_listener/config.ini", "r") as file:
         targets_config = json.loads(file.read())
         # 删除不在监听列表中的目标
         for key, value in targets.items():
