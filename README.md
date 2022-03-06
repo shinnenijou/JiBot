@@ -28,16 +28,31 @@
       pip install --upgrade tencentcloud-sdk-python
       pip install emoji
       ```
-      * plugins_status: 需要使用第三方库psutil查询服务器运行状态
+      * plugin_status: 需要使用第三方库psutil查询服务器运行状态
       ```
       pip instal psutil
       ```
-
+      * plugin_twitter: 需要第三方库selenium及linux版chrome/chromedriver
+         * selenium可使用pip安装 
+         ```
+         pip install selenium
+         ```
+         * chrome需要在google官网下载linux发行版并进行安装，过程中可能需要额外安装一些系统依赖，
+         ```
+         wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+         sudo dpkg -i google-chrome-stable_current_amd64.deb
+         ```
+         如果在安装chrome时缺少系统依赖导致失败，尝试一下命令安装缺少的依赖
+         ```
+         sudo apt --fix-broken install
+         ```
+         * chromedriver需要在[Chromedriver](https://chromedriver.storage.googleapis.com/index.html)额外下载并保存到PATH
 ## Function: 主要功能
 1. wishlist_listener: 定时监听Amazon愿望单中物品变化情况并发送至指定群
 2. user_translator: 指定源语言与目标语言对特定用户的所有发言进行翻译，翻译结果将保留原文中的emoji及qq自带表情
-3. nonebot_plugins_status: 已发布插件，远程查询服务器cpu·内存·硬盘等使用百分比（详见[status](https://github.com/cscs181/QQ-GitHub-Bot/tree/master/src/plugins/nonebot_plugin_status)）
-4. nonebot_plugins_status: 已发布插件，对不同群的插件开启进行管理（详见[manager](https://github.com/nonepkg/nonebot-plugin-manager)）
+3. nonebot_plugin_status: 已发布插件，远程查询服务器cpu·内存·硬盘等使用百分比（详见[status](https://github.com/cscs181/QQ-GitHub-Bot/tree/master/src/plugins/nonebot_plugin_status)）
+4. nonebot_plugin_status: 已发布插件，对不同群的插件开启进行管理（详见[manager](https://github.com/nonepkg/nonebot-plugin-manager)）
+5. nonebot_plugin_twitter: 已发布插件，对关注的推特用户内容进行推送和翻译修改自（详见[ErikaBot](https://github.com/SlieFamily/ErikaBot)）
 ## Guide： 启用方法
 1. 安装依赖，将本仓库克隆至本地后，在本文件目录内配置.env.prod。必须进行配置的项目
 ```
