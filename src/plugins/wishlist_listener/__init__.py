@@ -146,9 +146,9 @@ def check_items(list1, list2):
     return not_include
 async def print_items(bot, items, str, name, url, groups):
     if items:
-        msg = f"{name}のほしい物リストに以下の商品が{str}ました: \r\n"
-        for item in items:
-            msg += item + "\r\n"
+        msg = f"{name}のほしい物リストに以下の商品が{str}ました:\r\n\r\n"
+        for i in range(len(items)):
+            msg += f'[{i}]items[i]\r\n'
         msg += url
         try:
             #print(msg)
