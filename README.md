@@ -2,34 +2,34 @@
 
 ## Overview： 环境依赖
 本bot基于[NoneBot2](https://github.com/nonebot/nonebot2)与[go-cqhttp](https://github.com/Mrs4s/go-cqhttp)开发，部分插件使用现有的开源插件，配置启动需要安装以下环境
-   1. NoneBot2主框架，可以通过pip等工具安装（详见文档[NoneBot2](https://v2.nonebot.dev/docs/start/installation)）
+   * NoneBot2主框架，可以通过pip等工具安装（详见文档[NoneBot2](https://v2.nonebot.dev/docs/start/installation)）
    ```
    pip install nb-cli
    ```
-   2. 协议适配器，可以通过NoneBot2的脚手架nb进行安装（详见文档[OneBot v11](https://adapter-onebot.netlify.app/docs/guide/installation)）
+   * 协议适配器，可以通过NoneBot2的脚手架nb进行安装（详见文档[OneBot v11](https://adapter-onebot.netlify.app/docs/guide/installation)）
    ```
    nb adapter install nonebot-adpater-onebot
    ```
-   3. 定时任务需要额外安装一项计时器,可以通过NoneBot2的脚手架nb进行安装(详见文档[NoneBot2](https://v2.nonebot.dev/docs/advanced/scheduler))
+   * 定时任务需要额外安装一项计时器,可以通过NoneBot2的脚手架nb进行安装(详见文档[NoneBot2](https://v2.nonebot.dev/docs/advanced/scheduler))
    ```
    nb plugin install nonebot_plugin_apscheduler
    ```
-   4. 安装协议端go-cqhttp，下载对应平台build的文件解压即可(详见[go-cqhttp release](https://github.com/Mrs4s/go-cqhttp/releases))
+   * 安装协议端go-cqhttp，下载对应平台build的文件解压即可(详见[go-cqhttp release](https://github.com/Mrs4s/go-cqhttp/releases))
    
-   5. 根据插件情况分别需要一些额外依赖
+   * 根据插件情况分别需要一些额外依赖
 
-      wishlist_listener: requests
+      * wishlist_listener: requests
       ```
       pip install requests
       ```
-      user_translator: 由于翻译接口使用腾讯云API，需要安装腾讯云SDK方便请求（详见[腾讯云API中心]
+      * user_translator: 由于翻译接口使用腾讯云API，需要安装腾讯云SDK方便请求（详见[腾讯云API中心]
       (https://cloud.tencent.com/document/sdk/Python)）在文本处理时对文本中的emoji进行了替换处理
       需要使用第三方库emoji
       ```
       pip install --upgrade tencentcloud-sdk-python
       pip install emoji
       ```
-      plugins_status: 需要使用第三方库psutil查询服务器运行状态
+      * plugins_status: 需要使用第三方库psutil查询服务器运行状态
       ```
       pip instal psutil
       ```
