@@ -3,7 +3,14 @@
 
 import nonebot
 from nonebot.adapters.onebot.v11 import Adapter as ONEBOT_V11Adapter
+from os import mkdir
 
+# Some customized operation
+# make data directory
+try:
+    mkdir("data")
+except FileExistsError:
+    pass
 
 # Custom your logger
 # 
@@ -29,9 +36,7 @@ nonebot.load_builtin_plugins("echo")
 nonebot.load_from_toml("pyproject.toml")
 
 # Modify some config / config depends on loaded configs
-# 
-# config = driver.config
-# do something...
+
 
 
 if __name__ == "__main__":

@@ -21,9 +21,9 @@ global_config = get_driver().config
 status_config = Config(**global_config.dict())
 
 command = on_command(
-    "状态",
+    "服务器状态",
     permission=(status_config.server_status_only_superusers or None) and SUPERUSER,
-    priority=10,
+    priority=1,
 )
 
 

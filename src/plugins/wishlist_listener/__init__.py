@@ -7,12 +7,17 @@ from nonebot.adapters.onebot.v11 import GroupMessageEvent
 
 import requests
 import json
+from os import mkdir
 
 ########## Var #########
 # 保存每个被监听的人的信息
 # [NAME]{URL, GROUP_ID, PREV_LIST, CURR_LIST}
 try:
-    with open(f"./src/plugins/wishlist_listener/config.ini", "x") as file:
+    mkdir("./data/wishlist_listener")
+except FileExistsError:
+    pass
+try:
+    with open(f"./data/wishlist_listener/config.ini", "x") as file:
         file.write("{}")
         pass
 except:
@@ -30,7 +35,7 @@ admin = on_command(cmd="愿望单状态", temp=False, priority=1, block=True,
 @admin.handle()
 async def print_targets(event:GroupMessageEvent):
     group_id = int(event.get_session_id().rpartition('_')[0][6:])
-    with open(f"./src/plugins/wishlist_listener/config.ini", "r") as file:
+    with open(f"./data/wishlist_listener/config.ini", "r") as file:
         config = json.loads(file.read())
     msg = "已开启以下对象愿望的监听: "
     for name, info in config.items():
@@ -47,7 +52,7 @@ async def add_target(event:GroupMessageEvent):
         name = cmd[1]
         url = cmd[2]
         group_id = int(event.get_session_id().rpartition('_')[0][6:])
-        with open(f"./src/plugins/wishlist_listener/config.ini", "r") as file:
+        with open(f"./data/wishlist_listener/config.ini", "r") as file:
             config = json.loads(file.read())
         if name not in config:
             config[name] = {"URL":url, "GROUP_ID":[group_id]}
@@ -57,7 +62,7 @@ async def add_target(event:GroupMessageEvent):
             await admin.send("添加成功")
         else:
             await admin.send("已存在")
-        with open(f"./src/plugins/wishlist_listener/config.ini", "w") as file:
+        with open(f"./data/wishlist_listener/config.ini", "w") as file:
                 file.write(json.dumps(config))
 
 admin = on_command(cmd="删除愿望单",temp=False, priority=1, block=True,
@@ -68,7 +73,7 @@ async def add_target(event:GroupMessageEvent):
     if len(cmd) == 2:
         name = cmd[1]
         group_id = int(event.get_session_id().rpartition('_')[0][6:])
-        with open(f"./src/plugins/wishlist_listener/config.ini", "r") as file:
+        with open(f"./data/wishlist_listener/config.ini", "r") as file:
             config = json.loads(file.read())
         if name in config and group_id in config[name]["GROUP_ID"]:
             config[name]["GROUP_ID"].remove(group_id)
@@ -77,7 +82,7 @@ async def add_target(event:GroupMessageEvent):
                 del config[name]
         else:
             await admin.send("未找到")
-        with open(f"./src/plugins/wishlist_listener/config.ini", "w") as file:
+        with open(f"./data/wishlist_listener/config.ini", "w") as file:
             file.write(json.dumps(config))
 
 def request(url, headers):
@@ -119,11 +124,12 @@ def check_items(list1, list2):
         if item not in list2:
             not_include.append(item)
     return not_include
-async def print_items(bot, items, str, name, groups):
+async def print_items(bot, items, str, name, url, groups):
     if items:
         msg = f"{name}のほしい物リストに以下の商品が{str}ました: \r\n"
         for item in items:
             msg += item + "\r\n"
+        msg += url
         try:
             #print(msg)
             for group_id in groups:
@@ -136,7 +142,7 @@ def check_clear(string):
 async def listen():
     global targets
     bot = nonebot.get_bot()
-    with open(f"./src/plugins/wishlist_listener/config.ini", "r") as file:
+    with open(f"./data/wishlist_listener/config.ini", "r") as file:
         targets_config = json.loads(file.read())
         # 删除不在监听列表中的目标
         for key, value in targets.items():
@@ -158,10 +164,11 @@ async def listen():
             new_items = check_items(targets[key]["CURR_LISTS"], targets[key]["PREV_LISTS"])
             buyed_items = check_items(targets[key]["PREV_LISTS"], targets[key]["CURR_LISTS"])
             targets[key]["PREV_LISTS"] = targets[key]["CURR_LISTS"]
-            await print_items(bot, new_items, "追加され", key, value["GROUP_ID"])
-            await print_items(bot, buyed_items, "削除され", key, value["GROUP_ID"])
+            await print_items(bot, new_items, "追加され", key, value["URL"], value["GROUP_ID"])
+            await print_items(bot, buyed_items, "削除され", key, value["URL"], value["GROUP_ID"])
         except:
             pass
 
 scheduler = require("nonebot_plugin_apscheduler").scheduler
-scheduler.add_job(listen, "interval", minutes=10)
+scheduler.add_job(listen, "interval",
+    minutes=int(nonebot.get_driver().config.dict()['wishlist_listen_interval']))

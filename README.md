@@ -34,10 +34,10 @@
       ```
 
 ## Function: 主要功能
-1. wishlist_listener: 监听Amazon愿望单中物品变化情况并发送至指定群
-2. user_translator: 指定源语言与目标语言对特定用户的所有发言进行翻译
+1. wishlist_listener: 定时监听Amazon愿望单中物品变化情况并发送至指定群
+2. user_translator: 指定源语言与目标语言对特定用户的所有发言进行翻译，翻译结果将保留原文中的emoji及qq自带表情
 3. nonebot_plugins_status: 已发布插件，远程查询服务器cpu·内存·硬盘等使用百分比（详见[status](https://github.com/cscs181/QQ-GitHub-Bot/tree/master/src/plugins/nonebot_plugin_status)）
-
+4. nonebot_plugins_status: 已发布插件，对不同群的插件开启进行管理（详见[manager](https://github.com/nonepkg/nonebot-plugin-manager)）
 ## Guide： 启用方法
 1. 安装依赖，将本仓库克隆至本地后，在本文件目录内配置.env.prod。必须进行配置的项目
 ```

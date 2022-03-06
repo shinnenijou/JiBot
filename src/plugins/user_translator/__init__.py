@@ -1,4 +1,3 @@
-from posixpath import split
 from tencentcloud.common import credential
 from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
 from tencentcloud.tmt.v20180321 import tmt_client, models
@@ -14,9 +13,7 @@ from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment
 import emoji
 
 import json
-
-# tools function/class
-import emoji
+from os import mkdir
 # tools function/class
 class EmojiStr:
     def __init__(self, string:str, plist: list = []) -> None:
@@ -69,11 +66,15 @@ req.ProjectId = 0
 
 # load translate users config
 try:
-    with open("./src/plugins/user_translator/config.ini", "r") as file:
+    mkdir("./data/user_translator")
+except FileExistsError:
+    pass
+try:    
+    with open("./data/user_translator/config.ini", "r") as file:
         TRANSLATE_USERS = json.loads(file.read())
 except FileNotFoundError:
     TRANSLATE_USERS = {}
-    with open("./src/plugins/user_translator/config.ini", "w") as file:
+    with open("./data/user_translator/config.ini", "w") as file:
         file.write(json.dumps(TRANSLATE_USERS))
 
 # DEBUG
@@ -104,11 +105,11 @@ async def add_user(event:GroupMessageEvent):
         isValidCmd = False
     if isValidCmd:
         session_id = f"{event.get_session_id().rpartition('_')[0]}_{user_id}"
-        with open("./src/plugins/user_translator/config.ini", "r") as file:
+        with open("./data/user_translator/config.ini", "r") as file:
             config = json.loads(file.read())
         if session_id not in config:
             config[session_id] = {"source":source, "target":target}
-            file = open("./src/plugins/user_translator/config.ini", "w")
+            file = open("./data/user_translator/config.ini", "w")
             file.write(json.dumps(config))
             file.close()
             await admin.send(f"成功开启 QQ{user_id} 的发言翻译功能")
@@ -130,11 +131,11 @@ async def del_user(event:GroupMessageEvent):
         isValidCmd = False
     if isValidCmd:
         session_id = f"{event.get_session_id().rpartition('_')[0]}_{user_id}"
-        with open("./src/plugins/user_translator/config.ini", "r") as file:
+        with open("./data/user_translator/config.ini", "r") as file:
             config = json.loads(file.read())
         if session_id in config:
             del config[session_id]
-            file = open("./src/plugins/user_translator/config.ini", "w")
+            file = open("./data/user_translator/config.ini", "w")
             file.write(json.dumps(config))
             await admin.send(f"成功关闭 QQ{user_id} 的发言翻译功能")
             file.close()
@@ -144,7 +145,7 @@ async def del_user(event:GroupMessageEvent):
             await admin.send(f"QQ{user_id} 的发言翻译功能未开启")
 
 # Event: translate for particular users
-translator = on_message(temp=False, priority=2, block=True,
+translator = on_message(temp=False, priority=5, block=True,
     permission=USER(*TRANSLATE_USERS.keys()))
 
 @translator.permission_updater
