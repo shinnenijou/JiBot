@@ -15,6 +15,7 @@ SECRETID = str(nonebot.get_driver().config.dict()["api_secretid"])
 SECRETKEY = str(nonebot.get_driver().config.dict()["api_secretkey"])
 REGION = str(nonebot.get_driver().config.dict()["api_region"])
 ENDPOINT = str(nonebot.get_driver().config.dict()["translate_endpoint"])
+
 # Tencent TMT API CONSTANT
 CRED = credential.Credential(SECRETID, SECRETKEY)
 CLIENT_PROFILE = ClientProfile(
@@ -28,16 +29,16 @@ CLIENT = tmt_client.TmtClient(CRED, REGION, CLIENT_PROFILE)
 REQ = models.TextTranslateRequest()
 REQ.ProjectId = 0
 
-def translate(sourceText:str, source:str, target:str) -> str:
+async def translate(sourceText:str, source:str, target:str) -> str:
     REQ.SourceText = sourceText
     REQ.Source = source
     REQ.Target = target
     resp = CLIENT.TextTranslate(REQ)
     return json.loads(resp.to_json_string())['TargetText']
 
-
-
-
-
-
-
+async def translate_list(textList:list[str], source:str, target:str) -> list[str]:
+    newList = textList[:]
+    for i in range(len(newList)):
+        if newList[i]:
+            newList[i] = await translate(newList[i], source, target)
+    return newList

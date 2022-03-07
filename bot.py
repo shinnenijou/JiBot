@@ -4,7 +4,6 @@
 import nonebot
 from nonebot.adapters.onebot.v11 import Adapter as ONEBOT_V11Adapter
 from os import mkdir
-from sys import path
 
 # Some customized operation
 # make data directory
@@ -12,8 +11,6 @@ try:
     mkdir("data")
 except FileExistsError:
     pass
-# Append self-utils directory to path
-path.append('./src/utils')
 
 # Custom your logger
 # 

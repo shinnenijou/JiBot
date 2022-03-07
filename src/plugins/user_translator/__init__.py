@@ -1,113 +1,104 @@
 # -*- coding: utf-8 -*-
-
 import nonebot
 from nonebot.matcher import Matcher
 from nonebot import on_message, on_command
 from nonebot.permission import USER, SUPERUSER
 from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER, PRIVATE_FRIEND
-from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment
+from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment, Message
 
-import json
-from os import mkdir
-from sys import path
+import asyncio
 # Self-Utils
-import tmt
-import msg_tools
-# load translate users config
-try:
-    mkdir("./data/user_translator")
-except FileExistsError:
-    pass
-try:    
-    with open("./data/user_translator/config.ini", "r") as file:
-        TRANSLATE_USERS = json.loads(file.read())
-except FileNotFoundError:
-    TRANSLATE_USERS = {}
-    with open("./data/user_translator/config.ini", "w") as file:
-        file.write(json.dumps(TRANSLATE_USERS))
-
+import src.plugins.user_translator.db as db
+import src.utils.tmt as tmt
+import src.utils.msg_tools as msg_tools
+# Initiate database
+db.init()
+USERS_ON = db.to_dict(asyncio.run(db.select()))
 # HELP
 helper = on_command(cmd="发言翻译帮助",temp=False, priority=2, block=True,
     permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
 @helper.handle()
-async def send_help():
+async def send_help(event:GroupMessageEvent):
     menu = '发言翻译模块目前支持的功能:\n\n'
     menu += '命令格式: "发言翻译列表"\n'
     menu += '命令格式: "开启发言翻译 QQ号 源语言->目标语言"\n'
-    menu += '命令格式: "关闭发言翻译 QQ号"'
-    await helper.finish(menu)
+    menu += '命令格式: "关闭发言翻译 QQ号 [(optional)源语言->目标语言]"'
+    await helper.send(menu)
 
 # STATUS
-admin = on_command(cmd="发言翻译列表",temp=False, priority=2, block=True,
+status = on_command(cmd='发言翻译列表',temp=False, priority=2, block=True,
     permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
-@admin.handle()
-async def del_user(event:GroupMessageEvent):
-    group_id = event.get_session_id().partition('_')[1]
-    msg = "以下成员的发言翻译功能正在运行: "
-    for key, value in TRANSLATE_USERS.items():
-        if group_id in key:
-            msg += f"\r\nQQ{key.rpartition('_')[2]}: {value['source']}->{value['target']}"
-    await admin.send(msg)
+@status.handle()
+async def get_status(event:GroupMessageEvent):
+    group_id = int(event.get_session_id().split('_')[1])
+    user_list = await db.select(group_id=group_id)
+    msg = "已开启以下群成员的发言翻译功能:\n"
+    for i in range(len(user_list)):
+        msg += f"\n[{i + 1}] {user_list[i][2]}: {user_list[i][3]}->{user_list[i][4]}"
+    print(USERS_ON)
+    await status.send(msg)
 
 # EVENT: add translate user
-admin = on_command(cmd="开启发言翻译",temp=False, priority=2, block=True,
+add = on_command(cmd='开启发言翻译',temp=False, priority=2, block=True,
     permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
-@admin.handle()
+@add.handle()
 async def add_user(event:GroupMessageEvent):
-    global TRANSLATE_USERS
+    global translator
+    global USERS_ON
     try:
-        user_id = event.get_plaintext().split()[1]
-        setting = event.get_plaintext().split()[2]
-        source = setting.partition("->")[0]
-        target = setting.partition("->")[2]
-        isValidCmd = user_id.isdigit() and source and target
-    except:
+        group_id = int(event.get_session_id().split('_')[1])
+        user_id = int(event.get_plaintext().split()[1])
+        setting = event.get_plaintext().split()[2].split('->')
+        source = setting[0]
+        target = setting[1]
+        isValidCmd = True
+    except FileNotFoundError:
         isValidCmd = False
     if isValidCmd:
-        session_id = f"{event.get_session_id().rpartition('_')[0]}_{user_id}"
-        with open("./data/user_translator/config.ini", "r") as file:
-            config = json.loads(file.read())
-        if session_id not in config:
-            config[session_id] = {"source":source, "target":target}
-            file = open("./data/user_translator/config.ini", "w")
-            file.write(json.dumps(config))
-            file.close()
-            print(f"成功开启 QQ{user_id} 的发言翻译功能")
-            #await admin.send(f"成功开启 QQ{user_id} 的发言翻译功能")
-            TRANSLATE_USERS = config
-            translator.permission = USER(*TRANSLATE_USERS.keys())
+        if await db.insert(group_id, user_id, source, target):
+            USERS_ON = db.to_dict(await db.select())
+            translator.permission = USER(*USERS_ON.keys())
+            msg = f"成功开启 QQ{user_id}: {source}->{target} 的发言翻译功能"
         else:
-            await admin.send(f"QQ{user_id} 的发言翻译功能正在运行")
+            msg = f"QQ{user_id}: {source}->{target} 的发言翻译功能已经开启"
+    else:
+        msg = '命令格式错误，请严格按照\n"/开启发言翻译 QQ号 源语言->目标语言"\n的格式发送命令'
+    await add.send(msg)
 
 # EVENT: delete translate user
-admin = on_command(cmd="关闭发言翻译",temp=False, priority=2, block=True,
+delete = on_command(cmd="关闭发言翻译",temp=False, priority=2, block=True,
     permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
-@admin.handle()
+@delete.handle()
 async def del_user(event:GroupMessageEvent):
-    global TRANSLATE_USERS
+    global translator
+    global USERS_ON
     try:
-        user_id = event.get_plaintext().split()[1]
-        isValidCmd = user_id.isdigit()
+        group_id = int(event.get_session_id().split('_')[1])
+        user_id = int(event.get_plaintext().split()[1])
+        isValidCmd = True
     except:
         isValidCmd = False
+    try:
+        setting = event.get_plaintext().split()[2].split('->')
+        source = setting[0]
+        target = setting[1]
+    except:
+        source = None
+        target = None
     if isValidCmd:
-        session_id = f"{event.get_session_id().rpartition('_')[0]}_{user_id}"
-        with open("./data/user_translator/config.ini", "r") as file:
-            config = json.loads(file.read())
-        if session_id in config:
-            del config[session_id]
-            file = open("./data/user_translator/config.ini", "w")
-            file.write(json.dumps(config))
-            await admin.send(f"成功关闭 QQ{user_id} 的发言翻译功能")
-            file.close()
-            TRANSLATE_USERS = config
-            translator.permission = USER(*TRANSLATE_USERS.keys())
+        if await db.delete(group_id, user_id, source, target):
+            USERS_ON = db.to_dict(await db.select())
+            translator.permission = USER(*USERS_ON.keys())
+            msg = f'成功关闭 QQ{user_id}: {source}->{target} 的发言翻译功能'
         else:
-            await admin.send(f"QQ{user_id} 的发言翻译功能未开启")
+            msg = f'QQ{user_id}: {source}->{target} 的发言翻译功能未开启'
+    else:
+        msg = '命令格式错误，请严格按照\n"/开启发言翻译 QQ号 [(optional)源语言->目标语言]"\n的格式发送命令'
+    await delete.send(msg)
 
 # Event: translate for particular users
 translator = on_message(temp=False, priority=5, block=True,
-    permission=USER(*TRANSLATE_USERS.keys()))
+    permission=USER(*USERS_ON.keys()))
 
 @translator.permission_updater
 async def update(matcher:Matcher):
@@ -115,22 +106,34 @@ async def update(matcher:Matcher):
 
 @translator.handle()
 async def translate(event:GroupMessageEvent):
-    if event.get_plaintext():
-        msg = event.get_message()
-        source_text = msg_tools.extract_nontext(msg)
-        plain_text, emoji_list =  msg_tools.extract_emoji(source_text)        
-        try:
-            plain_text = tmt.translate(
-                sourceText=plain_text,
-                source=TRANSLATE_USERS[event.get_session_id()]["source"],
-                target=TRANSLATE_USERS[event.get_session_id()]["target"]
-                )
-            target_text = msg_tools.recover_emoji(plain_text, emoji_list)
-            msg = msg_tools.replace_plain_text(msg, target_text)
-            msg.insert(0, MessageSegment(type='text', data={'text': '【机翻】'}))
-            await translator.send(msg)
-        except Exception as err:
-            await nonebot.get_bot().send_group_msg(
-                group_id=nonebot.get_driver().config.dict()["admin_group"],
-                message=event.get_plaintext() + "\r\nError: " + str(err)
-            )
+    if not event.get_plaintext():
+        return None
+    session_id = event.get_session_id()
+    messages = [[] for i in range(len(USERS_ON[session_id]))]
+    try:
+        for seg in event.get_message():
+            if seg['type'] == 'text':
+                text_list, emoji_list = msg_tools.split_emoji(seg['data']['text'])
+                for i in range(len(USERS_ON[session_id])):
+                    messages[i].append(
+                        MessageSegment.text(
+                            msg_tools.recover_emoji(
+                                await tmt.translate_list(
+                                    text_list,
+                                    USERS_ON[session_id][i]['source'],
+                                    USERS_ON[session_id][i]['target']
+                                ),
+                                emoji_list
+                            )
+                        )
+                    )
+            elif seg['type'] in msg_tools.PLAIN_TEXT:
+                messages[i].append(seg)
+        for i in range(len(USERS_ON[session_id])):
+            messages[i].insert(0, MessageSegment.text('【机翻】'))
+            await translator.send(messages[i])
+    except Exception as err:
+        await nonebot.get_bot().send_group_msg(
+            group_id=nonebot.get_driver().config.dict()["admin_group"],
+            message=f'发送{event.get_plaintext()}时:' + "\r\nError: " + str(err)
+        )
