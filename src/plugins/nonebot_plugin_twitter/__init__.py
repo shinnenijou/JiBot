@@ -123,16 +123,6 @@ async def tweet():
                     })
             else:
                 logger.info(f'QQ群({card[0]})重复推文过滤')
-    await schedBot.call_api("send_guild_channel_msg",**{
-        'guild_id':54880161636523193,
-        'channel_id':2841279,
-        'message':text+media
-        })
-    await schedBot.call_api("send_guild_channel_msg",**{
-        'guild_id':28505721637064109,
-        'channel_id':2871978,
-        'message':text+media
-        })
     tweet_index += 1
     
 # 关注推特命令(仅允许管理员操作)
