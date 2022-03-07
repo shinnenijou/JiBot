@@ -6,19 +6,20 @@ from nonebot.adapters.onebot.v11 import Message
 
 
 EMOJI_REX = emoji.get_emoji_regexp()
-EMOJI_DELIMITER = "@em@"
+EMOJI_DELIMITER = "@-@"
 EMOJI_DELIMITER_REX = re.compile(EMOJI_DELIMITER)
-TEXT_DELIMITERS = {
-    'face':'@fc@', 'image':'@im@', 'record':'@rc@', 'video':'@vd@', 'at':'@at@',
-    'rps':'@rp@', 'dice':'@dc@', 'shake':'@sk@', 'poke':'@pk@',
-    'anonymous':'@an@', 'share':'@sr@', 'contact':'@cn@', 'location':'@lc@',
-    'music':'@ms@', 'reply':'@rl@', 'forward':'@fw@', 'node':'@nd@', 
-    'xml':'@xm@', 'json':'@js@'
-}
-TEXT_DELIMITERS_REX = re.compile(
-    '(@' + '@|@'.join(value[1:3] for key, value in TEXT_DELIMITERS.items()) + '@)',
-    )
-PLAIN_TEXT = ['text', 'face', 'reply', 'at']
+# TEXT_DELIMITERS = {
+#     'face':'(fc)', 'image':'@im@', 'record':'@rc@', 'video':'@vd@', 'at':'@at@',
+#     'rps':'@rp@', 'dice':'@dc@', 'shake':'@sk@', 'poke':'@pk@',
+#     'anonymous':'@an@', 'share':'@sr@', 'contact':'@cn@', 'location':'@lc@',
+#     'music':'@ms@', 'reply':'@rl@', 'forward':'@fw@', 'node':'@nd@', 
+#     'xml':'@xm@', 'json':'@js@'
+# }
+NONTEXT_DELIMITER = "@-@"
+# TEXT_DELIMITERS_REX = re.compile(
+#     '(@' + '@|@'.join(value[1:3] for key, value in TEXT_DELIMITERS.items()) + '@)',
+#     )
+PLAIN_TEXT = ['face', 'reply', 'at', 'text']
 
 
 def extract_emoji(string:str) -> Tuple[str,list[str]]:
@@ -31,18 +32,21 @@ def extract_emoji(string:str) -> Tuple[str,list[str]]:
     new_string = EMOJI_DELIMITER.join(word for word in words if word not in emoji_list)
     return new_string, emoji_list
 
-def recover_emoji(string:str, emojis:list[str]) -> str:
+def recover_emoji(words:list[str], emojis:list[str]) -> str:
     """
     recover a string text from a plain text and list of emoji
     given palin text must be generate by extract_emoji(),
     or delimited by a pre-defined delimiter
     """
-    words = EMOJI_DELIMITER_REX.split(string)
     new_string = ""
     for i in range(len(emojis)):
         new_string += words[i] + emojis[i]
     new_string += words[-1]
     return new_string
+
+def split_emoji(string:str) -> list[str]:
+    return EMOJI_REX.sub(EMOJI_DELIMITER, string).split(EMOJI_DELIMITER),\
+        EMOJI_REX.findall(string)
 
 def extract_nontext(message:Message) -> str:
     """
@@ -54,27 +58,5 @@ def extract_nontext(message:Message) -> str:
         if seg['type'] == 'text':
             new_text += seg.data["text"]
         else:
-            new_text += TEXT_DELIMITERS[seg['type']]
+            new_text += NONTEXT_DELIMITER
     return new_text
-
-def replace_whole_text(message:Message, plain_text:str) -> Message:
-    new_message = message[:]
-    words = TEXT_DELIMITERS_REX.split(plain_text)
-    for i in range(len(new_message)):
-        if new_message[i]['type'] == 'text':
-            new_message[i]['text'] = words[i]
-    return new_message
-
-def replace_plain_text(message:Message, plain_text:str) -> Message:
-    new_message = message[:]
-    words = TEXT_DELIMITERS_REX.split(plain_text)
-    i = 0
-    while i != len(new_message):
-        if new_message[i]['type'] == 'text':
-            new_message[i]['text'] = words[i]
-        elif new_message[i]['type'] not in PLAIN_TEXT:
-            del new_message[i]
-            i -= 1
-        i += 1
-    return new_message
-

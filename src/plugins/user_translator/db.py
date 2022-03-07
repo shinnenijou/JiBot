@@ -4,7 +4,9 @@ from sqlite3 import OperationalError
 from os import mkdir
 
 DATA_PATH = './data'
-DB_PATH = './data/user_translate'
+UT_DIR_PATH = f'{DATA_PATH}/user_translate'
+DB_PATH = f'{UT_DIR_PATH}/users.db'
+
 
 def init() -> None:
     try:
@@ -12,10 +14,10 @@ def init() -> None:
     except FileExistsError:
         pass
     try:
-        mkdir(DB_PATH)
+        mkdir(UT_DIR_PATH)
     except FileExistsError:
         pass
-    connection = sqlite3.connect(f'{DB_PATH}/users.db')
+    connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
     try:
         cursor = cursor.execute(
@@ -42,7 +44,7 @@ def init() -> None:
     connection.close()
 
 async def insert(group_id :int, user_id : int, source : str, target : str) -> bool:
-    connection = sqlite3.connect(f'{DB_PATH}/users.db')
+    connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
     if not await select(group_id, user_id, source, target):
         id = cursor.execute('SELECT MAX(ID) FROM TRANSLATE;').fetchone()[0] + 1
@@ -68,7 +70,7 @@ async def delete(
 
     if not group_id and not user_id and not source and not target:
         return False
-    connection = sqlite3.connect(f'{DB_PATH}/users.db')
+    connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
     if await select(group_id, user_id, source, target):
         condition = ''
@@ -98,7 +100,7 @@ async def select(
     source : str = None,
     target : str = None) -> list:
 
-    connection = sqlite3.connect(f'{DB_PATH}/users.db')
+    connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
     condition = "WHERE ID != 0 AND "
     if group_id:
@@ -126,3 +128,10 @@ def to_dict(rows:list) -> dict:
             ret[session_id] = []
         ret[session_id].append({'source':row[3], 'target':row[4]})
     return ret
+
+import asyncio
+init()
+asyncio.run(insert(12345,12345,'zh','ja'))
+print(asyncio.run(select()))
+asyncio.run(delete(12345,12345,'zh','ja'))
+print(asyncio.run(select()))
