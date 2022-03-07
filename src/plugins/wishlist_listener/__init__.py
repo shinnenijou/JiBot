@@ -7,16 +7,16 @@ import sys
 # Third-party Library
 import nonebot
 from nonebot.plugin import require
-from nonebot import on_command
+from nonebot import on_command, on_notice
 from nonebot.permission import SUPERUSER
 from nonebot.adapters.onebot.v11 import GROUP_OWNER, GROUP_ADMIN, PRIVATE_FRIEND
-from nonebot.adapters.onebot.v11 import GroupMessageEvent
+from nonebot.adapters.onebot.v11 import GroupMessageEvent, GroupDecreaseNoticeEvent
 
 
 
 ########## Var #########
 # 保存每个被监听的人的信息
-# [NAME]{URL, GROUP_ID, PREV_LIST, CURR_LIST}
+# {NAME:{URL, GROUP_ID, PREV_LIST, CURR_LIST}}
 try:
     mkdir("./data/wishlist_listener")
 except FileExistsError:
@@ -69,7 +69,7 @@ async def add_target(event:GroupMessageEvent):
     if len(cmd) == 3:
         name = cmd[1]
         url = cmd[2]
-        group_id = int(event.get_session_id().rpartition('_')[0][6:])
+        group_id = int(event.get_session_id().split('_')[2])
         with open(f"./data/wishlist_listener/config.ini", "r") as file:
             config = json.loads(file.read())
         if name not in config:
@@ -108,6 +108,22 @@ async def add_target(event:GroupMessageEvent):
             await delete.send("未找到")
         with open(f"./data/wishlist_listener/config.ini", "w") as file:
             file.write(json.dumps(config))
+
+# DELETE after quit from group
+group_decrease = on_notice(priority=1, block=False)
+@group_decrease.handle()
+async def _(event: GroupDecreaseNoticeEvent):
+    group_id = event.get_session_id().split('_')[1]
+    if event.self_id == event.user_id:
+        with open(f"./data/wishlist_listener/config.ini", "r") as file:
+            config = json.loads(file.read())
+        for name, data in config.items():
+            if group_id in data['GROUP_ID']:
+                data['GROUP_ID'].remove(group_id)
+            if not data['GROUP_ID']:
+                del config[name]
+        with open(f"./data/wishlist_listener/config.ini", "w") as file:
+            file.write(config)
 
 def request(url, headers):
     try:
@@ -187,4 +203,4 @@ async def listen():
 
 scheduler = require("nonebot_plugin_apscheduler").scheduler
 scheduler.add_job(listen, "interval",
-    minutes=int(nonebot.get_driver().config.dict()['wishlist_listen_interval']))
+    seconds=int(nonebot.get_driver().config.dict()['wishlist_listen_interval']))

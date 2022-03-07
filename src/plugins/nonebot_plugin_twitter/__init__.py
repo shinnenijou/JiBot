@@ -23,12 +23,18 @@ import asyncio
 import nonebot
 import threading
 import time
+from sys import path
 
 model.Init() #数据库初始化
-
 config.token = data_source.init() #token获取初始化
-
 tweet_index = 0
+
+# Import self-utils
+path.append('/src/utils')
+import tmt
+# CONSTANT
+TWEET_LISTEN_INTERVAL = nonebot.get_driver().config.dict()['tweet_listen_interval']
+TOKEN_FLUSH_INTERVAL = nonebot.get_driver().config.dict()['token_flush_interval']
 
 # 更新token操作函数
 def flush_token():
@@ -59,15 +65,16 @@ def flush_token():
 # 请求定时任务对象scheduler   
 scheduler = require('nonebot_plugin_apscheduler').scheduler
 
-# 创建定时任务：刷新token/每5min更新一次 
-@scheduler.scheduled_job('interval',minutes=5,id='flush_token',timezone='Asia/Shanghai')
+# 创建定时任务
+@scheduler.scheduled_job('interval', minutes=TOKEN_FLUSH_INTERVAL,
+    id='flush_token', timezone='Asia/Shanghai')
 async def flush():
     flush = threading.Thread(target=flush_token)
     flush.start()
     logger.info('开始刷新token')
 
-# 创建定时任务：推送tweet/每15s查询一次
-@scheduler.scheduled_job('interval',seconds=15,id='tweet')
+# 创建定时任务
+@scheduler.scheduled_job('interval', seconds=TWEET_LISTEN_INTERVAL, id='tweet')
 async def tweet():
     if model.Empty():
         return #数据库关注列表为空，无事发生
@@ -82,7 +89,7 @@ async def tweet():
     logger.info('检测到 %s 的推特已更新'%(users[tweet_index][1]))
     model.UpdateTweet(users[tweet_index][0],tweet_id) #更新数据库的最新推文id
     text,translate,media_list,retweet_name=data_source.get_tweet_details(data) #读取tweet详情
-    translate=await data_source.baidu_translate(config.appid,translate,config.baidu_token) #翻译
+    translate=tmt.translate(translate, 'auto', 'zh') #翻译
     media = ''
     for item in media_list:
         media += MessageSegment.image(item)+'\n'
@@ -143,15 +150,15 @@ async def handle(bot: Bot, event: MessageEvent, state: T_State = State(), args: 
         if len(user) != 0:
                 status = model.AddCard(args,id,is_group)
                 if status == 0:
-                    msg='{}({})关注成功！\n[CQ:image,file=https://cdn.jsdelivr.net/gh/SlieFamily/TempImages@main//Auto/erika_ok.jpeg]'.format(user[1],args) #待测试
+                    msg='{}({})关注成功！'.format(user[1],args) #待测试
                 else:
-                    msg='{}({})已经在关注列表中！\n[CQ:image,file=https://cdn.jsdelivr.net/gh/SlieFamily/TempImages@main//Auto/erika_ok.jpeg]'.format(user[1],args) #待测试
+                    msg='{}({})已经在关注列表中！'.format(user[1],args) #待测试
         else: #否则联网获取信息
             user_name,user_id = await data_source.get_user_info(args,config.token)
             if(user_id != ''):
                 model.AddNewUser(args,user_name,user_id)
                 model.AddCard(args,id,is_group)
-                msg = '{}({})已经关注成功！\n[CQ:image,file=https://cdn.jsdelivr.net/gh/SlieFamily/TempImages@main//Auto/erika_ok.jpeg]'.format(user_name,args) #待测试
+                msg = '{}({})已在本群的关注列表中！'.format(user_name,args) #待测试
             else:
                 msg = '{} 推特ID不存在或网络错误！\n'.format(args)
     Msg = Message(msg)
@@ -174,9 +181,9 @@ async def handle(bot: Bot, event: MessageEvent, state: T_State = State(), args: 
         else:
             status = model.DeleteCard(args,id,is_group)
             if status != 0:
-                msg = '{}({})不在本群的关注列表'.format(user[1],args)
+                msg = '{}({})不在本群的关注列表中'.format(user[1],args)
             else:
-                msg = '{}({})删除成功！\n[CQ:image,file=https://cdn.jsdelivr.net/gh/SlieFamily/TempImages@main/Auto/erika_ok.jpeg]'.format(user[1],args)
+                msg = '{}({})删除成功！'.format(user[1],args)
     Msg = Message(msg)
     await adduser.finish(Msg)
 
@@ -224,7 +231,7 @@ async def handle(bot: Bot, event: MessageEvent, state: T_State = State()):
                 msg = '{}({})不在当前关注列表！'.format(user[1],args)
             else:
                 model.TranslateON(args,id,is_group)
-                msg = '{}({})开启推文翻译！'.format(user[1],args)
+                msg = '{}({})已开启推文翻译！'.format(user[1],args)
     Msg = Message(msg)
     await ontranslate.finish(Msg)
 
@@ -248,7 +255,7 @@ async def handle(bot: Bot, event: MessageEvent, state: T_State = State()):
                 msg='{}({})不在当前群组/私聊关注列表！'.format(user[1],args)
             else:
                 model.TranslateOFF(args,id,is_group)
-                msg='{}({})关闭推文翻译！'.format(user[1],args)
+                msg='{}({})已关闭推文翻译！'.format(user[1],args)
     Msg=Message(msg)
     await offtranslate.finish(Msg)
 

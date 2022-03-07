@@ -10,8 +10,6 @@ from tencentcloud.common.profile.client_profile import ClientProfile
 
 import nonebot
 
-
-
 # Load config
 SECRETID = str(nonebot.get_driver().config.dict()["api_secretid"])
 SECRETKEY = str(nonebot.get_driver().config.dict()["api_secretkey"])
@@ -30,7 +28,7 @@ CLIENT = tmt_client.TmtClient(CRED, REGION, CLIENT_PROFILE)
 REQ = models.TextTranslateRequest()
 REQ.ProjectId = 0
 
-def translator(sourceText:str, source:str, target:str) -> str:
+def translate(sourceText:str, source:str, target:str) -> str:
     REQ.SourceText = sourceText
     REQ.Source = source
     REQ.Target = target

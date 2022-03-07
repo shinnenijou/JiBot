@@ -6,6 +6,10 @@ import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from nonebot.log import logger
+import nonebot
+
+# CONSTANT
+TWITTER_TOKEN = nonebot.get_driver().config.dict()['twitter_token']
 
 # 初始化
 def init():
@@ -40,7 +44,7 @@ async def get_user_info(name:str,token:str):
     user_name=''
     user_id=''
     headers = {
-    'authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA',
+    'authorization': f'Bearer {TWITTER_TOKEN}',
 	'content-type': 'application/json',
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36 Edg/98.0.1108.43',
 	'x-guest-token': '%s'%token,
@@ -66,7 +70,7 @@ async def get_user_info(name:str,token:str):
 # 获取最新推文
 async def get_latest_tweet(user_id,token):
     headers = {
-    'authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA',
+    'authorization': f'Bearer {TWITTER_TOKEN}',
     'content-type': 'application/json',
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36 Edg/98.0.1108.43',
     'x-guest-token': '%s'%token,
