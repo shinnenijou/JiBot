@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from dataclasses import MISSING
 from nonebot import on_command
 from nonebot import rule
@@ -202,7 +203,7 @@ async def handle(bot: Bot, event: MessageEvent, state: T_State = State()):
     await alllist.finish(Msg)
 
 #开启推文翻译(仅允许管理员操作)
-ontranslate = on_command('开启推特翻译',rule=to_me(),priority=1,permission=GROUP_ADMIN|GROUP_OWNER|PRIVATE_FRIEND|SUPERUSER,)
+ontranslate = on_command('开启推特翻译',priority=1,permission=GROUP_ADMIN|GROUP_OWNER|PRIVATE_FRIEND|SUPERUSER,)
 @ontranslate.handle()
 async def handle(bot: Bot, event: MessageEvent, state: T_State = State()):
     is_group=int(isinstance(event,GroupMessageEvent))
@@ -226,7 +227,7 @@ async def handle(bot: Bot, event: MessageEvent, state: T_State = State()):
     await ontranslate.finish(Msg)
 
 #关闭推文翻译(仅允许管理员操作)
-offtranslate = on_command('关闭推特翻译',rule=to_me(),priority=1,permission=GROUP_ADMIN|GROUP_OWNER|PRIVATE_FRIEND|SUPERUSER,)
+offtranslate = on_command('关闭推特翻译',priority=1,permission=GROUP_ADMIN|GROUP_OWNER|PRIVATE_FRIEND|SUPERUSER,)
 @offtranslate.handle()
 async def handle(bot: Bot, event: MessageEvent, state: T_State = State()):
     is_group=int(isinstance(event,GroupMessageEvent))
@@ -253,7 +254,7 @@ async def handle(bot: Bot, event: MessageEvent, state: T_State = State()):
 help = on_command('推特帮助',priority=1,permission=GROUP_ADMIN|GROUP_OWNER|PRIVATE_FRIEND|SUPERUSER)
 @help.handle()
 async def handle(bot: Bot, event: MessageEvent, state: T_State = State()):
-    menu='目前支持的功能：\n(请将ID替换为需操作的推特ID，即@后面的名称)\n推特关注 ID\n推特取关 ID\n推特关注列表\n开启推特翻译 ID\n关闭推特翻译 ID\n'
+    menu='目前支持的功能：\n\n(请将ID替换为需操作的推特ID，即@后面的名称)\n推特关注 ID\n推特取关 ID\n推特关注列表\n开启推特翻译 ID\n关闭推特翻译 ID'
     msg=menu
     Msg=Message(msg)
     await help.finish(Msg)
