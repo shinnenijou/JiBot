@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from argparse import Namespace
 
 from .plugin import *

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from nonebot import on_command
 from nonebot.permission import USER, SUPERUSER
 from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER, PRIVATE_FRIEND

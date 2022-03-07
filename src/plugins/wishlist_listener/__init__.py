@@ -1,4 +1,10 @@
-from tokenize import group
+# -*- coding: utf-8 -*-
+# Python STL
+import requests
+import json
+from os import mkdir
+import sys
+# Third-party Library
 import nonebot
 from nonebot.plugin import require
 from nonebot import on_command
@@ -6,9 +12,7 @@ from nonebot.permission import SUPERUSER
 from nonebot.adapters.onebot.v11 import GROUP_OWNER, GROUP_ADMIN, PRIVATE_FRIEND
 from nonebot.adapters.onebot.v11 import GroupMessageEvent
 
-import requests
-import json
-from os import mkdir
+
 
 ########## Var #########
 # 保存每个被监听的人的信息

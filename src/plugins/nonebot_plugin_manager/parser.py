@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from nonebot.rule import ArgumentParser
 
 npm_parser = ArgumentParser("npm")

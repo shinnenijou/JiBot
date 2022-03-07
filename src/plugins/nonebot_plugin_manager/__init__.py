@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from argparse import Namespace
 from nonebot.params import ShellCommandArgs
 from nonebot.matcher import Matcher
