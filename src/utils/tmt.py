@@ -13,19 +13,15 @@ import nonebot
 
 # TENCENT API
 # CONSTANT
-# SECRETID = str(nonebot.get_driver().config.dict()["api_secretid"])
-# SECRETKEY = str(nonebot.get_driver().config.dict()["api_secretkey"])
-# REGION = str(nonebot.get_driver().config.dict()["api_region"])
-# ENDPOINT = str(nonebot.get_driver().config.dict()["translate_endpoint"])
+SECRETID = str(nonebot.get_driver().config.dict()["api_secretid"])
+SECRETKEY = str(nonebot.get_driver().config.dict()["api_secretkey"])
+REGION = str(nonebot.get_driver().config.dict()["api_region"])
+ENDPOINT = str(nonebot.get_driver().config.dict()["translate_endpoint"])
 
 SIGN_ALGORITHM = 'TC3-HMAC-SHA256'
 SERVICE = 'tmt'
 LIMIT_PER_SECOND = 5
 TIME_OUT = 10 # seconds
-SECRETID="AKIDf6HCpCIEyUlmX3JJ4cw1qPjndEZfV5QV"
-SECRETKEY="qSpwmLceP5ZonVw67uSkmX1ECvOddNs7"
-REGION="ap-chengdu"
-ENDPOINT="https://tmt.ap-chengdu.tencentcloudapi.com"
 
 
 # Request HEADERS
