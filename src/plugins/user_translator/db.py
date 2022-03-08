@@ -128,10 +128,3 @@ def to_dict(rows:list) -> dict:
             ret[session_id] = []
         ret[session_id].append({'source':row[3], 'target':row[4]})
     return ret
-
-import asyncio
-init()
-asyncio.run(insert(12345,12345,'zh','ja'))
-print(asyncio.run(select()))
-asyncio.run(delete(12345,12345,'zh','ja'))
-print(asyncio.run(select()))

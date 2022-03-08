@@ -12,8 +12,6 @@ from nonebot.permission import SUPERUSER
 from nonebot.adapters.onebot.v11 import GROUP_OWNER, GROUP_ADMIN, PRIVATE_FRIEND
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, GroupDecreaseNoticeEvent
 
-
-
 ########## Var #########
 # 保存每个被监听的人的信息
 # {NAME:{URL, GROUP_ID, PREV_LIST, CURR_LIST}}
@@ -125,60 +123,7 @@ async def _(event: GroupDecreaseNoticeEvent):
         with open(f"./data/wishlist_listener/config.ini", "w") as file:
             file.write(config)
 
-def request(url, headers):
-    try:
-        # 向amazon请求网页html
-        response = requests.get(url, headers=headers)
-        response.encoding = "UTF-8"
-        resp = response.text
-    except:
-        # 发生任何异常都跳出
-        resp = ""
-    return resp
-def find_item(string, begin):
-    item_beg = string.find("itemName", begin, len(string))
-    if item_beg == -1:
-        item_title = ""
-        title_end = -1
-    else:
-        title_beg = string.find("title", item_beg, len(string))
-        title_end = string.find("href", title_beg, len(string))
-        item_title = string[title_beg + 7: title_end - 2].strip()
-    return item_title, title_end
-def find_items(string):
-    temp_list = []
-    if string:
-        # 如果get没有发生异常，则对返回的html进行处理
-        begin = 0
-        # 将返回数据中包含的愿望单物品全部添加至列表中
-        while begin != -1:
-            # 查找愿望单中是否有物品
-            item_title, begin = find_item(string, begin)
-            if item_title:
-                temp_list.append(item_title)
-    return temp_list
-def check_items(list1, list2):
-    # 比对两个列表，找出list1中不在list2中的元素
-    not_include = []
-    for item in list1:
-        if item not in list2:
-            not_include.append(item)
-    return not_include
-async def print_items(bot, items, str, name, url, groups):
-    if items:
-        msg = f"{name}のほしい物リストに以下の商品が{str}ました:\r\n\r\n"
-        for i in range(len(items)):
-            msg += f'[{i + 1}]{items[i]}\r\n'
-        msg += url
-        try:
-            #print(msg)
-            for group_id in groups:
-                await bot.send_group_msg(group_id = group_id, message = msg)
-        except:
-            pass
-def check_clear(string):
-    # pattern found
-    return string.find("このリストにはアイテムはありません") != -1
+
 async def listen():
     bot = nonebot.get_bot()
     with open(f"./data/wishlist_listener/config.ini", "r") as file:

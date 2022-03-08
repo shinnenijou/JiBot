@@ -18,9 +18,9 @@
    
    * 根据插件情况分别需要一些额外依赖
 
-      * wishlist_listener: requests
+      * wishlist_listener: aiohttp
       ```
-      pip install requests
+      pip install aiohttp
       ```
       * user_translator: 由于翻译接口使用腾讯云API，需要安装腾讯云SDK方便请求（详见[腾讯云API中心](https://cloud.tencent.com/document/sdk/Python))
       在文本处理时对文本中的emoji进行了替换处理需要使用第三方库emoji

@@ -109,31 +109,17 @@ async def translate(event:GroupMessageEvent):
     if not event.get_plaintext():
         return None
     session_id = event.get_session_id()
-    messages = [[] for i in range(len(USERS_ON[session_id]))]
-    try:
-        for seg in event.get_message():
-            if seg['type'] == 'text':
-                text_list, emoji_list = msg_tools.split_emoji(seg['data']['text'])
-                for i in range(len(USERS_ON[session_id])):
-                    messages[i].append(
-                        MessageSegment.text(
-                            msg_tools.recover_emoji(
-                                await tmt.translate_list(
-                                    text_list,
-                                    USERS_ON[session_id][i]['source'],
-                                    USERS_ON[session_id][i]['target']
-                                ),
-                                emoji_list
-                            )
-                        )
-                    )
-            elif seg['type'] in msg_tools.PLAIN_TEXT:
-                messages[i].append(seg)
-        for i in range(len(USERS_ON[session_id])):
-            messages[i].insert(0, MessageSegment.text('【机翻】'))
-            await translator.send(messages[i])
-    except Exception as err:
-        await nonebot.get_bot().send_group_msg(
-            group_id=nonebot.get_driver().config.dict()["admin_group"],
-            message=f'发送{event.get_plaintext()}时:' + "\r\nError: " + str(err)
-        )
+    message = event.get_message()
+    fragments = msg_tools.MessageFragments(message)
+    for config in USERS_ON[session_id]:
+        try:
+            frag = fragments.copy()
+            source, target = config['source'], config['target']
+            target_texts = await tmt.translate(source, target, *frag.get_plain_text())
+            frag.update_plain_text(target_texts)
+            await translator.send(frag.get_message())
+        except Exception as err:
+            await nonebot.get_bot().send_group_msg(
+                group_id=nonebot.get_driver().config.dict()["admin_group"],
+                message=f'发送{event.get_plaintext()}时:' + "\r\nError: " + str(err)
+            )
