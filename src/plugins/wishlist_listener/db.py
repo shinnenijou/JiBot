@@ -4,7 +4,7 @@ from sqlite3 import OperationalError
 from os import mkdir
 
 DATA_PATH = './data'
-WL_PATH = f'{DATA_PATH}/withlist_listener'
+WL_PATH = f'{DATA_PATH}/wishlist_listener'
 DB_PATH = f'{WL_PATH}/wishlists.db'
 
 def init() -> None:
