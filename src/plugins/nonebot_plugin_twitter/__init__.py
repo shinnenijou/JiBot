@@ -213,7 +213,7 @@ async def handle(bot: Bot, event: MessageEvent, state: T_State = State()):
     id=event.get_session_id()
     if not id.isdigit():
         id=id.split('_')[1]
-    args = str(event.get_message()).strip()
+    args = event.get_plaintext().strip()[1]
     msg = '指令格式错误！请按照：开启推特翻译 推特ID'
     if args != '':
         user = model.GetUserInfo(args)
