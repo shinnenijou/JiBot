@@ -31,7 +31,7 @@ config.token = data_source.init() #token获取初始化
 tweet_index = 0
 
 # Import self-utils
-import src.plugins.user_translator.tmt as tmt
+import src.plugins.nonebot_plugin_twitter.tmt as tmt
 # CONSTANT
 TWEET_LISTEN_INTERVAL = nonebot.get_driver().config.dict()['tweet_listen_interval']
 TOKEN_FLUSH_INTERVAL = nonebot.get_driver().config.dict()['token_flush_interval']
@@ -89,7 +89,7 @@ async def tweet():
     logger.info('检测到 %s 的推特已更新'%(users[tweet_index][1]))
     model.UpdateTweet(users[tweet_index][0],tweet_id) #更新数据库的最新推文id
     text,translate,media_list,retweet_name=data_source.get_tweet_details(data) #读取tweet详情
-    translate=tmt.translate(translate, 'auto', 'zh') #翻译
+    translate = (await tmt.translate('auto', 'zh', translate))[0] #翻译
     media = ''
     for item in media_list:
         media += MessageSegment.image(item)+'\n'
@@ -126,7 +126,8 @@ async def tweet():
     tweet_index += 1
     
 # 关注推特命令(仅允许管理员操作)
-adduser = on_command('推特关注',priority=1,permission=GROUP_ADMIN|GROUP_OWNER|PRIVATE_FRIEND|SUPERUSER,)
+adduser = on_command('推特关注', priority=1, temp=False, block = True,
+    permission=GROUP_ADMIN|GROUP_OWNER|PRIVATE_FRIEND|SUPERUSER,)
 @adduser.handle()
 async def handle(bot: Bot, event: MessageEvent, state: T_State = State(), args: Message = CommandArg()):
     is_group = int(isinstance(event,GroupMessageEvent))
@@ -155,7 +156,8 @@ async def handle(bot: Bot, event: MessageEvent, state: T_State = State(), args: 
     await adduser.finish(Msg)
 
 #取关用户(仅允许管理员操作)    
-removeuser = on_command('推特取关',priority=1,permission=GROUP_ADMIN|GROUP_OWNER|PRIVATE_FRIEND|SUPERUSER,)
+removeuser = on_command('推特取关', priority=1, temp=False, block=True,
+    permission=GROUP_ADMIN|GROUP_OWNER|PRIVATE_FRIEND|SUPERUSER,)
 @removeuser.handle()
 async def handle(bot: Bot, event: MessageEvent, state: T_State = State(), args: Message = CommandArg()):
     is_group = int(isinstance(event,GroupMessageEvent))
@@ -178,7 +180,8 @@ async def handle(bot: Bot, event: MessageEvent, state: T_State = State(), args: 
     await adduser.finish(Msg)
 
 #显示本群中的关注列表(仅允许管理员操作)  
-alllist = on_command('推特关注列表',priority=1,permission=GROUP_ADMIN|GROUP_OWNER|PRIVATE_FRIEND|SUPERUSER,)
+alllist = on_command('推特关注列表', priority=1, temp=False, block=True,
+    permission=GROUP_ADMIN|GROUP_OWNER|PRIVATE_FRIEND|SUPERUSER,)
 @alllist.handle()
 async def handle(bot: Bot, event: MessageEvent, state: T_State = State()):
     is_group = int(isinstance(event,GroupMessageEvent))
@@ -202,7 +205,8 @@ async def handle(bot: Bot, event: MessageEvent, state: T_State = State()):
     await alllist.finish(Msg)
 
 #开启推文翻译(仅允许管理员操作)
-ontranslate = on_command('开启推特翻译',priority=1,permission=GROUP_ADMIN|GROUP_OWNER|PRIVATE_FRIEND|SUPERUSER,)
+ontranslate = on_command('开启推特翻译', priority=1, temp=False, block=True,
+    permission=GROUP_ADMIN|GROUP_OWNER|PRIVATE_FRIEND|SUPERUSER,)
 @ontranslate.handle()
 async def handle(bot: Bot, event: MessageEvent, state: T_State = State()):
     is_group=int(isinstance(event,GroupMessageEvent))
@@ -226,7 +230,8 @@ async def handle(bot: Bot, event: MessageEvent, state: T_State = State()):
     await ontranslate.finish(Msg)
 
 #关闭推文翻译(仅允许管理员操作)
-offtranslate = on_command('关闭推特翻译',priority=1,permission=GROUP_ADMIN|GROUP_OWNER|PRIVATE_FRIEND|SUPERUSER,)
+offtranslate = on_command('关闭推特翻译', priority=1, temp=False, block=True,
+    permission=GROUP_ADMIN|GROUP_OWNER|PRIVATE_FRIEND|SUPERUSER,)
 @offtranslate.handle()
 async def handle(bot: Bot, event: MessageEvent, state: T_State = State()):
     is_group=int(isinstance(event,GroupMessageEvent))
@@ -242,7 +247,7 @@ async def handle(bot: Bot, event: MessageEvent, state: T_State = State()):
         else:
             card=model.GetCard(args,id,is_group)
             if len(card)==0:
-                msg='{}({})不在当前群组/私聊关注列表！'.format(user[1],args)
+                msg='{}({})不在当前群组关注列表！'.format(user[1],args)
             else:
                 model.TranslateOFF(args,id,is_group)
                 msg='{}({})已关闭推文翻译！'.format(user[1],args)
@@ -250,7 +255,8 @@ async def handle(bot: Bot, event: MessageEvent, state: T_State = State()):
     await offtranslate.finish(Msg)
 
 #帮助
-help = on_command('推特帮助',priority=1,permission=GROUP_ADMIN|GROUP_OWNER|PRIVATE_FRIEND|SUPERUSER)
+help = on_command('推特帮助', priority=1, temp=False, block=True,
+    permission=GROUP_ADMIN|GROUP_OWNER|PRIVATE_FRIEND|SUPERUSER)
 @help.handle()
 async def handle(bot: Bot, event: MessageEvent, state: T_State = State()):
     menu='目前支持的功能：\n\n(请将ID替换为需操作的推特ID，即@后面的名称)\n推特关注 ID\n推特取关 ID\n推特关注列表\n开启推特翻译 ID\n关闭推特翻译 ID'
