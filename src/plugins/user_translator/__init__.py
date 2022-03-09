@@ -118,7 +118,7 @@ async def translate(event:GroupMessageEvent):
             target_texts = await tmt.translate(source, target, *frag.get_plain_text())
             frag.update_plain_text(target_texts)
             msg = frag.get_message()
-            msg.insert(0, MessageSegment.text('【机翻】'))
+            msg.insert(0, MessageSegment.text('【机翻】\r\n'))
             await translator.send(msg)
         except Exception as err:
             await nonebot.get_bot().send_group_msg(

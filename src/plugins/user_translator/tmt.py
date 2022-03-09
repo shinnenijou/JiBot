@@ -19,7 +19,7 @@ ENDPOINT = str(nonebot.get_driver().config.dict()["translate_endpoint"])
 SIGN_ALGORITHM = 'TC3-HMAC-SHA256'
 SERVICE = 'tmt'
 LIMIT_PER_SECOND = 5
-TIME_OUT = 10 # seconds
+TIME_OUT = 30 # seconds
 
 
 # Request HEADERS
