@@ -1,6 +1,6 @@
 # JiBot(鸡器人)
 
-## Overview： 环境依赖
+## Overview  环境依赖
 本bot基于[NoneBot2](https://github.com/nonebot/nonebot2)与[go-cqhttp](https://github.com/Mrs4s/go-cqhttp)开发，部分插件使用现有的开源插件，配置启动需要安装以下环境
    * NoneBot2主框架，可以通过pip等工具安装（详见文档[NoneBot2](https://v2.nonebot.dev/docs/start/installation)）
       ```
@@ -54,14 +54,14 @@
             sudo apt --fix-broken install
             ```
          * chromedriver需要在[Chromedriver](https://chromedriver.storage.googleapis.com/index.html)额外下载并保存至PATH
-## Function: 主要功能
+## Function  主要功能
 1. wishlist_listener: 定时监听Amazon愿望单中物品变化情况并发送至指定群，老头快人一步
 2. user_translator: 指定源语言与目标语言对特定用户的所有发言进行翻译，翻译结果将保留原文中的emoji及qq自带表情，翻译引擎使用腾讯TMT，每月免费额度对于轻度使用非常友好，请求时需要TC3-HMAC-SHA256签名，签名方法详见[Tencent TMT](https://cloud.tencent.com/document/product/551/30636)
 3. nonebot_plugin_status: 已发布插件，远程查询服务器cpu·内存·硬盘等使用百分比，详见[status](https://github.com/cscs181/QQ-GitHub-Bot/tree/master/src/plugins/nonebot_plugin_status)
 4. nonebot_plugin_manager: 已发布插件，对不同群的插件开启进行管理，详见[manager](https://github.com/nonepkg/nonebot-plugin-manager)
 5. nonebot_plugin_twitter: 已发布插件，对关注的推特用户内容进行推送和翻译，修改自[ErikaBot](https://github.com/SlieFamily/ErikaBot)
 6. haruka_bot: 已发布插件，对关注的B站用户动态，直播等内容进行推送，修改自[Harukabot](https://github.com/SK-415/HarukaBot)
-## Guide： 启用方法
+## Guide  启用方法
 1. 安装依赖，将本仓库克隆至本地后，在本文件目录内配置.env.prod。必须进行配置的项目
    ```
    SUPERUSERS=[str|int] 超级用户id，个别指令将限制为仅限超级用户使用
@@ -83,7 +83,7 @@ nb run
 3. （可选）非海外服务器需要设置HTTP, HTTPS代理以请求Twitter及Amazon
 4. （可选）将Jibot与go-cqhttps配置为systemd service并设置开机启动，需要后于network.target以及代理服务启动
 
-## Documentation: 参考文档
+## Doc  参考文档
 See [NoneBot2](https://v2.nonebot.dev/)
 
 See [go-cqhttp](https://docs.go-cqhttp.org/)
