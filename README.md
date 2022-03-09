@@ -18,19 +18,26 @@
    
    * 根据插件情况分别需要一些额外依赖
 
-      * wishlist_listener: aiohttp
+      * wishlist_listener: requests
+      ```
+      pip install requests
+      ```
+      * user_translator: 翻译的请求使用aiohttp进行异步请求，文本处理时对文本中的`emoji`进行替换处理
       ```
       pip install aiohttp
-      ```
-      * user_translator: 由于翻译接口使用腾讯云API，需要安装腾讯云SDK方便请求（详见[腾讯云API中心](https://cloud.tencent.com/document/sdk/Python))
-      在文本处理时对文本中的emoji进行了替换处理需要使用第三方库emoji
-      ```
-      pip install --upgrade tencentcloud-sdk-python
       pip install emoji
       ```
-      * plugin_status: 需要使用第三方库psutil查询服务器运行状态
+      * plugin_status: 需要使用第三方库`psutil`查询服务器运行状态
       ```
       pip instal psutil
+      ```
+      * haruka_bot: 一大堆第三方依赖，使用`nb-cli`安装时会自动安装
+      ```
+      nb plugin install haruka_bot
+      ```
+         启动bot前需要在`.end.prod`中设置数据库保存的位置，建议和其他插件一样保存在./data目录的插件子目录下
+      ```
+      HARUKA_DIR="./data/haruka_bot"
       ```
       * plugin_twitter: 需要第三方库selenium及linux版chrome/chromedriver
          * selenium可使用pip安装 
@@ -49,10 +56,11 @@
          * chromedriver需要在[Chromedriver](https://chromedriver.storage.googleapis.com/index.html)额外下载并保存到PATH
 ## Function: 主要功能
 1. wishlist_listener: 定时监听Amazon愿望单中物品变化情况并发送至指定群
-2. user_translator: 指定源语言与目标语言对特定用户的所有发言进行翻译，翻译结果将保留原文中的emoji及qq自带表情
+2. user_translator: 指定源语言与目标语言对特定用户的所有发言进行翻译，翻译结果将保留原文中的emoji及qq自带表情，翻译引擎使用腾讯TMT，每月免费额度对于轻度使用非常友好，请求时需要TC3-HMAC-SHA256签名，签名方法详见[签名方法V3](https://cloud.tencent.com/document/product/551/30636)
 3. nonebot_plugin_status: 已发布插件，远程查询服务器cpu·内存·硬盘等使用百分比（详见[status](https://github.com/cscs181/QQ-GitHub-Bot/tree/master/src/plugins/nonebot_plugin_status)）
-4. nonebot_plugin_status: 已发布插件，对不同群的插件开启进行管理（详见[manager](https://github.com/nonepkg/nonebot-plugin-manager)）
+4. nonebot_plugin_manager: 已发布插件，对不同群的插件开启进行管理（详见[manager](https://github.com/nonepkg/nonebot-plugin-manager)）
 5. nonebot_plugin_twitter: 已发布插件，对关注的推特用户内容进行推送和翻译，修改自[ErikaBot](https://github.com/SlieFamily/ErikaBot)
+6. haruka_bot: 已发布插件，对关注的B站用户动态，直播等内容进行推送，修改自[Harukabot](https://github.com/SK-415/HarukaBot)
 ## Guide： 启用方法
 1. 安装依赖，将本仓库克隆至本地后，在本文件目录内配置.env.prod。必须进行配置的项目
 ```
@@ -66,12 +74,13 @@ API_SECRETKEY=str    腾讯云API的SecretKey，必需。需要在腾讯云控�
 
 API_REGION=str       请求的地域，部分API将会有区域化数据。
 ```
-
+其他可选配置项目参考各个插件文档
 2. 在本文件目录运行nonebot
 ```
 nb run
 ```
-3. （可选）将Jibot与go-cqhttps配置为systemd service并设置开机启动
+4. （可选）非海外服务器需要设置HTTP, HTTPS代理以请求Twitter及Amazon
+4. （可选）将Jibot与go-cqhttps配置为systemd service并设置开机启动
 
 ## Documentation: 参考文档
 See [NoneBot2](https://v2.nonebot.dev/)
@@ -80,4 +89,4 @@ see [go-cqhttp](https://docs.go-cqhttp.org/)
 
 see [TMT文本翻译](https://cloud.tencent.com/document/api/551/15619)
 
-see [nonebot_plugins_status](https://github.com/cscs181/QQ-GitHub-Bot/tree/master/src/plugins/nonebot_plugin_status)
+各个插件文档见`主要功能部分`
