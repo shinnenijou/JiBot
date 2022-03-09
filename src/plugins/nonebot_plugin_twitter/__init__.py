@@ -31,8 +31,7 @@ config.token = data_source.init() #token获取初始化
 tweet_index = 0
 
 # Import self-utils
-path.append('/src/utils')
-import tmt
+import src.plugins.user_translator.tmt as tmt
 # CONSTANT
 TWEET_LISTEN_INTERVAL = nonebot.get_driver().config.dict()['tweet_listen_interval']
 TOKEN_FLUSH_INTERVAL = nonebot.get_driver().config.dict()['token_flush_interval']
