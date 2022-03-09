@@ -81,13 +81,13 @@ API_REGION=str       请求的地域，部分API将会有区域化数据。
 nb run
 ```
 3. （可选）非海外服务器需要设置HTTP, HTTPS代理以请求Twitter及Amazon
-4. （可选）将Jibot与go-cqhttps配置为systemd service并设置开机启动
+4. （可选）将Jibot与go-cqhttps配置为systemd service并设置开机启动，需要后于network.target以及代理服务启动
 
 ## Documentation: 参考文档
 See [NoneBot2](https://v2.nonebot.dev/)
 
-see [go-cqhttp](https://docs.go-cqhttp.org/)
+See [go-cqhttp](https://docs.go-cqhttp.org/)
 
-see [TMT文本翻译](https://cloud.tencent.com/document/api/551/15619)
+See [TMT文本翻译](https://cloud.tencent.com/document/api/551/15619)
 
-各个插件文档见`主要功能部分`
+各个插件文档见`主要功能`部分
