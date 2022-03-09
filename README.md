@@ -39,6 +39,12 @@
          ```
          HARUKA_DIR="./data/haruka_bot"
          ```
+         该插件源码保存在python包文件夹中，需要进行修改可以直接在包文件夹中修改，包路径查找示例如下
+         ```
+         >>> import haruka_bot
+         >>> print(haruka_bot)
+         <module 'haruka_bot' from '/usr/local/lib/python3.9/dist-packages/haruka_bot/__init__.py'>
+         ```
       * plugin_twitter: 需要第三方库`selenium`及linux版`chrome/chromedriver`
          * selenium可使用pip安装 
             ```
