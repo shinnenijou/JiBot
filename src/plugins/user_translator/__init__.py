@@ -4,13 +4,13 @@ from nonebot.matcher import Matcher
 from nonebot import on_message, on_command
 from nonebot.permission import USER, SUPERUSER
 from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER, PRIVATE_FRIEND
-from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment, Message
+from nonebot.adapters.onebot.v11 import GroupMessageEvent
 
 import asyncio
 # Self-Utils
-import src.plugins.user_translator.db as db
-import src.utils.tmt as tmt
-import src.utils.msg_tools as msg_tools
+import db
+import tmt
+import tools
 # Initiate database
 db.init()
 USERS_ON = db.to_dict(asyncio.run(db.select()))
@@ -110,7 +110,7 @@ async def translate(event:GroupMessageEvent):
         return None
     session_id = event.get_session_id()
     message = event.get_message()
-    fragments = msg_tools.MessageFragments(message)
+    fragments = tools.MessageFragments(message)
     for config in USERS_ON[session_id]:
         try:
             frag = fragments.copy()

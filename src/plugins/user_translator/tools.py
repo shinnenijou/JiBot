@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-from cgitb import text
-from email import message
 import emoji
-import re
 from typing import Tuple
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 

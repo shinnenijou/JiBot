@@ -3,12 +3,6 @@
 import json, hashlib, hmac, aiohttp, asyncio
 from time import strftime, gmtime, time, sleep
 
-from tencentcloud.common import credential
-from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
-from tencentcloud.tmt.v20180321 import tmt_client, models
-from tencentcloud.common.profile.http_profile import HttpProfile
-from tencentcloud.common.profile.client_profile import ClientProfile
-
 import nonebot
 
 # TENCENT API
