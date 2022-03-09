@@ -75,6 +75,7 @@ API_SECRETKEY=str    腾讯云API的SecretKey，必需。需要在腾讯云控�
 API_REGION=str       请求的地域，部分API将会有区域化数据。
 ```
 其他可选配置项目参考各个插件文档
+
 2. 在本文件目录运行nonebot
 ```
 nb run
