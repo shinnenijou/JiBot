@@ -4,7 +4,7 @@ from nonebot.permission import USER, SUPERUSER
 from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER, PRIVATE_FRIEND
 from nonebot.adapters.onebot.v11 import GroupMessageEvent
 
-helper = on_command(cmd="帮助", block=True, priority=1,
+helper = on_command(cmd="菜单", block=True, priority=1,
     permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
 @helper.handle()
 async def help_menu(event:GroupMessageEvent):
