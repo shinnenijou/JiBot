@@ -1,37 +1,22 @@
 # -*- coding: utf-8 -*-
 # Python STL
-import requests
-import json
-from os import mkdir
-import sys
+import asyncio
+from typing import Tuple
 # Third-party Library
 import nonebot
 from nonebot.plugin import require
 from nonebot import on_command, on_notice
 from nonebot.permission import SUPERUSER
+from nonebot.params import Command, CommandArg
 from nonebot.adapters.onebot.v11 import GROUP_OWNER, GROUP_ADMIN, PRIVATE_FRIEND
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, GroupDecreaseNoticeEvent
+# Self-tools
+import src.plugins.wishlist_listener.db as db
+import src.plugins.wishlist_listener.tools as tools
 
-########## Var #########
-# 保存每个被监听的人的信息
-# {NAME:{URL, GROUP_ID, PREV_LIST, CURR_LIST}}
-try:
-    mkdir("./data/wishlist_listener")
-except FileExistsError:
-    pass
-try:
-    with open(f"./data/wishlist_listener/config.ini", "x") as file:
-        file.write("{}")
-        pass
-except:
-    pass
+# INITIATE DATABASE
+db.init()
 
-# 用于HTTP请求的请求头
-HEADERS = {}
-HEADERS["Host"] = "www.amazon.co.jp"
-HEADERS["Accept"] = "text/html"
-HEADERS["Accept-Language"] = "ja-JP"
-HEADERS["Connection"] = "close"
 ########################
 # HELP
 helper = on_command(cmd="愿望单帮助", temp=False, priority=2, block=True,
@@ -48,104 +33,93 @@ async def help_menu():
 admin = on_command(cmd="愿望单列表", temp=False, priority=2, block=True,
     permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
 @admin.handle()
-async def print_targets(event:GroupMessageEvent):
-    group_id = int(event.get_session_id().rpartition('_')[0][6:])
-    with open(f"./data/wishlist_listener/config.ini", "r") as file:
-        config = json.loads(file.read())
-    msg = "已开启以下对象愿望的监听: "
-    for name, info in config.items():
-        if group_id in info["GROUP_ID"]:
-            msg += f"\r\n{name}"
+async def print_targets(event : GroupMessageEvent):  
+    group_id = int(event.get_session_id().split('_')[1])
+    listen_list = await db.get_users_on(group_id)
+    msg = "已开启以下对象愿望的监听: \r\n"
+    for name in listen_list:
+        msg += f"\r\n{name}"
     await admin.send(msg)
 
-# ADD
+# ADD a listen target
 add = on_command(cmd="愿望单关注",temp=False, priority=2, block=True,
     permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
 @add.handle()
-async def add_target(event:GroupMessageEvent):
+async def add_listen(
+    event:GroupMessageEvent,
+):  
     cmd = event.get_plaintext().split()
     if len(cmd) == 3:
         name = cmd[1]
         url = cmd[2]
-        group_id = int(event.get_session_id().split('_')[2])
-        with open(f"./data/wishlist_listener/config.ini", "r") as file:
-            config = json.loads(file.read())
-        if name not in config:
-            config[name] = {
-                "URL":url,
-                "GROUP_ID":[group_id],
-                "CURR_LISTS":[],
-                "PREV_LISTS":[]
-            }
-            await add.send("添加成功")
-        elif group_id not in config[name]["GROUP_ID"]:
-            config[name]["GROUP_ID"].append(group_id)
-            await add.send("添加成功")
+        group_id = int(event.get_session_id().split('_')[1])
+        listen_list = await db.get_users_on(group_id)
+        if name not in listen_list:
+            await asyncio.gather(*[
+                db.add_listen(group_id, name, url),
+                add.send("添加成功")
+            ])              
         else:
             await add.send("已存在")
-        with open(f"./data/wishlist_listener/config.ini", "w") as file:
-                file.write(json.dumps(config))
+    else:
+        await add.send("命令错误, 请检查输入格式: \r\n愿望单关注 名称 URL")
 
-# DELETE
+# DELETE a listen target
 delete = on_command(cmd="愿望单取关",temp=False, priority=2, block=True,
     permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
 @delete.handle()
-async def add_target(event:GroupMessageEvent):
+async def delete_listen(event:GroupMessageEvent):
     cmd = event.get_plaintext().split()
     if len(cmd) == 2:
         name = cmd[1]
-        group_id = int(event.get_session_id().rpartition('_')[0][6:])
-        with open(f"./data/wishlist_listener/config.ini", "r") as file:
-            config = json.loads(file.read())
-        if name in config and group_id in config[name]["GROUP_ID"]:
-            config[name]["GROUP_ID"].remove(group_id)
-            await delete.send("已删除")
-            if not config[name]["GROUP_ID"]:
-                del config[name]
+        group_id = int(event.get_session_id().split('_')[1])
+        listen_list = await db.get_users_on(group_id)
+        if name in listen_list:
+            await asyncio.gather(*[
+                db.delete_listen(group_id, name),
+                delete.send("已删除")
+            ])
         else:
             await delete.send("未找到")
-        with open(f"./data/wishlist_listener/config.ini", "w") as file:
-            file.write(json.dumps(config))
+    else:
+        await delete.send("命令错误, 请检查输入格式:\r\n愿望单取关 名称")
 
 # DELETE after quit from group
-group_decrease = on_notice(priority=1, block=False)
+group_decrease = on_notice(temp=False, priority=2, block=False)
 @group_decrease.handle()
 async def _(event: GroupDecreaseNoticeEvent):
     group_id = event.get_session_id().split('_')[1]
     if event.self_id == event.user_id:
-        with open(f"./data/wishlist_listener/config.ini", "r") as file:
-            config = json.loads(file.read())
-        for name, data in config.items():
-            if group_id in data['GROUP_ID']:
-                data['GROUP_ID'].remove(group_id)
-            if not data['GROUP_ID']:
-                del config[name]
-        with open(f"./data/wishlist_listener/config.ini", "w") as file:
-            file.write(config)
+        await db.delete_group(group_id)
 
-
-async def listen():
-    bot = nonebot.get_bot()
-    with open(f"./data/wishlist_listener/config.ini", "r") as file:
-        targets = json.loads(file.read())
-    for key, value in targets.items():
-        try:
-            text = request(value["URL"], HEADERS)
-            targets[key]["CURR_LISTS"] = find_items(text)
-            # 如果愿望单突然完全清空，则检查文本中是否确实包含无物品信息
-            if not targets[key]["CURR_LISTS"] and not check_clear(text):
-                targets[key]["CURR_LISTS"] = targets[key]["PREV_LISTS"]
-            new_items = check_items(targets[key]["CURR_LISTS"], targets[key]["PREV_LISTS"])
-            buyed_items = check_items(targets[key]["PREV_LISTS"], targets[key]["CURR_LISTS"])
-            targets[key]["PREV_LISTS"] = targets[key]["CURR_LISTS"]
-            await print_items(bot, new_items, "追加され", key, value["URL"], value["GROUP_ID"])
-            await print_items(bot, buyed_items, "削除され", key, value["URL"], value["GROUP_ID"])
-        except:
-            pass
-        targets[key]['CURR_LISTS'] = []
-    with open(f"./data/wishlist_listener/config.ini", "w") as file:
-        file.write(json.dumps(targets))
+async def _listen(target : str, bot):
+    url, groups, prev_items =  await asyncio.gather(*[
+        db.get_url(target),
+        db.get_groups_on(target),
+        db.get_items(target)
+    ])
+    items = await tools.fetch_items(url)
+    if not items and not tools.check_clear(items):
+        items = prev_items
+    buyed_items = tools.check_items(prev_items, items)
+    new_items = tools.check_items(items, prev_items)
+    msg = tools.make_notice(new_items, buyed_items, target, url)
+    if msg:
+        await asyncio.gather(*[
+            bot.send_group_msg(
+                group_id=group_id,
+                message=msg
+            )for group_id in groups],
+            db.update_commodities(target, new_items, buyed_items)
+        )
 
 scheduler = require("nonebot_plugin_apscheduler").scheduler
-scheduler.add_job(listen, "interval",
-    seconds=int(nonebot.get_driver().config.dict()['wishlist_listen_interval']))
+@scheduler.scheduled_job(
+    trigger='interval',
+    seconds=nonebot.get_driver().config.dict()['wishlist_listen_interval'])
+async def listen_all():
+    bot = nonebot.get_bot()
+    listen_list = await db.get_all_users()
+    await asyncio.gather(*[
+        _listen(target, bot) for target in listen_list
+    ])
