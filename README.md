@@ -35,11 +35,11 @@
       ```
       nb plugin install haruka_bot
       ```
-         启动bot前需要在`.end.prod`中设置数据库保存的位置，建议和其他插件一样保存在./data目录的插件子目录下
+      启动bot前需要在`.end.prod`中设置数据库保存的位置，建议和其他插件一样保存在./data目录的插件子目录下
       ```
       HARUKA_DIR="./data/haruka_bot"
       ```
-      * plugin_twitter: 需要第三方库selenium及linux版chrome/chromedriver
+      * plugin_twitter: 需要第三方库`selenium`及linux版`chrome/chromedriver`
          * selenium可使用pip安装 
          ```
          pip install selenium
@@ -49,16 +49,16 @@
          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
          sudo dpkg -i google-chrome-stable_current_amd64.deb
          ```
-         如果在安装chrome时缺少系统依赖导致失败，尝试一下命令安装缺少的依赖
+         如果在安装chrome时缺少系统依赖导致失败，尝试以下命令安装缺少的依赖
          ```
          sudo apt --fix-broken install
          ```
          * chromedriver需要在[Chromedriver](https://chromedriver.storage.googleapis.com/index.html)额外下载并保存到PATH
 ## Function: 主要功能
-1. wishlist_listener: 定时监听Amazon愿望单中物品变化情况并发送至指定群
-2. user_translator: 指定源语言与目标语言对特定用户的所有发言进行翻译，翻译结果将保留原文中的emoji及qq自带表情，翻译引擎使用腾讯TMT，每月免费额度对于轻度使用非常友好，请求时需要TC3-HMAC-SHA256签名，签名方法详见[签名方法V3](https://cloud.tencent.com/document/product/551/30636)
-3. nonebot_plugin_status: 已发布插件，远程查询服务器cpu·内存·硬盘等使用百分比（详见[status](https://github.com/cscs181/QQ-GitHub-Bot/tree/master/src/plugins/nonebot_plugin_status)）
-4. nonebot_plugin_manager: 已发布插件，对不同群的插件开启进行管理（详见[manager](https://github.com/nonepkg/nonebot-plugin-manager)）
+1. wishlist_listener: 定时监听Amazon愿望单中物品变化情况并发送至指定群，老头快人一步
+2. user_translator: 指定源语言与目标语言对特定用户的所有发言进行翻译，翻译结果将保留原文中的emoji及qq自带表情，翻译引擎使用腾讯TMT，每月免费额度对于轻度使用非常友好，请求时需要TC3-HMAC-SHA256签名，签名方法详见[Tencent TMT](https://cloud.tencent.com/document/product/551/30636)
+3. nonebot_plugin_status: 已发布插件，远程查询服务器cpu·内存·硬盘等使用百分比，详见[status](https://github.com/cscs181/QQ-GitHub-Bot/tree/master/src/plugins/nonebot_plugin_status)
+4. nonebot_plugin_manager: 已发布插件，对不同群的插件开启进行管理，详见[manager](https://github.com/nonepkg/nonebot-plugin-manager)
 5. nonebot_plugin_twitter: 已发布插件，对关注的推特用户内容进行推送和翻译，修改自[ErikaBot](https://github.com/SlieFamily/ErikaBot)
 6. haruka_bot: 已发布插件，对关注的B站用户动态，直播等内容进行推送，修改自[Harukabot](https://github.com/SK-415/HarukaBot)
 ## Guide： 启用方法
@@ -79,7 +79,7 @@ API_REGION=str       请求的地域，部分API将会有区域化数据。
 ```
 nb run
 ```
-4. （可选）非海外服务器需要设置HTTP, HTTPS代理以请求Twitter及Amazon
+3. （可选）非海外服务器需要设置HTTP, HTTPS代理以请求Twitter及Amazon
 4. （可选）将Jibot与go-cqhttps配置为systemd service并设置开机启动
 
 ## Documentation: 参考文档
