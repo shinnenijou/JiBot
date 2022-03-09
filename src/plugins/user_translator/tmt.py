@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Tencent Mechine Translation
-import json, hashlib, hmac, aiohttp, asyncio
+import json, hashlib, hmac, aiohttp, asyncio, queue
 from time import strftime, gmtime, time, sleep
 
 import nonebot
@@ -11,6 +11,10 @@ SECRETID = str(nonebot.get_driver().config.dict()["api_secretid"])
 SECRETKEY = str(nonebot.get_driver().config.dict()["api_secretkey"])
 REGION = str(nonebot.get_driver().config.dict()["api_region"])
 ENDPOINT = str(nonebot.get_driver().config.dict()["translate_endpoint"])
+
+############### WARNING ################
+
+########################################
 
 SIGN_ALGORITHM = 'TC3-HMAC-SHA256'
 SERVICE = 'tmt'
@@ -91,7 +95,6 @@ def _authorization(
         'Signature=' + signature
     return auth
 
-
 def _make_payload(sourceText : str, source : str, target : str, projectID : int = 0) -> str:
     return json.dumps({'SourceText':sourceText, 'Source' : source,
         'Target' : target, 'ProjectId' : projectID})
@@ -112,48 +115,53 @@ def _make_headers(payload : str) -> dict:
     )
     return headers
 
-async def _post(
-    session : aiohttp.ClientSession,
-    target_texts : list[str],
-    task_list : list[int],
-    index : int,
-    source_text : str,
-    source : str,
-    target : str) -> None:
+class TranslateTasker():
 
-    payload = _make_payload(source_text, source, target)
-    headers = _make_headers(payload)
-    async with session.post(url=ENDPOINT, data=payload, headers=headers) as resp:
-        try:
-            target_texts[index] = (await resp.json())['Response']['TargetText']
-            task_list.remove(index)
-        except:
-            pass
+    def __init__(self, source : str, target : str, source_texts : list[str],
+        url : str = ENDPOINT, timeout : int =TIME_OUT, limit : int = LIMIT_PER_SECOND):
+        self.source = source
+        self.target = target
+        self.source_texts = source_texts
+        self.url = url
+        self.timeout = timeout
+        self.limit = LIMIT_PER_SECOND
+        self.task_queue = queue.Queue()
+        self.target_texts = [""] * len(source_texts)
+        self.session = aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=timeout),
+            connector=aiohttp.TCPConnector(limit_per_host=limit)
+        )
+        for i in range(len(source_texts)):
+            self.task_queue.put(i)
+
+    async def post(self):
+        task_id = self.task_queue.get()
+        payload = _make_payload(self.source_texts[task_id], self.source, self.target)
+        headers = _make_headers(payload)
+        async with self.session.post(url=self.url, data=payload, headers=headers) as resp:
+            try:
+                print(task_id)
+                self.target_texts[task_id] = (await resp.json())['Response']['TargetText']
+            except:
+                self.task_queue.put(task_id)
+        return self
+    
+    async def post_all(self):
+        while self.task_queue.qsize() > self.limit:
+            await asyncio.gather(*[self.post() for i in range(self.limit)])
+            await asyncio.sleep(1)
+        await asyncio.gather(*[self.post() for i in range(self.task_queue.qsize())])
+        return self
+
+    async def get_target_texts(self):
+        return self.target_texts
+
+    async def close(self):
+        await self.session.close()
 
 async def translate(source : str, target : str, *source_texts) -> list[str]:
-    async with aiohttp.ClientSession(
-        timeout=aiohttp.ClientTimeout(total=TIME_OUT),
-        connector=aiohttp.TCPConnector(limit_per_host=LIMIT_PER_SECOND)
-    ) as session:
-        text_num = len(source_texts)
-        task_list = list(range(text_num))
-        target_texts = [""] * text_num
-        not_first_time = False
-        # 每次完成前5个句子
-        while len(task_list) > LIMIT_PER_SECOND:
-            if not_first_time:
-                sleep(1.1)
-            else:
-                not_first_time = True
-            await asyncio.gather(*[_post(session, target_texts, task_list,
-                i, source_texts[i], source, target) for i in task_list[:LIMIT_PER_SECOND]])
-        # 完成剩下的句子
-        while task_list:
-            if not_first_time:
-                sleep(1.1)
-            else:
-                not_first_time = True
-            await asyncio.gather(*[_post(session, target_texts, task_list,
-                i, source_texts[i], source, target) for i in task_list])
-
+    tasker = TranslateTasker(source, target, source_texts)
+    await tasker.post_all()
+    target_texts = await tasker.get_target_texts()
+    await tasker.close()
     return target_texts
