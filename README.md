@@ -70,15 +70,19 @@
 ## Guide  启用方法
 1. 安装依赖，将本仓库克隆至本地后，在本文件目录内配置.env.prod。必须进行配置的项目
    ```
-   SUPERUSERS=[str|int] 超级用户id，个别指令将限制为仅限超级用户使用
+   SUPERUSERS=[str|int]   超级用户id，个别指令将限制为仅限超级用户使用
 
-   ADMIN_GROUP=str|int  管理群，可以对bot进行全局管理—、控制以及测试
+   ADMIN_GROUP=str|int    管理群，可以对bot进行全局管理—、控制以及测试
 
-   API_SECRETID=str     腾讯云API的SecretID，必需。需要在腾讯云控制中心开启相应API权限
+   API_SECRETID=str       腾讯云API的SecretID，必需。需要在腾讯云控制中心开启相应API权限
 
-   API_SECRETKEY=str    腾讯云API的SecretKey，必需。需要在腾讯云控制中心开启相应API权限
+   API_SECRETKEY=str      腾讯云API的SecretKey，必需。需要在腾讯云控制中心开启相应API权限
 
-   API_REGION=str       请求的地域，部分API将会有区域化数据。
+   API_REGION=str         请求的地域，部分API将会有区域化数据。
+
+   TRANSLATE_ENDPOINT=str 最终请求的域名，可以在TMT文档中查到位于不同物理位置的域名
+
+   TWITTER_TOKEN=str      Twitter API Token，可以在Twitter developer页面进行申请
    ```
    其他可选配置项目参考各个插件文档
 
@@ -95,5 +99,7 @@ See [NoneBot2](https://v2.nonebot.dev/)
 See [go-cqhttp](https://docs.go-cqhttp.org/)
 
 See [TMT文本翻译](https://cloud.tencent.com/document/api/551/15619)
+
+See [Twitter_Developer_Platform](https://developer.twitter.com/en)
 
 各个插件文档见`主要功能`部分
