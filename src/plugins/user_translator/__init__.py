@@ -4,7 +4,7 @@ from nonebot.matcher import Matcher
 from nonebot import on_message, on_command
 from nonebot.permission import USER, SUPERUSER
 from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER, PRIVATE_FRIEND
-from nonebot.adapters.onebot.v11 import GroupMessageEvent
+from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment
 
 import asyncio
 # Self-Utils
@@ -117,7 +117,7 @@ async def translate(event:GroupMessageEvent):
             source, target = config['source'], config['target']
             target_texts = await tmt.translate(source, target, *frag.get_plain_text())
             frag.update_plain_text(target_texts)
-            await translator.send(frag.get_message())
+            await translator.send(frag.get_message().insert(0, MessageSegment.text('【机翻】')))
         except Exception as err:
             await nonebot.get_bot().send_group_msg(
                 group_id=nonebot.get_driver().config.dict()["admin_group"],
