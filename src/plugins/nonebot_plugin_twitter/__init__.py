@@ -92,11 +92,12 @@ async def tweet():
     logger.info('检测到 %s 的推特已更新'%(users[tweet_index][1]))
     model.UpdateTweet(users[tweet_index][0],tweet_id) #更新数据库的最新推文id
     text,source_text,media_list,retweet_name=data_source.get_tweet_details(data) #读取tweet详情
-    source_text, emoji_list = utils.split_emoji(source_text)
-    for text in source_text:
-        text = text.replace('http://', '').replace('https://', '')
-    translate = await tmt.translate(TWEET_SOURCE, TWEET_TARGET, *source_text) #翻译
+    ###### AUTHOR: Shinnen #######
+    source_text, emoji_list = utils.split_emoji(
+        source_text.replace('http://', '').replace('https://'))
+    translate = await tmt.translate(TWEET_SOURCE, TWEET_TARGET, *source_text)
     translate = utils.merge_emoji(translate, emoji_list)
+    ##############################
     media = ''
     for item in media_list:
         media += MessageSegment.image(item)+'\n'
