@@ -34,7 +34,8 @@ async def get_status(event:GroupMessageEvent):
     user_list = await db.select(group_id=group_id)
     msg = "已开启以下群成员的发言翻译功能:\n"
     for i in range(len(user_list)):
-        msg += f"\n[{i + 1}] {user_list[i][2]}: {user_list[i][3]}->{user_list[i][4]}"
+        user_name = await tools.get_user_name(nonebot.get_bot(), group_id, user_list[i][2])
+        msg += f"\n[{i + 1}] {user_name}({user_list[i][2]}): {user_list[i][3]}->{user_list[i][4]}"
     await status.send(msg)
 
 # EVENT: add translate user
@@ -54,12 +55,13 @@ async def add_user(event:GroupMessageEvent):
     except FileNotFoundError:
         isValidCmd = False
     if isValidCmd:
+        user_name = await tools.get_user_name(nonebot.get_bot(), group_id, user_id)
         if await db.insert(group_id, user_id, source, target):
             USERS_ON = db.to_dict(await db.select())
             translator.permission = USER(*USERS_ON.keys())
-            msg = f"成功开启 QQ{user_id}: {source}->{target} 的发言翻译功能"
+            msg = f"成功开启 {user_name}({user_id}): {source}->{target}"
         else:
-            msg = f"QQ{user_id}: {source}->{target} 的发言翻译功能已经开启"
+            msg = f"{user_name}({user_id}): {source}->{target} 已经开启"
     else:
         msg = '命令格式错误，请严格按照\n"/开启发言翻译 QQ号 源语言->目标语言"\n的格式发送命令'
     await add.send(msg)
@@ -85,16 +87,17 @@ async def del_user(event:GroupMessageEvent):
         source = None
         target = None
     if isValidCmd:
+        user_name = await tools.get_user_name(nonebot.get_bot(), group_id, user_id)
         if await db.delete(group_id, user_id, source, target):
             USERS_ON = db.to_dict(await db.select())
             translator.permission = USER(*USERS_ON.keys())
             if not source and not target:
                 source = target = 'all'
-            msg = f'成功关闭 QQ{user_id}: {source}->{target} 的发言翻译功能'
+            msg = f'成功关闭 {user_name}({user_id}): {source}->{target}'
         else:
-            msg = f'QQ{user_id}: {source}->{target} 的发言翻译功能未开启'
+            msg = f'{user_name}({user_id})的发言翻译功能未开启'
     else:
-        msg = '命令格式错误，请严格按照\n"/开启发言翻译 QQ号 [(optional)源语言->目标语言]"\n的格式发送命令'
+        msg = '命令格式错误，请严格按照\n"/关闭发言翻译 QQ号 [(optional)源语言->目标语言]"\n的格式发送命令'
     await delete.send(msg)
 
 # Event: translate for particular users
