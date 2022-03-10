@@ -15,31 +15,31 @@ import src.plugins.auto_translator.tools as tools
 db.init()
 USERS_ON = db.to_dict(asyncio.run(db.select()))
 # HELP
-helper = on_command(cmd="发言翻译帮助",temp=False, priority=2, block=True,
+helper = on_command(cmd="自动翻译帮助",temp=False, priority=2, block=True,
     permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
 @helper.handle()
 async def send_help(event:GroupMessageEvent):
-    menu = '发言翻译模块目前支持的功能:\n\n'
-    menu += '命令格式: "发言翻译列表"\n'
-    menu += '命令格式: "开启发言翻译 QQ号 源语言->目标语言"\n'
-    menu += '命令格式: "关闭发言翻译 QQ号 [(optional)源语言->目标语言]"'
+    menu = '自动翻译模块目前支持的功能:\n\n'
+    menu += '命令格式: "/自动翻译列表"\n'
+    menu += '命令格式: "/开启自动翻译 QQ号 源语言->目标语言"\n'
+    menu += '命令格式: "/关闭自动翻译 QQ号 [(optional)源语言->目标语言]"'
     await helper.send(menu)
 
 # STATUS
-status = on_command(cmd='发言翻译列表',temp=False, priority=2, block=True,
+status = on_command(cmd='自动翻译列表',temp=False, priority=2, block=True,
     permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
 @status.handle()
 async def get_status(event:GroupMessageEvent):
     group_id = int(event.get_session_id().split('_')[1])
     user_list = await db.select(group_id=group_id)
-    msg = "已开启以下群成员的发言翻译功能:\n"
+    msg = "已开启以下群成员的自动翻译功能:\n"
     for i in range(len(user_list)):
         user_name = await tools.get_user_name(nonebot.get_bot(), group_id, user_list[i][2])
         msg += f"\n[{i + 1}] {user_name}({user_list[i][2]}): {user_list[i][3]}->{user_list[i][4]}"
     await status.send(msg)
 
 # EVENT: add translate user
-add = on_command(cmd='开启发言翻译',temp=False, priority=2, block=True,
+add = on_command(cmd='开启自动翻译',temp=False, priority=2, block=True,
     permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
 @add.handle()
 async def add_user(event:GroupMessageEvent):
@@ -63,11 +63,11 @@ async def add_user(event:GroupMessageEvent):
         else:
             msg = f"{user_name}({user_id}): {source}->{target} 已经开启"
     else:
-        msg = '命令格式错误，请严格按照\n"/开启发言翻译 QQ号 源语言->目标语言"\n的格式发送命令'
+        msg = '命令格式错误，请严格按照\n"/开启自动翻译 QQ号 源语言->目标语言"\n的格式发送命令'
     await add.send(msg)
 
 # EVENT: delete translate user
-delete = on_command(cmd="关闭发言翻译",temp=False, priority=2, block=True,
+delete = on_command(cmd="关闭自动翻译",temp=False, priority=2, block=True,
     permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
 @delete.handle()
 async def del_user(event:GroupMessageEvent):
@@ -95,9 +95,9 @@ async def del_user(event:GroupMessageEvent):
                 source = target = 'all'
             msg = f'成功关闭 {user_name}({user_id}): {source}->{target}'
         else:
-            msg = f'{user_name}({user_id})的发言翻译功能未开启'
+            msg = f'{user_name}({user_id})的自动翻译功能未开启'
     else:
-        msg = '命令格式错误，请严格按照\n"/关闭发言翻译 QQ号 [(optional)源语言->目标语言]"\n的格式发送命令'
+        msg = '命令格式错误，请严格按照\n"/关闭自动翻译 QQ号 [(optional)源语言->目标语言]"\n的格式发送命令'
     await delete.send(msg)
 
 # Event: translate for particular users

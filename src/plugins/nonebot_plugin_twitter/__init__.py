@@ -262,7 +262,7 @@ help = on_command('推特帮助', priority=1, temp=False, block=True,
     permission=GROUP_ADMIN|GROUP_OWNER|PRIVATE_FRIEND|SUPERUSER)
 @help.handle()
 async def handle(bot: Bot, event: MessageEvent, state: T_State = State()):
-    menu='目前支持的功能：\n\n(请将ID替换为需操作的推特ID，即@后面的名称)\n推特关注 ID\n推特取关 ID\n推特关注列表\n开启推特翻译 ID\n关闭推特翻译 ID'
+    menu='目前支持的功能：\n\n(请将ID替换为需操作的推特ID，即@后面的名称)\n/推特关注 ID\n/推特取关 ID\n/推特关注列表\n/开启推特翻译 ID\n/关闭推特翻译 ID'
     msg=menu
     Msg=Message(msg)
     await help.finish(Msg)

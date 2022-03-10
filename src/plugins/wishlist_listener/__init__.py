@@ -24,9 +24,9 @@ helper = on_command(cmd="愿望单帮助", temp=False, priority=2, block=True,
 @helper.handle()
 async def help_menu():
     menu = '愿望单模块目前支持的功能:\n\n'
-    menu += '命令格式: "愿望单列表"\n'
-    menu += '命令格式: "愿望单关注 名称 URL"\n'
-    menu += '命令格式: "愿望单取关 名称"'
+    menu += '命令格式: "/愿望单列表"\n'
+    menu += '命令格式: "/愿望单关注 名称 URL"\n'
+    menu += '命令格式: "/愿望单取关 名称"'
     await helper.finish(menu)
 
 # STATUS
@@ -62,7 +62,7 @@ async def add_listen(
         else:
             await add.send("已存在")
     else:
-        await add.send("命令错误, 请检查输入格式: \r\n愿望单关注 名称 URL")
+        await add.send("命令错误, 请检查输入格式: \r\n/愿望单关注 名称 URL")
 
 # DELETE a listen target
 delete = on_command(cmd="愿望单取关",temp=False, priority=2, block=True,
@@ -82,7 +82,7 @@ async def delete_listen(event:GroupMessageEvent):
         else:
             await delete.send("未找到")
     else:
-        await delete.send("命令错误, 请检查输入格式:\r\n愿望单取关 名称")
+        await delete.send("命令错误, 请检查输入格式:\r\n/愿望单取关 名称")
 
 # DELETE after quit from group
 group_decrease = on_notice(temp=False, priority=2, block=False)
