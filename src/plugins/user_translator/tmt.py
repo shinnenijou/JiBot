@@ -140,7 +140,7 @@ class TranslateTasker():
         headers = _make_headers(payload)
         async with self.session.post(url=self.url, data=payload, headers=headers) as resp:
             try:
-                self.target_texts[task_id] = (await resp.json())['Response']['TargetText'].replace(' ','')
+                self.target_texts[task_id] = (await resp.json())['Response']['TargetText']
             except:
                 self.task_queue.put(task_id)
         return self

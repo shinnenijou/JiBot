@@ -99,7 +99,7 @@ async def tweet():
             if model.IsNotInCard(retweet_name,card[0]): #如果是转推，已经推送过则不再推送
                 if card[2] == 1:#需要翻译
                     await schedBot.call_api('send_msg',**{
-                        'message':text+translate+media,
+                        'message':f'{text}\r\n【机翻】\r\n{translate}' + media,
                             'group_id':card[0]
                     })
                 else:#不需要翻译

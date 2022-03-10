@@ -4,7 +4,7 @@ from nonebot.matcher import Matcher
 from nonebot import on_message, on_command
 from nonebot.permission import USER, SUPERUSER
 from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER, PRIVATE_FRIEND
-from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment
+from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment, Message
 
 import asyncio
 # Self-Utils
@@ -88,6 +88,8 @@ async def del_user(event:GroupMessageEvent):
         if await db.delete(group_id, user_id, source, target):
             USERS_ON = db.to_dict(await db.select())
             translator.permission = USER(*USERS_ON.keys())
+            if not source and not target:
+                source = target = 'all'
             msg = f'成功关闭 QQ{user_id}: {source}->{target} 的发言翻译功能'
         else:
             msg = f'QQ{user_id}: {source}->{target} 的发言翻译功能未开启'

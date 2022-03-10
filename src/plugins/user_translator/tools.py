@@ -16,19 +16,18 @@ class MessageFragments():
             self.message = message
             i = 0
             while i < len(message):
-                print(message[i])
-                if message[i]['type'] == 'text':
-                    text_list, emoji_list = split_emoji(message[i]['data']['text'])
+                if message[i].type == 'text':
+                    text_list, emoji_list = split_emoji(message[i].data['text'])
                     self.fragments[i] = [text_list, emoji_list]
                     for text in self.fragments[i][0]:
                         self.plain_text.append(text)
-                elif message[i]['type'] not in PLAIN_TEXT:
+                elif message[i].type not in PLAIN_TEXT:
                     del message[i]
                     i -= 1
                 i += 1
     
     def copy(self):
-        return MessageFragments()._copy_from(self.message, self.plain_text, self.fragments)
+        return MessageFragments([])._copy_from(self.message, self.plain_text, self.fragments)
 
     def update_plain_text(self, text_list : list[str]) -> None:
         count = 0
@@ -53,9 +52,9 @@ class MessageFragments():
 
     def _copy_from(self, message: Message, plain_text : list[str],
         fragments:list):
-        self.fragments = fragments
-        self.message = message
-        self.plain_text = plain_text
+        self.fragments = fragments.copy()
+        self.message = message.copy()
+        self.plain_text = plain_text.copy()
         return self
 
 def _extract(string: str, emoji_list: list[dict[str,str]],
