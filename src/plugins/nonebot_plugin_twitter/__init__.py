@@ -94,7 +94,7 @@ async def tweet():
     text,source_text,media_list,retweet_name=data_source.get_tweet_details(data) #读取tweet详情
     ###### AUTHOR: Shinnen #######
     text_list, emoji_list = utils.split_emoji(
-        source_text.replace('http://', '').replace('https://'))
+        source_text.replace('http://', '').replace('https://',''))
     translate = await tmt.translate(TWEET_SOURCE, TWEET_TARGET, *text_list)
     translate = utils.merge_emoji(translate, emoji_list)
     ##############################
