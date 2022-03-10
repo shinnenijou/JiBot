@@ -22,7 +22,7 @@
          ```
          pip install requests
          ```
-      * user_translator: 翻译的请求使用aiohttp进行异步请求，文本处理时对文本中的`emoji`进行替换处理
+      * user_translator: 翻译的请求使用`aiohttp`进行异步请求，文本处理时需要使用`emoji`进行替换处理
          ```
          pip install aiohttp
          pip install emoji
@@ -61,8 +61,9 @@
             ```
          * chromedriver需要在[Chromedriver](https://chromedriver.storage.googleapis.com/index.html)额外下载并保存至PATH
 ## Function  主要功能
-1. wishlist_listener: 定时监听Amazon愿望单中物品变化情况并发送至指定群，老头快人一步
-2. user_translator: 指定源语言与目标语言对特定用户的所有发言进行翻译，翻译结果将保留原文中的emoji及qq自带表情，翻译引擎使用腾讯TMT，每月免费额度对于轻度使用非常友好，请求时需要TC3-HMAC-SHA256签名，签名方法详见[Tencent TMT](https://cloud.tencent.com/document/product/551/30636)
+1. wishlist_listener: 自制插件，定时监听Amazon愿望单中物品变化情况并发送至指定群，老头快人一步
+2. auto_translator: 自制插件，指定源语言与目标语言对特定用户的所有发言进行翻译，翻译结果将保留原文中的emoji及qq自带表情，翻译引擎使用腾讯TMT，每月免费额度对于轻度使用非常友好，请求时需要TC3-HMAC-SHA256签名，签名方法详见[Tencent TMT](https://cloud.tencent.com/document/product/551/30636)
+3. manual_translator: 自制插件，指定目标语言进行翻译，翻译接口同上
 3. nonebot_plugin_status: 已发布插件，远程查询服务器cpu·内存·硬盘等使用百分比，详见[status](https://github.com/cscs181/QQ-GitHub-Bot/tree/master/src/plugins/nonebot_plugin_status)
 4. nonebot_plugin_manager: 已发布插件，对不同群的插件开启进行管理，详见[manager](https://github.com/nonepkg/nonebot-plugin-manager)
 5. nonebot_plugin_twitter: 已发布插件，对关注的推特用户内容进行推送和翻译，修改自[ErikaBot](https://github.com/SlieFamily/ErikaBot)

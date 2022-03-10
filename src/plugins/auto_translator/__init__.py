@@ -113,6 +113,7 @@ async def translate(event:GroupMessageEvent):
     if not event.get_plaintext():
         return None
     session_id = event.get_session_id()
+    message_id = event.get_event_description().split()[1]
     message = event.get_message()
     fragments = tools.MessageFragments(message)
     for config in USERS_ON[session_id]:
@@ -123,6 +124,9 @@ async def translate(event:GroupMessageEvent):
             frag.update_plain_text(target_texts)
             msg = frag.get_message()
             msg.insert(0, MessageSegment.text('【机翻】\r\n'))
+            msg.insert(0, MessageSegment(
+                type='reply', data={'id':message_id}
+            ))
             await translator.send(msg)
         except Exception as err:
             await nonebot.get_bot().send_group_msg(
