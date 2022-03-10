@@ -4,7 +4,7 @@ from sqlite3 import OperationalError
 from os import mkdir
 
 DATA_PATH = './data'
-UT_DIR_PATH = f'{DATA_PATH}/user_translator'
+UT_DIR_PATH = f'{DATA_PATH}/auto_translator'
 DB_PATH = f'{UT_DIR_PATH}/users.db'
 
 
