@@ -12,7 +12,7 @@ from nonebot.adapters.onebot.v11 import GROUP_OWNER, GROUP_ADMIN, PRIVATE_FRIEND
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, GroupDecreaseNoticeEvent
 # Self-tools
 import src.plugins.wishlist_listener.db as db
-import plugins.wishlist_listener.utils as utils
+import src.plugins.wishlist_listener.utils as utils
 
 # INITIATE DATABASE
 db.init()

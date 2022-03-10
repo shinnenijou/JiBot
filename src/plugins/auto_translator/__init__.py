@@ -10,7 +10,7 @@ import asyncio
 # Self-Utils
 import src.plugins.auto_translator.db as db
 import src.plugins.auto_translator.tmt as tmt
-import plugins.auto_translator.utils as utils
+import src.plugins.auto_translator.utils as utils
 # Initiate database
 db.init()
 USERS_ON = db.to_dict(asyncio.run(db.select()))
