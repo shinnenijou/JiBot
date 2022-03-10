@@ -7,15 +7,16 @@ from nonebot.adapters.onebot.v11 import Message, MessageSegment
 PLAIN_TEXT = ['face', 'reply', 'at', 'text']
 class MessageFragments():
 
-    def __init__(self, message : Message = []) -> None:
+    def __init__(self, message : Message) -> None:
         # list[[list[text], list[emoji]]]
         self.fragments =[None] * len(message)
         self.plain_text = []
-        self.message = Message("")
+        self.message = Message()
         if message:
             self.message = message
             i = 0
             while i < len(message):
+                print(message[i])
                 if message[i]['type'] == 'text':
                     text_list, emoji_list = split_emoji(message[i]['data']['text'])
                     self.fragments[i] = [text_list, emoji_list]

@@ -35,7 +35,6 @@ async def get_status(event:GroupMessageEvent):
     msg = "已开启以下群成员的发言翻译功能:\n"
     for i in range(len(user_list)):
         msg += f"\n[{i + 1}] {user_list[i][2]}: {user_list[i][3]}->{user_list[i][4]}"
-    print(USERS_ON)
     await status.send(msg)
 
 # EVENT: add translate user

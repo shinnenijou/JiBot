@@ -2,15 +2,15 @@
 
 ## Overview  环境依赖
 本bot基于[NoneBot2](https://github.com/nonebot/nonebot2)与[go-cqhttp](https://github.com/Mrs4s/go-cqhttp)开发，部分插件使用现有的开源插件，配置启动需要安装以下环境
-   * NoneBot2主框架，可以通过pip等工具安装（详见文档[NoneBot2](https://v2.nonebot.dev/docs/start/installation)）
+   * NoneBot2主框架，可以通过`pip`等工具安装（详见文档[NoneBot2](https://v2.nonebot.dev/docs/start/installation)）
       ```
       pip install nb-cli
       ```
-   * 协议适配器，可以通过NoneBot2的脚手架nb进行安装（详见文档[OneBot v11](https://adapter-onebot.netlify.app/docs/guide/installation)）
+   * 协议适配器，可以通过NoneBot2的脚手架`nb-cli`进行安装（详见文档[OneBot v11](https://adapter-onebot.netlify.app/docs/guide/installation)）
       ```
       nb adapter install nonebot-adpater-onebot
       ```
-   * 定时任务需要额外安装一项计时器,可以通过NoneBot2的脚手架nb进行安装(详见文档[NoneBot2](https://v2.nonebot.dev/docs/advanced/scheduler))
+   * 定时任务需要额外安装一项计时器,可以通过NoneBot2的脚手架`nb-cli`进行安装(详见文档[NoneBot2](https://v2.nonebot.dev/docs/advanced/scheduler))
       ```
       nb plugin install nonebot_plugin_apscheduler
       ```
@@ -18,7 +18,7 @@
    
    * 根据插件情况分别需要一些额外依赖
 
-      * wishlist_listener: requests
+      * wishlist_listener: 使用`requests`同步直接请求html文件
          ```
          pip install requests
          ```
