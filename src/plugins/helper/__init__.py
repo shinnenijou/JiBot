@@ -8,7 +8,7 @@ helper = on_command(cmd="菜单", block=True, priority=1,
     permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
 @helper.handle()
 async def help_menu(event:GroupMessageEvent):
-    menu = "欢迎使用JiBot鸡器人! 阿鸡爱你哦😘\n现支持以下模块:\n\n"\
+    menu = "欢迎使用JiBot鸡气人! 阿鸡爱你哦😘\n现支持以下模块:\n\n"\
          + '【bilibili监听推送】发送 "/bili帮助" 获取命令帮助\n'\
          + '【推特监听推送】发送 "/推特帮助" 获取命令帮助\n'\
          + '【愿望单监听推送】发送 "/愿望单帮助" 获取命令帮助\n'\
