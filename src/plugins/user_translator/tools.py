@@ -17,7 +17,8 @@ class MessageFragments():
             i = 0
             while i < len(message):
                 if message[i].type == 'text':
-                    text_list, emoji_list = split_emoji(message[i].data['text'])
+                    text_list, emoji_list = split_emoji(
+                        message[i].data['text'].replace("http://", "").replace("https://", ""))
                     self.fragments[i] = [text_list, emoji_list]
                     for text in self.fragments[i][0]:
                         self.plain_text.append(text)

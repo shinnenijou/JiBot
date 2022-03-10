@@ -91,7 +91,8 @@ async def tweet():
     logger.info('检测到 %s 的推特已更新'%(users[tweet_index][1]))
     model.UpdateTweet(users[tweet_index][0],tweet_id) #更新数据库的最新推文id
     text,translate,media_list,retweet_name=data_source.get_tweet_details(data) #读取tweet详情
-    translate = (await tmt.translate(TWEET_SOURCE, TWEET_TARGET, translate))[0] #翻译
+    translate = (await tmt.translate(TWEET_SOURCE, TWEET_TARGET,
+        translate.replace("http://", "").replace("https://", "")))[0] #翻译
     media = ''
     for item in media_list:
         media += MessageSegment.image(item)+'\n'
