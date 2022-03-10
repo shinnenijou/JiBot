@@ -123,7 +123,7 @@ async def translate(event:GroupMessageEvent):
             target_texts = await tmt.translate(source, target, *frag.get_plain_text())
             frag.update_plain_text(target_texts)
             msg = frag.get_message()
-            msg.insert(0, MessageSegment.text('【机翻】\r\n'))
+            msg.insert(0, MessageSegment.text('机翻：\r\n'))
             msg.insert(0, MessageSegment(
                 type='reply', data={'id':message_id}
             ))

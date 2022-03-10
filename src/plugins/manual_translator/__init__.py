@@ -29,7 +29,7 @@ async def translate(event: GroupMessageEvent):
             target = 'ja'
             text_start = 1
         source_text = "".join(cmd[i] for i in range(text_start, len(cmd)))
-        target_text = "【机翻】\r\n" + (await tmt.translate('auto', target, 
+        target_text = "机翻：\r\n" + (await tmt.translate('auto', target, 
             source_text.replace("http://", "").replace("https://", "")))[0]
         msg = Message(target_text)
         msg.insert(0, MessageSegment(type='reply', data={'id':message_id}))
