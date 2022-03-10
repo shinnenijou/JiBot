@@ -68,7 +68,7 @@ class MessageFragments():
         return self
 
 def _extract(string: str, emoji_list: list[dict[str,str]],
-    string_only : list[str], emoji_only : list[str]) -> None:
+    string_only : list[str], emoji_only : list[str]) -> Tuple[list[str],list[str]]:
     if len(emoji_list):
         parts = string.partition(emoji_list[0]['emoji'])
         string_only.append(parts[0])

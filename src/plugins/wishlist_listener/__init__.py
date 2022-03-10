@@ -12,7 +12,7 @@ from nonebot.adapters.onebot.v11 import GROUP_OWNER, GROUP_ADMIN, PRIVATE_FRIEND
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, GroupDecreaseNoticeEvent
 # Self-tools
 import src.plugins.wishlist_listener.db as db
-import src.plugins.wishlist_listener.tools as tools
+import plugins.wishlist_listener.utils as utils
 
 # INITIATE DATABASE
 db.init()
@@ -98,12 +98,12 @@ async def _listen(target : str, bot):
         db.get_groups_on(target),
         db.get_items(target)
     ])
-    items = await tools.fetch_items(url)
-    if not items and not tools.check_clear(items):
+    items = await utils.fetch_items(url)
+    if not items and not utils.check_clear(items):
         items = prev_items
-    buyed_items = tools.check_items(prev_items, items)
-    new_items = tools.check_items(items, prev_items)
-    msg = tools.make_notice(new_items, buyed_items, target, url)
+    buyed_items = utils.check_items(prev_items, items)
+    new_items = utils.check_items(items, prev_items)
+    msg = utils.make_notice(new_items, buyed_items, target, url)
     if msg:
         await asyncio.gather(*[
             bot.send_group_msg(

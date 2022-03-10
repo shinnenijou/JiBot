@@ -32,6 +32,7 @@ tweet_index = 0
 
 # Import self-utils
 import src.plugins.nonebot_plugin_twitter.tmt as tmt
+import src.plugins.nonebot_plugin_twitter.utils as utils
 # CONSTANT
 TWEET_LISTEN_INTERVAL = nonebot.get_driver().config.dict()['tweet_listen_interval']
 TOKEN_FLUSH_INTERVAL = nonebot.get_driver().config.dict()['token_flush_interval']
@@ -68,7 +69,7 @@ def flush_token():
 scheduler = require('nonebot_plugin_apscheduler').scheduler
 
 # 创建定时任务
-@scheduler.scheduled_job('interval', minutes=TOKEN_FLUSH_INTERVAL,
+@scheduler.scheduled_job('interval', seconds=TOKEN_FLUSH_INTERVAL,
     id='flush_token', timezone='Asia/Shanghai')
 async def flush():
     flush = threading.Thread(target=flush_token)
@@ -90,9 +91,12 @@ async def tweet():
         return #最新推文id和上次收录的一致(说明并未更新)
     logger.info('检测到 %s 的推特已更新'%(users[tweet_index][1]))
     model.UpdateTweet(users[tweet_index][0],tweet_id) #更新数据库的最新推文id
-    text,translate,media_list,retweet_name=data_source.get_tweet_details(data) #读取tweet详情
-    translate = (await tmt.translate(TWEET_SOURCE, TWEET_TARGET,
-        translate.replace("http://", "").replace("https://", "")))[0] #翻译
+    text,source_text,media_list,retweet_name=data_source.get_tweet_details(data) #读取tweet详情
+    source_text, emoji_list = utils.split_emoji(source_text)
+    for text in source_text:
+        text = text.replace('http://', '').replace('https://', '')
+    translate = (await tmt.translate(TWEET_SOURCE, TWEET_TARGET,source_text)) #翻译
+    translate = utils.merge_emoji(translate, emoji_list)
     media = ''
     for item in media_list:
         media += MessageSegment.image(item)+'\n'
@@ -102,7 +106,7 @@ async def tweet():
             if model.IsNotInCard(retweet_name,card[0]): #如果是转推，已经推送过则不再推送
                 if card[2] == 1:#需要翻译
                     await schedBot.call_api('send_msg',**{
-                        'message':f'{text}\r\n【机翻】\r\n{translate}' + media,
+                        'message':f'{text}\r\n机翻：\r\n{translate}' + media,
                             'group_id':card[0]
                     })
                 else:#不需要翻译
@@ -138,7 +142,6 @@ async def handle(bot: Bot, event: MessageEvent, state: T_State = State(), args: 
     if not id.isdigit():
         id = id.split('_')[1]
     msg = '命令格式错误'
-    print("---",args)
     if args!='':
         user = model.GetUserInfo(args)# 如果该用户已存在数据库中，直接拉取
         if len(user) != 0:
@@ -152,7 +155,7 @@ async def handle(bot: Bot, event: MessageEvent, state: T_State = State(), args: 
             if(user_id != ''):
                 model.AddNewUser(args,user_name,user_id)
                 model.AddCard(args,id,is_group)
-                msg = '{}({})已在本群的关注列表中！'.format(user_name,args) #待测试
+                msg = '{}({})关注成功！'.format(user_name,args) #待测试
             else:
                 msg = '{} 推特ID不存在或网络错误！\n'.format(args)
     Msg = Message(msg)
@@ -178,7 +181,7 @@ async def handle(bot: Bot, event: MessageEvent, state: T_State = State(), args: 
             if status != 0:
                 msg = '{}({})不在本群的关注列表中'.format(user[1],args)
             else:
-                msg = '{}({})删除成功！'.format(user[1],args)
+                msg = '{}({})取关成功！'.format(user[1],args)
     Msg = Message(msg)
     await adduser.finish(Msg)
 

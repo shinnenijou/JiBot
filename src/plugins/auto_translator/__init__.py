@@ -10,7 +10,7 @@ import asyncio
 # Self-Utils
 import src.plugins.auto_translator.db as db
 import src.plugins.auto_translator.tmt as tmt
-import src.plugins.auto_translator.tools as tools
+import plugins.auto_translator.utils as utils
 # Initiate database
 db.init()
 USERS_ON = db.to_dict(asyncio.run(db.select()))
@@ -34,7 +34,7 @@ async def get_status(event:GroupMessageEvent):
     user_list = await db.select(group_id=group_id)
     msg = "已开启以下群成员的自动翻译功能:\n"
     for i in range(len(user_list)):
-        user_name = await tools.get_user_name(nonebot.get_bot(), group_id, user_list[i][2])
+        user_name = await utils.get_user_name(nonebot.get_bot(), group_id, user_list[i][2])
         msg += f"\n[{i + 1}] {user_name}({user_list[i][2]}): {user_list[i][3]}->{user_list[i][4]}"
     await status.send(msg)
 
@@ -55,7 +55,7 @@ async def add_user(event:GroupMessageEvent):
     except FileNotFoundError:
         isValidCmd = False
     if isValidCmd:
-        user_name = await tools.get_user_name(nonebot.get_bot(), group_id, user_id)
+        user_name = await utils.get_user_name(nonebot.get_bot(), group_id, user_id)
         if await db.insert(group_id, user_id, source, target):
             USERS_ON = db.to_dict(await db.select())
             translator.permission = USER(*USERS_ON.keys())
@@ -87,7 +87,7 @@ async def del_user(event:GroupMessageEvent):
         source = None
         target = None
     if isValidCmd:
-        user_name = await tools.get_user_name(nonebot.get_bot(), group_id, user_id)
+        user_name = await utils.get_user_name(nonebot.get_bot(), group_id, user_id)
         if await db.delete(group_id, user_id, source, target):
             USERS_ON = db.to_dict(await db.select())
             translator.permission = USER(*USERS_ON.keys())
@@ -115,7 +115,7 @@ async def translate(event:GroupMessageEvent):
     session_id = event.get_session_id()
     message_id = event.get_event_description().split()[1]
     message = event.get_message()
-    fragments = tools.MessageFragments(message)
+    fragments = utils.MessageFragments(message)
     for config in USERS_ON[session_id]:
         try:
             frag = fragments.copy()
