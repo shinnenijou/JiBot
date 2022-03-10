@@ -95,7 +95,7 @@ async def tweet():
     source_text, emoji_list = utils.split_emoji(source_text)
     for text in source_text:
         text = text.replace('http://', '').replace('https://', '')
-    translate = (await tmt.translate(TWEET_SOURCE, TWEET_TARGET,source_text)) #翻译
+    translate = await tmt.translate(TWEET_SOURCE, TWEET_TARGET, *source_text) #翻译
     translate = utils.merge_emoji(translate, emoji_list)
     media = ''
     for item in media_list:
