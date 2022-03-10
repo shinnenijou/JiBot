@@ -35,6 +35,8 @@ import src.plugins.nonebot_plugin_twitter.tmt as tmt
 # CONSTANT
 TWEET_LISTEN_INTERVAL = nonebot.get_driver().config.dict()['tweet_listen_interval']
 TOKEN_FLUSH_INTERVAL = nonebot.get_driver().config.dict()['token_flush_interval']
+TWEET_SOURCE = nonebot.get_driver().config.dict()['tweet_source']
+TWEET_TARGET = nonebot.get_driver().config.dict()['tweet_target']
 
 # 更新token操作函数
 def flush_token():
@@ -89,7 +91,7 @@ async def tweet():
     logger.info('检测到 %s 的推特已更新'%(users[tweet_index][1]))
     model.UpdateTweet(users[tweet_index][0],tweet_id) #更新数据库的最新推文id
     text,translate,media_list,retweet_name=data_source.get_tweet_details(data) #读取tweet详情
-    translate = (await tmt.translate('auto', 'zh', translate))[0] #翻译
+    translate = (await tmt.translate(TWEET_SOURCE, TWEET_TARGET, translate))[0] #翻译
     media = ''
     for item in media_list:
         media += MessageSegment.image(item)+'\n'
