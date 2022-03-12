@@ -2,7 +2,6 @@
 import asyncio
 from email import message
 from nonebot import on_command, on_notice
-from nonebot.params import CommandArg
 from nonebot.adapters.onebot.v11 import Message,MessageSegment
 from nonebot.adapters.onebot.v11.permission import GROUP_ADMIN, GROUP_OWNER, PRIVATE_FRIEND
 from nonebot.permission import SUPERUSER
@@ -73,13 +72,14 @@ async def tweet():
 adduser = on_command('推特关注', priority=2, temp=False, block = True,
     permission=GROUP_ADMIN|GROUP_OWNER|SUPERUSER)
 @adduser.handle()
-async def add(event:GroupMessageEvent, args:Message=CommandArg()):
+async def add(event:GroupMessageEvent):
     global ID_LIST, USERNAME_LIST, NAME_LIST, NEWEST_TWEET_LIST
     group_id = event.get_session_id().split('_')[1]
+    cmd = event.get_plaintext().split()
     msg = '命令格式错误, 请按照命令格式: "/推特关注 推特id(不带@)"'
-    if len(args) != 1:
+    if len(cmd) != 2:
         await adduser.finish(Message(msg))
-    username = args[0].data['text']
+    username = cmd[1]
     # 请求命令id对应的用户
     user_info = (await twitter.get_users_info(TWITTER_TOKEN, username))[0]
     if user_info:
@@ -102,11 +102,12 @@ async def add(event:GroupMessageEvent, args:Message=CommandArg()):
 deleteuser = on_command('推特取关', priority=2, temp=False, block=True,
     permission=GROUP_ADMIN|GROUP_OWNER|SUPERUSER)
 @deleteuser.handle()
-async def delete(event:GroupMessageEvent, args:Message=CommandArg()):
+async def delete(event:GroupMessageEvent):
     group_id = event.get_session_id().split('_')[1]
+    cmd = event.get_plaintext().split()
     msg = '命令格式错误, 请按照命令格式: "/推特取关 推特id(不带@)"'
-    if len(args) == 1:
-        username = args[0].data['text']
+    if len(cmd) == 2:
+        username = cmd[1]
         user_id, name = db.get_id_n_name(username)
         if db.delete_group_sub(user_id, group_id):
             msg = f"{name}({username}取关成功)"
@@ -131,11 +132,12 @@ async def get_list(event: GroupMessageEvent):
 translate_on = on_command('开启推特翻译', priority=2, temp=False, block=True,
     permission=GROUP_ADMIN|GROUP_OWNER|SUPERUSER)
 @translate_on.handle()
-async def on(event: GroupMessageEvent, args:Message=CommandArg()):
+async def on(event: GroupMessageEvent):
     group_id = event.get_session_id().split('_')[1]
+    cmd = event.get_plaintext().split()
     msg = '命令格式错误, 请按照命令格式: "/开启推特翻译 推特id(不带@)"'
-    if len(args) == 1:
-        username = args[0].data['text']
+    if len(cmd) == 2:
+        username = cmd[1]
         id, name = db.get_id_n_name(username)
         if db.translate_on(id, group_id):
             msg = f'{name}({username})开启推文翻译成功！'
@@ -147,11 +149,12 @@ async def on(event: GroupMessageEvent, args:Message=CommandArg()):
 translate_off = on_command('关闭推特翻译', priority=2, temp=False, block=True,
     permission=GROUP_ADMIN|GROUP_OWNER|SUPERUSER,)
 @translate_off.handle()
-async def off(event: GroupMessageEvent, args:Message=CommandArg()):
+async def off(event: GroupMessageEvent):
     group_id = event.get_session_id().split('_')[1]
+    cmd = event.get_plaintext().split()
     msg = '命令格式错误, 请按照命令格式: "/开启推特翻译 推特id(不带@)"'
-    if len(args) == 1:
-        username = args[0].data['text']
+    if len(cmd) == 2:
+        username = cmd[1]
         id, name = db.get_id_n_name(username)
         if db.translate_off(id, group_id):
             msg = f'{name}({username})关闭推文翻译成功！'

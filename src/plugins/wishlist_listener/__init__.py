@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 # Python STL
 import asyncio
-from typing import Tuple
 # Third-party Library
 import nonebot
 from nonebot.plugin import require
+from nonebot.log import logger
 from nonebot import on_command, on_notice
 from nonebot.permission import SUPERUSER
-from nonebot.params import Command, CommandArg
 from nonebot.adapters.onebot.v11 import GROUP_OWNER, GROUP_ADMIN, PRIVATE_FRIEND
-from nonebot.adapters.onebot.v11 import GroupMessageEvent, GroupDecreaseNoticeEvent
+from nonebot.adapters.onebot.v11 import Message, GroupMessageEvent, GroupDecreaseNoticeEvent
 # Self-tools
 import src.plugins.wishlist_listener.db as db
 import src.plugins.wishlist_listener.utils as utils
@@ -45,16 +44,39 @@ async def print_targets(event : GroupMessageEvent):
 add = on_command(cmd="愿望单关注",temp=False, priority=2, block=True,
     permission=GROUP_ADMIN | GROUP_OWNER | PRIVATE_FRIEND | SUPERUSER)
 @add.handle()
-async def add_listen(
-    event:GroupMessageEvent,
-):  
-    cmd = event.get_plaintext().split()
+async def add_listen(event:GroupMessageEvent): 
+    cmd =event.get_plaintext().split()
+    if len(cmd) == 3:
+        name = cmd[1]
+        url = cmd[2]
+        if 'WQJIE8LKY4EB' in url:
+            await add.finish("谁准你关注阿猪了？")
+        group_id = int(event.get_session_id().split('_')[1])
+        listen_list = await db.get_users_on(group_id)
+        if name not in listen_list:
+            logger.success('添加成功')
+            await asyncio.gather(*[
+                db.add_listen(group_id, name, url),
+                add.send("添加成功")
+            ])              
+        else:
+            await add.send("已存在")
+    else:
+        await add.send("命令错误, 请检查输入格式: \r\n/愿望单关注 名称 URL")
+
+# ADD a listen target(SUPERUSER ONLY)
+add = on_command(cmd="愿望单关注",temp=False, priority=1, block=True,
+    permission=SUPERUSER)
+@add.handle()
+async def add_listen(event:GroupMessageEvent):  
+    cmd =event.get_plaintext().split()
     if len(cmd) == 3:
         name = cmd[1]
         url = cmd[2]
         group_id = int(event.get_session_id().split('_')[1])
         listen_list = await db.get_users_on(group_id)
         if name not in listen_list:
+            logger.success('添加成功')
             await asyncio.gather(*[
                 db.add_listen(group_id, name, url),
                 add.send("添加成功")
@@ -75,6 +97,7 @@ async def delete_listen(event:GroupMessageEvent):
         group_id = int(event.get_session_id().split('_')[1])
         listen_list = await db.get_users_on(group_id)
         if name in listen_list:
+            logger.success('删除成功')
             await asyncio.gather(*[
                 db.delete_listen(group_id, name),
                 delete.send("已删除")
@@ -119,6 +142,7 @@ scheduler = require("nonebot_plugin_apscheduler").scheduler
     seconds=nonebot.get_driver().config.dict()['wishlist_listen_interval'])
 async def listen_all():
     bot = nonebot.get_bot()
+    logger.success('开始读取愿望单')
     listen_list = await db.get_all_users()
     await asyncio.gather(*[
         _listen(target, bot) for target in listen_list
