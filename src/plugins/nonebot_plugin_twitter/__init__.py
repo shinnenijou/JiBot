@@ -18,7 +18,6 @@ import src.plugins.nonebot_plugin_twitter.db as db
 import src.plugins.nonebot_plugin_twitter.twitter as twitter
 # CONSTANTS
 TWEET_LISTEN_INTERVAL = nonebot.get_driver().config.dict()['tweet_listen_interval']
-TOKEN_FLUSH_INTERVAL = nonebot.get_driver().config.dict()['token_flush_interval']
 TWEET_SOURCE = nonebot.get_driver().config.dict()['tweet_source']
 TWEET_TARGET = nonebot.get_driver().config.dict()['tweet_target']
 TWITTER_TOKEN = nonebot.get_driver().config.dict()['twitter_token']
