@@ -12,10 +12,10 @@ from nonebot.log import logger
 import nonebot
 
 # Import self-utils
-import src.plugins.nonebot_plugin_twitter.tmt as tmt
-import src.plugins.nonebot_plugin_twitter.utils as utils
-import src.plugins.nonebot_plugin_twitter.db as db
-import src.plugins.nonebot_plugin_twitter.twitter as twitter
+import src.plugins.twitter.tmt as tmt
+import src.plugins.twitter.utils as utils
+import src.plugins.twitter.db as db
+import src.plugins.twitter.twitter as twitter
 # CONSTANTS
 TWEET_LISTEN_INTERVAL = nonebot.get_driver().config.dict()['tweet_listen_interval']
 TWEET_SOURCE = nonebot.get_driver().config.dict()['tweet_source']

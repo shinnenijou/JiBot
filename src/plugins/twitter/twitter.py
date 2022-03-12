@@ -215,32 +215,15 @@ def reorgnize_timeline(
 def make_message(newest_tweet:dict[str,str], name:str, 
     retweeted_tweet:dict[str,str], translate_text:str=None) -> Message:
     msg = Message([
-        MessageSegment.text(f'{name}发布了一条新推文:\n---------------\n'),
+        MessageSegment.text(f'{name} 发布了一条新推文:' + '\n---------------\n'),
         MessageSegment.text(newest_tweet['text'])
     ])
     if translate_text:
-        msg.append(MessageSegment.text('\n---------------\n机翻:\n' + translate_text))
-    msg.append(MessageSegment.text('\n---------------\n' + newest_tweet['tweet_url'] + '\n'))
+        msg.append(MessageSegment.text('\n---------------\n' + '机翻:\n' + translate_text))
+    msg.append(MessageSegment.text('\n---------------\n' + newest_tweet['tweet_url']))
     for image in newest_tweet['media_url']:
             msg.append(MessageSegment.image(image))
     if retweeted_tweet:
         for image in retweeted_tweet['media_url']:
             msg.append(MessageSegment.image(image))
     return msg
-
-
-
-# import json
-# ACCESS_TOKEN = "AAAAAAAAAAAAAAAAAAAAAHezZwEAAAAAdHutKYUPNV5XZwr6PtBoBogTDVs%3Dnn00IbE0Gn1ASi2aIOSTJzgPWjozFHQjGtXVuwLahiPYEQH6iD"
-# info = asyncio.run(get_users_info(ACCESS_TOKEN, '0tome0to'))
-# id = info[0]['id']
-# timeline = asyncio.run(get_users_timeline(ACCESS_TOKEN, [id], ['']))
-# with open('timeline.txt', 'w') as file:
-#     file.write(json.dumps(timeline))
-# newest_id, tweets = reorgnize_timeline(timeline[0], '0tome0to','')
-# msg = make_message(tweets[0], '0tome0to', {})
-# print(msg)
-# # tweets_detail = asyncio.run(get_tweets(ACCESS_TOKEN, '1502192742067507201'))
-# tweets = reorgnize_tweets(tweets_detail, '0tome0to')
-# for tweet in tweets:
-#     print(tweet)
