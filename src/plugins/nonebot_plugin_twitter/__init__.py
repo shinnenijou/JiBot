@@ -69,76 +69,6 @@ async def tweet():
                 for i in range(len(group_list))
             ])
 
-    # # 立即获取最新的一条推文
-            # timeline = (await twitter.get_users_timeline(TWITTER_TOKEN, [user_id], ['']))[0]
-            # newest_tweet_id, tweets = twitter.reorgnize_timeline(timeline, username, '')
-            # # 如果新推文有引用则获取引用推文内容
-            # newest_tweet = tweets[0]
-            # retweeted_tweet = {}
-            # if 'referenced_tweets' in newest_tweet:
-                # retweeted_tweet = await twitter.get_tweets(
-                #     TWITTER_TOKEN, newest_tweet['referenced_tweets']['id'])
-            #     retweeted_tweet = twitter.reorgnize_tweets(retweeted_tweet, username)
-            # text_list, emoji_list = utils.split_emoji(newest_tweet['text'])
-            # text_list = await tmt.translate(TWEET_SOURCE, TWEET_TARGET, *text_list)
-            # translate_text = utils.merge_emoji(text_list, emoji_list)
-            # msg = twitter.make_message(newest_tweet, name,
-            #     retweeted_tweet, translate_text)
-
-
-
-#     if model.Empty():
-#         return #数据库关注列表为空，无事发生
-#     schedBot = nonebot.get_bot()
-#     users = model.GetUserList()
-#     tweet_id,data = await twitter.get_latest_tweet(users[tweet_index][2],config.token)
-#     if tweet_id == '' or users[tweet_index][3] == tweet_id:
-#         tweet_index += 1
-#         return #最新推文id和上次收录的一致(说明并未更新)
-#     logger.info('检测到 %s 的推特已更新'%(users[tweet_index][1]))
-#     model.UpdateTweet(users[tweet_index][0],tweet_id) #更新数据库的最新推文id
-#     text,source_text,media_list,retweet_name=twitter.get_tweet_details(data) #读取tweet详情
-#     ###### AUTHOR: Shinnen #######
-#     text_list, emoji_list = utils.split_emoji(
-#         source_text.replace('http://', '').replace('https://',''))
-#     translate = await tmt.translate(TWEET_SOURCE, TWEET_TARGET, *text_list)
-#     translate = utils.merge_emoji(translate, emoji_list)
-#     ##############################
-#     media = ''
-#     for item in media_list:
-#         media += MessageSegment.image(item)+'\n'
-#     cards = model.GetALLCard(users[tweet_index][0])
-#     for card in cards:
-#         if card[1] == 1:#是群聊
-#             if model.IsNotInCard(retweet_name,card[0]): #如果是转推，已经推送过则不再推送
-#                 if card[2] == 1:#需要翻译
-#                     await schedBot.call_api('send_msg',**{
-#                         'message':f'{text}\r\n机翻：\r\n{translate}' + media,
-#                             'group_id':card[0]
-#                     })
-#                 else:#不需要翻译
-#                     await schedBot.call_api('send_msg',**{
-#                             'message':text+media,
-#                             'group_id':card[0]
-#                     })
-#             else:
-#                 logger.info(f'QQ群({card[0]})重复推文过滤')
-#         else:#私聊
-#             if model.IsNotInCard(retweet_name,card[0]):
-#                 if card[2] == 1:#需要翻译
-#                     await schedBot.call_api('send_msg',**{
-#                         'message':text+translate+media,
-#                         'user_id':card[0]
-#                     })
-#                 else:
-#                     await schedBot.call_api('send_msg',**{
-#                         'message':text+media,
-#                         'user_id':card[0]
-#                     })
-#             else:
-#                 logger.info(f'QQ群({card[0]})重复推文过滤')
-#     tweet_index += 1
-    
 # 关注推特命令(仅允许管理员操作)
 adduser = on_command('推特关注', priority=2, temp=False, block = True,
     permission=GROUP_ADMIN|GROUP_OWNER|SUPERUSER)
@@ -191,7 +121,7 @@ userlist = on_command('推特关注列表', priority=2, temp=False, block=True,
 @userlist.handle()
 async def get_list(event: GroupMessageEvent):
     group_id = event.get_session_id().split('_')[1]
-    msg = '用户名(推特ID):\n'
+    msg = '本群已关注以下推特:\n'
     id_list, name_list, username_list = db.get_group_users(group_id)
     for i in range(len(name_list)):
         msg += f'\n{name_list[i]}({username_list[i]})'
