@@ -121,8 +121,8 @@ async def _listen(target : str, bot):
         db.get_groups_on(target),
         db.get_items(target)
     ])
-    items = await utils.fetch_items(url)
-    if not items and not utils.check_clear(items):
+    items, resp = await utils.fetch_items(url)
+    if not items and not utils.check_clear(resp):
         items = prev_items
     buyed_items = utils.check_items(prev_items, items)
     new_items = utils.check_items(items, prev_items)

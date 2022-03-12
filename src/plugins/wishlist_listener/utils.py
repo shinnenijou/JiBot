@@ -24,7 +24,7 @@ async def fetch_items(url : str) -> list[str]:
         #     final_page = True
         #     if new_items and new_items % 10:
         #         final_page = False
-    return items
+    return items, resp
 
 def _request(
     url : str, headers : dict[str, str]) -> str:
