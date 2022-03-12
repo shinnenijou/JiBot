@@ -144,3 +144,4 @@ dmypy.json
 .DS_Store
 test.py
 data/
+response_reference.txt
