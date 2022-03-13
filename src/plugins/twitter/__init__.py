@@ -143,7 +143,7 @@ async def get_list(event: GroupMessageEvent):
     _, name_list, username_list, translate_list = db.get_group_sub(group_id)
     for i in range(len(name_list)):
         translate_text = '开启' if translate_list[i] else '关闭'
-        msg += f'\n{name_list[i]}({username_list[i]})  翻译已{translate_text}'
+        msg += f'\n[{i + 1}]{name_list[i]}({username_list[i]}) 翻译已{translate_text}'
     await userlist.finish(Message(msg))
 
 #开启推文翻译(仅允许管理员操作)
