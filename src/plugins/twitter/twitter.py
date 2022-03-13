@@ -6,9 +6,8 @@ from nonebot.adapters.onebot.v11 import Message, MessageSegment
 from nonebot.log import logger
 
 # CONSTANT
-# PROXY = nonebot.get_driver().config.dict()['proxy']
-# PROXY = None if PROXY == 'None' else PROXY
-PROXY = "http://127.0.0.1:7890"
+PROXY = nonebot.get_driver().config.dict()['proxy']
+PROXY = None if PROXY == 'None' else PROXY
 
 async def get_users_info(access_token : str, *usernames : str, ) -> list[dict[str,str]]:
     """
@@ -270,5 +269,3 @@ def make_message(
         for image in referenced_tweet['media_url']:
             msg.append(MessageSegment.image(image))
     return msg
-
-
