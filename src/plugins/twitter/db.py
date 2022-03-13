@@ -267,7 +267,7 @@ def get_group_sub(group_id : str) -> tuple[list[str],list[str],list[str]]:
     name_list = []
     translate_list = []
     for row in user_list:
-        id = user_list[0]
+        id = row[0]
         translate_on = cursor.execute(
             f'select translate_on from _{id} where group_id="{group_id}";').fetchall()
         if translate_on:
