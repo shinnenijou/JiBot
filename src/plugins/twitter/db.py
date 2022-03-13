@@ -157,7 +157,7 @@ def get_user_id_name(username : str) -> str:
     return id, name
 
 # 白名单操作
-# 回复推文将会以回复对象进行过滤, 所有推特用户共用
+# WARNING: 所有推特用户共用
 def add_white_list(id:str, username:str, name:str) -> bool:
     connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
@@ -265,15 +265,17 @@ def get_group_sub(group_id : str) -> tuple[list[str],list[str],list[str]]:
     id_list = []
     username_list = []
     name_list = []
+    translate_list = []
     for row in user_list:
         id = user_list[0]
-        group_exist = cursor.execute(
-            f'select count(*) from _{id} where group_id="{group_id}";').fetchone()[0]
-        if group_exist:
+        translate_on = cursor.execute(
+            f'select translate_on from _{id} where group_id="{group_id}";').fetchall()
+        if translate_on:
+            translate_list.append(translate_on[0][0])
             id_list.append(row[0])
             username_list.append(row[1])
             name_list.append(row[2])
-    return id_list, name_list, username_list
+    return id_list, name_list, username_list, translate_list
 
 # 翻译控制
 def translate_on(id : str, group_id : str) -> bool:  # 开启推文翻译

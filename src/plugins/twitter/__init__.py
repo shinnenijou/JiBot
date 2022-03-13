@@ -140,9 +140,10 @@ userlist = on_command('推特关注列表', priority=2, temp=False, block=True,
 async def get_list(event: GroupMessageEvent):
     group_id = event.get_session_id().split('_')[1]
     msg = '本群已关注以下推特:\n'
-    id_list, name_list, username_list = db.get_group_sub(group_id)
+    _, name_list, username_list, translate_list = db.get_group_sub(group_id)
     for i in range(len(name_list)):
-        msg += f'\n{name_list[i]}({username_list[i]})'
+        translate_text = '开启' if translate_list[i] else '关闭'
+        msg += f'\n{name_list[i]}({username_list[i]})  翻译已{translate_text}'
     await userlist.finish(Message(msg))
 
 #开启推文翻译(仅允许管理员操作)
@@ -223,7 +224,7 @@ async def remove_white_list(event:GroupMessageEvent):
     await white_list_remove.finish(Message(msg))
 
 # 查看推特白名单
-white_list = on_command('推特白名单列表', priority=2, temp=False, block=True,
+white_list = on_command('推特白名单', priority=2, temp=False, block=True,
     permission=SUPERUSER)
 @white_list.handle()
 async def get_white_list():
@@ -245,6 +246,7 @@ async def help():
          + '/推特取关 ID\n'\
          + '/开启推特翻译 ID\n'\
          + '/关闭推特翻译 ID\n'\
+         + '/推特白名单\n'\
          + '/添加推特白名单 ID\n'\
          + '/移除推特百名单 ID'
     await helper.finish(Message(menu))
@@ -256,6 +258,6 @@ async def _(event: GroupDecreaseNoticeEvent):
     # 此处user_id是退群的qq用户
     group_id = event.get_session_id().split('_')[1]
     if event.self_id == event.user_id:
-        id_list, username_list, name_list = db.get_group_sub(group_id)
+        id_list, _, _, _ = db.get_group_sub(group_id)
         for id in id_list:
             db.delete_group_sub(id, group_id)
