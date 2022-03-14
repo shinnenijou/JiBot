@@ -89,7 +89,6 @@ async def push_dynamic():
                     )
                 )
                 tasks.append(task)
-            print(message)
             try:
                 await asyncio.gather(*tasks)
             except:
