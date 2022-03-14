@@ -12,7 +12,6 @@ from nonebot.permission import SUPERUSER, USER
 from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, MessageSegment
 
-
 # Self
 import src.plugins.bilibili.dynamics as dynamics
 import src.plugins.bilibili.db as db
@@ -34,13 +33,22 @@ COMMENT_EXPIRATION = nonebot.get_driver().config.dict()['dynamic_comment_expirat
 UID_LIST, NAME_LIST, NEWEST_DYNAMICS = db.get_user_list()
 TRANSLATOR_LIST, _ = db.get_translator_list()
 DYNAMIC_QUEUE = deque()
-
+##########################
 ######### 命令帮助 #########
 helper = on_command(cmd='bili帮助', priority=2, temp=False, block=True, 
     permission=GROUP_OWNER|GROUP_ADMIN|SUPERUSER)
 @helper.handle() 
-async def _():
-    pass
+async def help():
+    menu = 'bilibili模块目前支持的功能:\n\n'\
+         + '/bili关注列表\n'\
+         + '/bili关注 ID\n'\
+         + '/bili取关 ID\n'\
+         + '/开启动态翻译 ID\n'\
+         + '/关闭动态翻译 ID\n'\
+         + '/评论白名单\n'\
+         + '/添加评论白名单 ID\n'\
+         + '/移除评论百名单 ID'
+    await helper.finish(Message(menu))
 
 # 定时任务  
 scheduler = require('nonebot_plugin_apscheduler').scheduler

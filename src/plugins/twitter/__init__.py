@@ -238,7 +238,7 @@ helper = on_command('推特帮助', priority=2, temp=False, block=True,
     permission=GROUP_ADMIN|GROUP_OWNER|SUPERUSER)
 @helper.handle()
 async def help():
-    menu = '目前支持的功能:(推特ID即@后面的名称)\n\n'\
+    menu = '推特模块目前支持的功能:(ID即@后的字符)\n\n'\
          + '/推特关注列表\n'\
          + '/推特关注 ID\n'\
          + '/推特取关 ID\n'\
