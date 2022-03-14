@@ -11,8 +11,8 @@ from nonebot.log import logger
 import nonebot
 
 # Import self-utils
-import src.plugins.twitter.tmt as tmt
-import src.plugins.twitter.utils as utils
+import src.plugins.twitter.utils.tmt as tmt
+import src.plugins.twitter.utils.emojis as emojis
 import src.plugins.twitter.db as db
 import src.plugins.twitter.twitter as twitter
 # CONSTANTS
@@ -61,13 +61,13 @@ async def tweet():
                 # 引用翻译
                 referenced_tweet = twitter.reorgnize_tweets(
                     referenced_tweet, USERNAME_LIST[i], WHITE_LIST)[0]
-                text_list, emoji_list = utils.split_emoji(referenced_tweet['text'])
+                text_list, emoji_list = emojis.split_emoji(referenced_tweet['text'])
                 text_list = await tmt.translate(TWEET_SOURCE, TWEET_TARGET, *text_list)
-                referenced_translate = utils.merge_emoji(text_list, emoji_list)
+                referenced_translate = emojis.merge_emoji(text_list, emoji_list)
             # 正文翻译
-            text_list, emoji_list = utils.split_emoji(tweet['text'])
+            text_list, emoji_list = emojis.split_emoji(tweet['text'])
             text_list = await tmt.translate(TWEET_SOURCE, TWEET_TARGET, *text_list)
-            main_translate = utils.merge_emoji(text_list, emoji_list)
+            main_translate = emojis.merge_emoji(text_list, emoji_list)
             # 发送通知
             group_list, translate_on_list = db.get_user_groups(ID_LIST[i])
             messages = []

@@ -142,8 +142,8 @@ scheduler = require("nonebot_plugin_apscheduler").scheduler
     seconds=nonebot.get_driver().config.dict()['wishlist_listen_interval'])
 async def listen_all():
     bot = nonebot.get_bot()
-    logger.success('开始读取愿望单')
     listen_list = await db.get_all_users()
     await asyncio.gather(*[
         _listen(target, bot) for target in listen_list
     ])
+    logger.success('成功刷新愿望单')
