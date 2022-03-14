@@ -6,7 +6,7 @@ from nonebot.adapters.onebot.v11 import Message, MessageSegment
 # CONSTANT
 PLAIN_TEXT = ['face', 'reply', 'at', 'text']
 
-async def get_user_name(bot, group_id, user_id) -> str:
+async def get_qq_name(bot, group_id, user_id) -> str:
     user_info = await bot.get_group_member_info(
         group_id=group_id, user_id=user_id, nocache=False
     )

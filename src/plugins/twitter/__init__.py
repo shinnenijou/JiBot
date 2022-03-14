@@ -107,7 +107,6 @@ async def follow(event:GroupMessageEvent):
         if db.add_group_sub(user_id, group_id):
             msg = f'{name}({username})关注成功！'
             # 更新数据库
-            db.update_newest_tweet(user_id, '')  # 初始的最新推文id为空字符串
             ID_LIST, USERNAME_LIST, NAME_LIST, NEWEST_TWEET_LIST = db.get_user_list()
         else:
             msg = f'{name}({username})已经在关注列表中！'
@@ -232,7 +231,6 @@ async def get_white_list():
     msg = '以下推特用户已加入白名单:\n'
     for i in range(len(username_list)):
         msg += f'\n[{i + 1}]{name_list[i]}({username_list[i]})'
-    print(msg)
     await white_list.finish(Message(msg))
 
 #帮助

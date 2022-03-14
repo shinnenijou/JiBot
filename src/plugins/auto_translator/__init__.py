@@ -52,10 +52,10 @@ async def add_user(event:GroupMessageEvent):
         source = setting[0]
         target = setting[1]
         isValidCmd = True
-    except FileNotFoundError:
+    except:
         isValidCmd = False
     if isValidCmd:
-        user_name = await utils.get_user_name(nonebot.get_bot(), group_id, user_id)
+        user_name = await utils.get_qq_name(nonebot.get_bot(), group_id, user_id)
         if await db.insert(group_id, user_id, source, target):
             USERS_ON = db.to_dict(await db.select())
             translator.permission = USER(*USERS_ON.keys())

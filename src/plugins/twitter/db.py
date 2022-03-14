@@ -78,6 +78,7 @@ def add_user(id : str, username : str, name : str) -> bool:#创建用户对应�
         f'select count(*) from sqlite_master where type="table" and name="_{id}";'
         ).fetchone()[0]
     if not table_exist:
+        # 初始的newest_tweet_id为空
         cursor.execute(f'insert into user_list values("{id}", "{username}", "{name}", "");')
         cursor.execute(
             f"""
