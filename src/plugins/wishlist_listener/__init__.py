@@ -115,7 +115,7 @@ scheduler = require("nonebot_plugin_apscheduler").scheduler
     id='wishlist')
 async def push_wishlist():
     bot = nonebot.get_bot()
-    target_list = db.get_all_users()
+    target_list = list(db.get_all_users())
     url_list = [db.get_url(target) for target in target_list]
     text_list = await utils.request_many(*url_list)
     for i in range(len(text_list)):
