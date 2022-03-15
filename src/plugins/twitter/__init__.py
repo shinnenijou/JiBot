@@ -36,7 +36,6 @@ async def tweet():
     if not ID_LIST:
         return  # 监听名单里没有目标
     bot = nonebot.get_bot()
-    logger.success('开始获取新推文')
     timeline_list = await twitter.get_users_timeline(
         access_token=TWITTER_TOKEN,
         users_id=ID_LIST,
@@ -51,6 +50,7 @@ async def tweet():
         NEWEST_TWEET_LIST[i] = newest_tweet_id
         db.update_newest_tweet(ID_LIST[i], newest_tweet_id)
         for tweet in tweets:
+            logger.success(f'成功检测到{USERNAME_LIST[i]}推文更新, 准备推送')
             # 初始化两个引用变量
             referenced_tweet = {}
             referenced_translate = ""
@@ -80,7 +80,6 @@ async def tweet():
                     referenced_translate * translate_on_list[j]
                     )
                 )
-                print(messages[i])
             await asyncio.gather(*[
                 bot.send_group_msg(group_id=group_list[i], message=messages[i])\
                     for i in range(len(group_list))
