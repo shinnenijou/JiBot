@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # Python STL
 import asyncio
-from turtle import update
-from unicodedata import name
 # Third-party Library
 import nonebot
 from nonebot.plugin import require
