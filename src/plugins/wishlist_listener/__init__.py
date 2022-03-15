@@ -54,11 +54,8 @@ async def add_listen(event:GroupMessageEvent):
         group_id = int(event.get_session_id().split('_')[1])
         listen_list = db.get_users_on(group_id)
         if name not in listen_list:
-            logger.success('添加成功')
-            await asyncio.gather(*[
-                db.add_listen(group_id, name, url),
-                add.send("添加成功")
-            ])              
+            db.add_listen(group_id, name, url)
+            await add.send("添加成功")       
         else:
             await add.send("已存在")
     else:
@@ -76,11 +73,8 @@ async def add_listen(event:GroupMessageEvent):
         group_id = int(event.get_session_id().split('_')[1])
         listen_list = db.get_users_on(group_id)
         if name not in listen_list:
-            logger.success('添加成功')
-            await asyncio.gather(*[
-                db.add_listen(group_id, name, url),
-                add.send("添加成功")
-            ])              
+            db.add_listen(group_id, name, url) 
+            await add.send("添加成功")          
         else:
             await add.send("已存在")
     else:
@@ -98,10 +92,8 @@ async def delete_listen(event:GroupMessageEvent):
         listen_list = db.get_users_on(group_id)
         if name in listen_list:
             logger.success('删除成功')
-            await asyncio.gather(*[
-                db.delete_listen(group_id, name),
-                delete.send("已删除")
-            ])
+            db.delete_listen(group_id, name)
+            await delete.send("已删除")
         else:
             await delete.send("未找到")
     else:
