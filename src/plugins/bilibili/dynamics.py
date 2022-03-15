@@ -257,25 +257,26 @@ CLASS_MAP = {
 async def get_users_timeline(credential:Credential, *uids:int) -> list[dict]:
     """
     获取复数用户的最新动态，
-    :return 每个用户最新动态的字典列表, 顺序与输入顺序一致
+    :return timeline_list: 多个用户时间线列表的列表, 顺序与输入顺序一致
     """
     tasks = []
     for uid in uids:
         task = asyncio.create_task(get_ones_timeline(uid, credential))
         tasks.append(task)
-    try:
-        data = await asyncio.gather(*tasks)
-    except:
-        data = []
-        logger.error('获取动态失败, 请检查网络链接或用户uid')
-    return data
+    timeline_list = await asyncio.gather(*tasks)
+    return timeline_list
 
 async def get_ones_timeline(uid:int, credential:Credential) -> dict:
     """
     获取给定用户的最新动态, 一般数量为最新12条
+    :return timeline: 包含用户最新动态的列表, 每一个动态是一个字典
     """
     u = user.User(uid, credential)
-    page = await u.get_dynamics()
-    if 'cards' in page:
-        dynamics = page['cards']
-    return dynamics
+    timeline = []
+    try:
+        timeline = await u.get_dynamics()
+    except Exception as err:
+        logger.error(f'请求{uid}动态发生错误: str({err})')
+    if 'cards' in timeline:
+        timeline = timeline['cards']
+    return timeline

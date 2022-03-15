@@ -4,22 +4,23 @@ import json, hashlib, hmac, aiohttp, asyncio, queue
 from time import strftime, gmtime, time
 
 import nonebot
+from nonebot.log import logger
 
 # TENCENT API
-# CONSTANT
 SECRETID = str(nonebot.get_driver().config.dict()["api_secretid"])
 SECRETKEY = str(nonebot.get_driver().config.dict()["api_secretkey"])
 REGION = str(nonebot.get_driver().config.dict()["api_region"])
 ENDPOINT = str(nonebot.get_driver().config.dict()["translate_endpoint"])
-
+SIGN_ALGORITHM = 'TC3-HMAC-SHA256'
+SERVICE = 'tmt'
+LIMIT_PER_SECOND = 5
+# CONSTANT
+TIMEOUT = aiohttp.ClientTimeout(total=10)  # seconds
+LIMIT = aiohttp.TCPConnector(limit_per_host=LIMIT_PER_SECOND)
 ############### WARNING ################
 
 ########################################
 
-SIGN_ALGORITHM = 'TC3-HMAC-SHA256'
-SERVICE = 'tmt'
-LIMIT_PER_SECOND = 5
-TIME_OUT = 30 # seconds
 
 
 # Request HEADERS
@@ -117,20 +118,14 @@ def _make_headers(payload : str) -> dict:
 
 class TranslateTasker():
 
-    def __init__(self, source : str, target : str, source_texts : list[str],
-        url : str = ENDPOINT, timeout : int =TIME_OUT, limit : int = LIMIT_PER_SECOND):
+    def __init__(self, source : str, target : str, source_texts : list[str]):
         self.source = source
         self.target = target
         self.source_texts = source_texts
-        self.url = url
-        self.timeout = timeout
         self.limit = LIMIT_PER_SECOND
         self.task_queue = queue.Queue()
         self.target_texts = [""] * len(source_texts)
-        self.session = aiohttp.ClientSession(
-            timeout=aiohttp.ClientTimeout(total=timeout),
-            connector=aiohttp.TCPConnector(limit_per_host=limit)
-        )
+        self.session = aiohttp.ClientSession(timeout=TIMEOUT,connector=LIMIT)
         for i in range(len(source_texts)):
             self.task_queue.put(i)
 
@@ -138,21 +133,28 @@ class TranslateTasker():
         task_id = self.task_queue.get()
         payload = _make_payload(self.source_texts[task_id], self.source, self.target)
         headers = _make_headers(payload)
-        async with self.session.post(url=self.url, data=payload, headers=headers) as resp:
+        async with self.session.post(url=ENDPOINT, data=payload, headers=headers) as resp:
             try:
                 self.target_texts[task_id] = (await resp.json())['Response']['TargetText']
             except:
+                logger.error(f'翻译No.{task_id}发生错误, 等待重试')
                 self.task_queue.put(task_id)
         return self
     
     async def post_all(self):
         while self.task_queue.qsize() > self.limit:
-            await asyncio.gather(*[self.post() for i in range(self.limit)])
+            tasks = []
+            for _ in range(self.limit):
+                tasks.append(asyncio.create_task(self.post()))
+            await asyncio.gather(*tasks)
             await asyncio.sleep(1)
-        await asyncio.gather(*[self.post() for i in range(self.task_queue.qsize())])
+        tasks = []
+        for _ in range(self.task_queue.qsize()):
+            tasks.append(asyncio.create_task(self.post()))
+        await asyncio.gather(*tasks)
         return self
 
-    async def get_target_texts(self):
+    def get_target_texts(self):
         return self.target_texts
 
     async def close(self):
@@ -161,6 +163,6 @@ class TranslateTasker():
 async def translate(source : str, target : str, *source_texts) -> list[str]:
     tasker = TranslateTasker(source, target, source_texts)
     await tasker.post_all()
-    target_texts = await tasker.get_target_texts()
+    target_texts = tasker.get_target_texts()
     await tasker.close()
     return target_texts
