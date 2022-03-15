@@ -60,7 +60,7 @@ class Room():
             if self.live_status == LiveStatus.LIVE:  # 只在开播时更新直播开始时间
                 self.live_start_time = int(play_info['live_time'])
         except Exception as err:
-            logger.error(f'请求{self.room_id}直播信息时出现错误: str({err})')
+            logger.error(f'请求{self.room_id}直播信息时出现错误: {err}')
         return is_updated
 
     async def update_key_info(self) -> bool:
@@ -69,13 +69,13 @@ class Room():
         """
         is_updated = False
         try:
-            resp = await self.room.get_room_play_info()
+            resp = await self.room.get_room_info()
             room_info = resp['room_info']
             is_updated = self.live_title != room_info['title']
             self.live_title = room_info['title']
             self.live_cover = room_info['cover']
         except Exception as err:
-            logger.error(f'请求{self.room_id}直播信息时出现错误: str({err})')
+            logger.error(f'请求{self.room_id}直播信息时出现错误: {err}')
         return is_updated
 
     def make_message(self) -> bool:
