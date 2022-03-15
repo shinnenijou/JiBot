@@ -16,7 +16,6 @@ SERVICE = 'tmt'
 LIMIT_PER_SECOND = 5
 # CONSTANT
 TIMEOUT = aiohttp.ClientTimeout(total=10)  # seconds
-LIMIT = aiohttp.TCPConnector(limit_per_host=LIMIT_PER_SECOND)
 ############### WARNING ################
 
 ########################################
@@ -122,10 +121,9 @@ class TranslateTasker():
         self.source = source
         self.target = target
         self.source_texts = source_texts
-        self.limit = LIMIT_PER_SECOND
         self.task_queue = queue.Queue()
         self.target_texts = [""] * len(source_texts)
-        self.session = aiohttp.ClientSession(timeout=TIMEOUT,connector=LIMIT)
+        self.session = aiohttp.ClientSession(timeout=TIMEOUT)
         for i in range(len(source_texts)):
             self.task_queue.put(i)
 
@@ -142,9 +140,9 @@ class TranslateTasker():
         return self
     
     async def post_all(self):
-        while self.task_queue.qsize() > self.limit:
+        while self.task_queue.qsize() > LIMIT_PER_SECOND:
             tasks = []
-            for _ in range(self.limit):
+            for _ in range(LIMIT_PER_SECOND):
                 tasks.append(asyncio.create_task(self.post()))
             await asyncio.gather(*tasks)
             await asyncio.sleep(1)
