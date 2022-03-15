@@ -2,6 +2,7 @@
 import aiohttp
 import requests
 import asyncio
+import nonebot
 from nonebot.log import logger
 # HTTP headers line
 HEADERS = {}
@@ -9,7 +10,8 @@ HEADERS["Host"] = "www.amazon.co.jp"
 HEADERS["Accept"] = "text/html"
 HEADERS["Accept-Language"] = "ja-JP"
 HEADERS["Connection"] = "close"
-
+# CONSTANT
+PROXY = nonebot.get_driver().config.dict()['proxy']
 async def request_many(*urls:int) -> list[str]:
     """
     获取复数url的愿望单页面
@@ -25,7 +27,7 @@ async def _request(session:aiohttp.ClientSession, url:str, headers:dict[str,str]
     """
     获取单一url的愿望单页面
     """
-    async with session.get(url=url, headers=headers) as resp:
+    async with session.get(url=url, headers=headers, proxy=PROXY) as resp:
         wishlist = ""
         try:
             wishlist = await resp.text()
@@ -86,8 +88,8 @@ def make_notice(new_items : list[str],buyed_items : list[str],name : str,url : s
         msg += url
     return msg
 
-def check_clear(text : str) -> bool:
+def is_clear(text : str) -> bool:
     """
     检查请求到的页面是不是真的没有商品。没有商品的页面信息中将会包含相关提示
     """
-    return text.find("このリストにはアイテムはありません") != -1
+    return text.find("このリストにはアイテムはありません") >= 0

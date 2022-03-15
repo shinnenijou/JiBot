@@ -120,8 +120,8 @@ async def push_wishlist():
     text_list = await utils.request_many(*url_list)
     for i in range(len(text_list)):
         prev_items = db.get_items(target_list[i])
-        items = utils.find_all(text_list[1])
-        if not items and not utils.check_clear(text_list[i]):
+        items = utils.find_all(text_list[i])
+        if not items and not utils.is_clear(text_list[i]):
             items = prev_items
         buyed_items = utils.check_items(prev_items, items)
         new_items = utils.check_items(items, prev_items)
