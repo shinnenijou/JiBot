@@ -44,7 +44,7 @@ def init() -> None:
     connection.commit()
     connection.close()
 
-async def get_users_on(group_id : int = None) -> Tuple[str,...]:
+def get_users_on(group_id : int = None) -> Tuple[str,...]:
     with sqlite3.connect(DB_PATH) as connection:
         cursor = connection.cursor()
         cursor = cursor.execute(
@@ -55,7 +55,7 @@ async def get_users_on(group_id : int = None) -> Tuple[str,...]:
         ret = list(name[0] for name in cursor.fetchall())
     return ret
 
-async def get_all_users() -> set:
+def get_all_users() -> set:
     with sqlite3.connect(DB_PATH) as connection:
         cursor = connection.cursor()
         cursor = cursor.execute(
@@ -66,7 +66,7 @@ async def get_all_users() -> set:
         ret = set(name[0] for name in cursor.fetchall())
     return ret
 
-async def get_groups_on(name : str = None) -> list[int]:
+def get_groups_on(name : str = None) -> list[int]:
     """
     获取订阅给定名称愿望单的群
     """
@@ -80,7 +80,7 @@ async def get_groups_on(name : str = None) -> list[int]:
         ret = list(group[0] for group in cursor.fetchall())
     return ret
 
-async def get_items(name : str) -> list[str]:
+def get_items(name : str) -> list[str]:
     with sqlite3.connect(DB_PATH) as connection:
         cursor = connection.cursor()
         cursor = cursor.execute(
@@ -91,7 +91,7 @@ async def get_items(name : str) -> list[str]:
         ret = list(item[0] for item in cursor.fetchall())
     return ret
 
-async def get_url(name : str) -> str:
+def get_url(name : str) -> str:
     """
     注意: 原则上一个名称只能对应一个URL, 重复的将会在add的阶段被阻止
     可以存在多个名称对应一个URL
@@ -105,7 +105,7 @@ async def get_url(name : str) -> str:
         )
     return cursor.fetchone()[0]
 
-async def add_listen(group_id : int, name : str, url : str) -> bool:
+def add_listen(group_id : int, name : str, url : str) -> bool:
     success = True
     with sqlite3.connect(DB_PATH) as connection:
         cursor = connection.cursor()
@@ -133,10 +133,10 @@ async def add_listen(group_id : int, name : str, url : str) -> bool:
                     success = False
             else:
                 success = False
-    await _add_table(name)
+    _add_table(name)
     return success
 
-async def delete_listen(group_id : int, name : str) -> bool:
+def delete_listen(group_id : int, name : str) -> bool:
     success = True
     with sqlite3.connect(DB_PATH) as connection:
         cursor = connection.cursor()
@@ -156,14 +156,14 @@ async def delete_listen(group_id : int, name : str) -> bool:
         
     return success
 
-async def delete_group(group_id : int) -> bool:
+def delete_group(group_id : int) -> bool:
     success = True
     target_list = get_users_on(group_id)
     for name in target_list:
         delete_listen(group_id, name)
     return success
 
-async def update_commodities(name : str, new_items : list[str], buyed_items : list[str]) -> bool:
+def update_commodities(name : str, new_items : list[str], buyed_items : list[str]) -> bool:
     success = True
     with sqlite3.connect(DB_PATH) as connection:
         try:
@@ -187,7 +187,7 @@ async def update_commodities(name : str, new_items : list[str], buyed_items : li
             success = False
     return success
 
-async def _add_table(table_name : str) -> bool:
+def _add_table(table_name : str) -> bool:
     with sqlite3.connect(DB_PATH) as connection:
         cursor = connection.cursor()
         success = True
@@ -210,7 +210,7 @@ async def _add_table(table_name : str) -> bool:
             success = False
     return success
 
-async def _delete_table(table_name : str) -> bool:
+def _delete_table(table_name : str) -> bool:
     with sqlite3.connect(DB_PATH) as connection:
         cursor = connection.cursor()
         success = True
@@ -224,7 +224,7 @@ async def _delete_table(table_name : str) -> bool:
             success = False
     return success
 
-async def _show_table(table_name : str) -> None:
+def _show_table(table_name : str) -> None:
     with sqlite3.connect(DB_PATH) as connection:
         cursor = connection.cursor()
         cursor.execute(
