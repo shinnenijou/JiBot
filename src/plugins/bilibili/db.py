@@ -29,6 +29,7 @@ def _creat_main_table():
             """
             create table user_list (
                 uid int primary key not null,
+                room_id int not null,
                 name varchar(255) not null,
                 newest_timestamp int
             );
@@ -61,7 +62,7 @@ def _creat_translator_list():
     connection.close()
 
 # bili用户操作
-def add_user(uid:int, name:str, timestamp:int=0) -> bool:#创建用户对应的表
+def add_user(uid:int, room_id, name:str, timestamp:int=0) -> bool:#创建用户对应的表
     """
     新添加一个表用于保存监听该用户的群和相关信息, 由于数字id是唯一标识所以使用下划线+id作为表名
     如果该用户已经存在则什么都不做
@@ -76,7 +77,7 @@ def add_user(uid:int, name:str, timestamp:int=0) -> bool:#创建用户对应的�
         f'select count(*) from sqlite_master where type="table" and name="_{uid}";'
         ).fetchone()[0]
     if not table_exist:
-        cursor.execute(f'insert into user_list values({uid}, "{name}", {timestamp});')
+        cursor.execute(f'insert into user_list values({uid}, {room_id}, "{name}", {timestamp});')
         cursor.execute(
             f"""
             create table _{uid} (
@@ -112,14 +113,16 @@ def get_user_groups(uid:int) -> tuple[list[str], list[int]]:
     connection.close()
     return group_list, translate_on_list
 
-def get_user_list() -> tuple[list[str], list[str], list[str]]:
+def get_user_list() -> tuple[list[int], list[int], list[str], list[int]]:
     """
     获取所有bili用户的信息, 用于新推文的请求。所有返回值的索引一一对应
     :return uid_list: 保存用户数字id的列表
+    :return room_list: 订阅主播的直播间id列表
     :return name_list: 保存每个用户显示名称的列表
     :return newest_timestamp_list: 保存每个用户最新动态发布时间戳的列表
     """
     uid_list = []
+    room_list = []
     name_list = []
     newest_timestamp_list = []
     connection = sqlite3.connect(DB_PATH)
@@ -128,11 +131,12 @@ def get_user_list() -> tuple[list[str], list[str], list[str]]:
     data = cursor.fetchall()
     for row in data:
         uid_list.append(row[0])
-        name_list.append(row[1])
-        newest_timestamp_list.append(row[2])
+        room_list.append(row[1])
+        name_list.append(row[2])
+        newest_timestamp_list.append(row[3])
     cursor.close()
     connection.close()
-    return uid_list, name_list, newest_timestamp_list
+    return uid_list, room_list, name_list, newest_timestamp_list
 
 def get_user_name(uid:int) -> str:
     """
@@ -303,7 +307,7 @@ def translate_off(uid:int, group_id:int) -> bool:  # 关闭推文翻译
 def update_timestamp(uid:int, newest_timestamp:int):  # 更新某用户最新动态时间戳
     connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
-    cursor.execute(f'update user_list set newest_timestamp="{newest_timestamp}" where uid="{uid}";')
+    cursor.execute(f'update user_list set newest_timestamp={newest_timestamp} where uid={uid};')
     connection.commit()
     cursor.close()
     connection.close()

@@ -1,22 +1,21 @@
 # -*- coding: utf-8 -*-
-# STL
-from time import time
+# Python STL
+from time import time, sleep
 import asyncio
 from collections import deque
-
-from bilibili_api import Credential, user, comment
+# Third-party
+from bilibili_api import Credential, comment
 import nonebot
 from nonebot.log import logger
 from nonebot import on_command, require
 from nonebot.permission import SUPERUSER, USER
 from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, MessageSegment
-
 # Self
 import src.plugins.bilibili.dynamics as dynamics
 import src.plugins.bilibili.db as db
 import src.plugins.bilibili.users as users
-
+from src.plugins.bilibili.live import LiveStatus, Room
 # Initiate Database
 db.init()
 # Credential
@@ -28,10 +27,13 @@ CREDENTIAL = Credential(SESSDATA, BILI_JCT, BUVID3)
 BILI_SOURCE = nonebot.get_driver().config.dict()['bili_source']
 BILI_TARGET = nonebot.get_driver().config.dict()['bili_target']
 DYNAMIC_LISTEN_INTERVAL = nonebot.get_driver().config.dict()['dynamic_listen_interval']
+LIVE_LISTEN_INTERVAL = nonebot.get_driver().config.dict()['live_listen_interval']
 COMMENT_EXPIRATION = nonebot.get_driver().config.dict()['dynamic_comment_expiration']
 # GLOBAL VIRIABLES
-UID_LIST, NAME_LIST, NEWEST_DYNAMICS = db.get_user_list()
-TRANSLATOR_LIST, _ = db.get_translator_list()
+UID_LIST, ROOM_LIST, NAME_LIST, NEWEST_DYNAMICS = db.get_user_list()
+for i in range(len(ROOM_LIST)):  # Initialize Room list
+    ROOM_LIST[i] = Room(UID_LIST[i], ROOM_LIST[i], NAME_LIST[i], CREDENTIAL)
+TRANSLATOR_LIST = db.get_translator_list()[0]
 DYNAMIC_QUEUE = deque()
 ##########################
 ######### 命令帮助 #########
@@ -50,7 +52,7 @@ async def help():
          + '/移除评论百名单 ID'
     await helper.finish(Message(menu))
 
-# 定时任务  
+# 定时任务对象
 scheduler = require('nonebot_plugin_apscheduler').scheduler
 
 ###########################
@@ -58,7 +60,7 @@ scheduler = require('nonebot_plugin_apscheduler').scheduler
 @scheduler.scheduled_job('interval', seconds=DYNAMIC_LISTEN_INTERVAL, id='dynamic')
 async def push_dynamic():
     global DYNAMIC_QUEUE, NEWEST_DYNAMICS
-    # 清理动态队列, pop掉发布时间戳离当前时间超过COMMENT_EXPIRATION的动态
+    # 清理超时动态队列, pop掉发布时间戳离当前时间超过COMMENT_EXPIRATION的动态
     while len(DYNAMIC_QUEUE):
         front = DYNAMIC_QUEUE.popleft()
         if time() - front.timestamp < COMMENT_EXPIRATION:
@@ -68,7 +70,6 @@ async def push_dynamic():
     if not UID_LIST:
         return  # 监听名单里没有目标
     bot = nonebot.get_bot()
-    logger.success('开始获取新动态')
     timeline_list = await dynamics.get_users_timeline(CREDENTIAL, *UID_LIST)
     # 每个用户的最新动态分别处理
     # 索引i: 指示第几个用户
@@ -82,6 +83,7 @@ async def push_dynamic():
             # 该动态时间戳比记录的要早则跳过
             if dynamic_info['desc']['timestamp'] <= NEWEST_DYNAMICS[i]:
                 continue
+            logger.success(f'成功检测到{UID_LIST}发布新动态, 准备推送')
             dynamic = dynamics.CLASS_MAP[dynamic_info['desc']['type']](dynamic_info, CREDENTIAL)
             # 翻译该动态
             await dynamic.translate(BILI_SOURCE, BILI_TARGET)
@@ -100,16 +102,40 @@ async def push_dynamic():
             try:
                 await asyncio.gather(*tasks)
             except:
-                logger.error('发送群消息失败, 请检查网络连接或qq账号状态')
+                logger.error(f'发送{UID_LIST[i]}群消息失败, 请检查网络连接或qq账号状态')
             # 保存该动态至内存, 供回复使用
             DYNAMIC_QUEUE.append(dynamic)
         # 更新时间戳, 返回动态从新到旧, 直接取第一条更新
         NEWEST_DYNAMICS[i] = timeline_list[i][0]['desc']['timestamp']
         db.update_timestamp(UID_LIST[i], NEWEST_DYNAMICS[i])
-    logger.success('成功获取新动态')
 
 ###########################
 ######### 直播推送 #########
+@scheduler.scheduled_job('interval', seconds=LIVE_LISTEN_INTERVAL, id='live')
+async def push_live():
+    global ROOM_LIST
+    bot = nonebot.get_bot()
+    tasks = []
+    for room in ROOM_LIST:
+        tasks.append(asyncio.create_task(room.update_live()))
+    updates = await asyncio.gather(*tasks)
+    for i in range(len(updates)):
+        # 直播状态有更新(包括开播与下播)，准备推送通知
+        if updates[i]:
+            logger.success(f'成功检测到{NAME_LIST[i]}({UID_LIST[i]})直播状态变化, 准备推送')
+            ROOM_LIST[i].update_key_info()
+            message = ROOM_LIST[i].make_message()
+            group_list = db.get_user_groups(UID_LIST[i])[0]
+            tasks = []
+            for group_id in group_list:
+                task = asyncio.create_task(
+                    bot.send_group_msg(
+                        group_id=group_id,
+                        message=message
+                    )
+                )
+                tasks.append(task)
+            await asyncio.gather(*tasks)
 
 ###########################
 ######### 发送评论 #########
@@ -120,11 +146,13 @@ async def send(event:GroupMessageEvent):
     args = event.get_plaintext().partition(' ')[2]
     dynamic_id = args.split()[0]
     msg = '命令格式错误, 请按照命令格式: "/评论 动态id 评论内容"'
-    if dynamic_id.isdigit():
-        text = args[len(dynamic_id):].strip()
-        dynamic_id = int(dynamic_id)
-        for dynamic in DYNAMIC_QUEUE:
-            if dynamic.dynamic_id == dynamic_id:
+    if not dynamic_id.isdigit():
+        return
+    text = args[len(dynamic_id):].strip()
+    dynamic_id = int(dynamic_id)
+    for dynamic in DYNAMIC_QUEUE:
+        if dynamic.dynamic_id == dynamic_id:
+            try:
                 await comment.send_comment(
                     text=text,
                     oid=dynamic.reply_id,
@@ -132,9 +160,11 @@ async def send(event:GroupMessageEvent):
                     credential=CREDENTIAL
                 )
                 msg = '评论发送成功'
-                break
-        else:
-            msg = '该动态不可回复'
+            except:
+                logger.error('发送评论失败, 请检查网络状况或Bili账号配置')
+            break
+    else:
+        msg = '发送失败, 请检查动态id'
     await send_comment.finish(Message(msg))
 
 ###########################
@@ -150,7 +180,6 @@ async def get_list(event: GroupMessageEvent):
     for i in range(len(name_list)):
         translate_text = '开启' if translate_list[i] else '关闭'
         msg += f'\n[{i + 1}]{name_list[i]}({uid_list[i]}) 翻译已{translate_text}'
-    print(msg)
     await userlist.finish(Message(msg))
 
 # 关注用户
@@ -158,7 +187,7 @@ follow_user = on_command(cmd='bili关注', priority=2, temp=False, block=True,
     permission=GROUP_OWNER|GROUP_ADMIN|SUPERUSER)
 @follow_user.handle()
 async def follow(event:GroupMessageEvent):
-    global UID_LIST, NAME_LIST, NEWEST_DYNAMICS
+    global UID_LIST, NAME_LIST, NEWEST_DYNAMICS, ROOM_LIST
 
     cmd = event.get_plaintext().split()
     group_id = event.get_session_id().split('_')[1]
@@ -169,11 +198,17 @@ async def follow(event:GroupMessageEvent):
     user_info = (await users.get_users_info(CREDENTIAL, uid))[0]
     if user_info:
         name = user_info['name']
-        db.add_user(uid, name, int(time()))  # 最新动态时间戳设置为当前时间
+        room_id = 0
+        if user_info['live_room']:
+            room_id = user_info['live_room']['roomid']
+        if db.add_user(uid, room_id, name, int(time())):  # 最新动态时间戳设置为当前时间
+            # 更新全局变量
+            UID_LIST.append(uid)
+            NAME_LIST.append(name)
+            NEWEST_DYNAMICS.append(int(time()))
+            ROOM_LIST.append(Room(uid, room_id, name, CREDENTIAL))
         if db.add_group_sub(uid, group_id):
             msg = f'{name}({uid}) 关注成功！'
-            # 更新全局变量
-            UID_LIST, NAME_LIST, NEWEST_DYNAMICS = db.get_user_list()
         else:
             msg = f'{name}({uid})已经在关注列表中！'
     else:
@@ -195,11 +230,15 @@ async def unfollow(event:GroupMessageEvent):
         if db.delete_group_sub(uid, group_id):
             msg = f"{name}({uid})取关成功"
             # 更新全局变量
-            UID_LIST, NAME_LIST, NEWEST_DYNAMICS = db.get_user_list()
+            UID_LIST, _, NAME_LIST, NEWEST_DYNAMICS = db.get_user_list()
+            if len(NAME_LIST) < len(ROOM_LIST):
+                for room in ROOM_LIST:
+                    if room.uid == uid:
+                        ROOM_LIST.remove(room)
+                        break
         else:
             msg = f"{uid}不在本群关注列表中"
-    msg = Message(msg)
-    await unfollow_user.finish(msg)
+    await unfollow_user.finish(Message(msg))
 
 #开启动态翻译
 translate_on = on_command('开启动态翻译', priority=2, temp=False, block=True,

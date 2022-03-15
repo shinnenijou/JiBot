@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
+# Python STL
 import json
 import asyncio
 from abc import ABC, abstractmethod
+# Third-party
 from bilibili_api import comment, Credential, user
-import src.plugins.bilibili.utils.tmt as tmt
-import src.plugins.bilibili.utils.emojis as emojis
 from nonebot.log import logger
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
-
+# Self
+import src.plugins.bilibili.utils.tmt as tmt
+import src.plugins.bilibili.utils.emojis as emojis
 
 # CONSTANT
-class DynamicType:
+class DynamicType():
     REPOST = 1
     IMAGEDYNAMIC = 2
     TEXTDYNAMIC = 4
