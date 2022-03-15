@@ -12,6 +12,7 @@ HEADERS["Accept-Language"] = "ja-JP"
 HEADERS["Connection"] = "close"
 # CONSTANT
 PROXY = nonebot.get_driver().config.dict()['proxy']
+PROXY = None if PROXY == 'None' else PROXY
 async def request_many(*urls:int) -> list[str]:
     """
     获取复数url的愿望单页面
