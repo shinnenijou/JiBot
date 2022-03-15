@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import aiohttp
 import requests
+import asyncio
+from nonebot.log import logger
 # HTTP headers line
 HEADERS = {}
 HEADERS["Host"] = "www.amazon.co.jp"
@@ -8,35 +10,30 @@ HEADERS["Accept"] = "text/html"
 HEADERS["Accept-Language"] = "ja-JP"
 HEADERS["Connection"] = "close"
 
-async def fetch_items(url : str) -> list[str]:
-    items = []
-#   with aiohttp.ClientSession() as session:
-    resp = _request(url, HEADERS)
-    new_items = _find_items(resp)
-    items.extend(new_items)
-        # final_page = True
-        # if new_items and new_items % 10:
-        #     final_page = False
-        # while not final_page:
-        #     resp = await _request_next_page(session, url, HEADERS)
-        #     new_items = _find_items(resp)
-        #     items.extend(new_items)
-        #     final_page = True
-        #     if new_items and new_items % 10:
-        #         final_page = False
-    return items, resp
+async def request_many(*urls:int) -> list[str]:
+    """
+    获取复数url的愿望单页面
+    """
+    async with aiohttp.ClientSession() as session:
+        tasks = []
+        for url in urls:
+            tasks.append(asyncio.create_task(_request(session, url, HEADERS)))
+        wishlist_list = await asyncio.gather(*tasks)
+    return wishlist_list
 
-def _request(
-    url : str, headers : dict[str, str]) -> str:
-    return requests.get(url=url, headers=headers).text
-# def _request(
-#     session : aiohttp.ClientSession,
-#     url : str, headers : dict[str, str] = HEADERS) -> str:
-# async def _request_next_page(
-#     session : aiohttp.ClientSession,
-#     url : str, headers : dict[str, str] = HEADERS) -> str:...
+async def _request(session:aiohttp.ClientSession, url:str, headers:dict[str,str]) -> str:
+    """
+    获取单一url的愿望单页面
+    """
+    async with session.get(url=url, headers=headers) as resp:
+        wishlist = ""
+        try:
+            wishlist = await resp.text()
+        except Exception as err:
+            logger.error(f'请求愿望单时发生错误: {err}')
+    return wishlist
 
-def _find(string : str, begin : int):
+def _find_one(string:str, begin:int):
     item_beg = string.find("itemName", begin, len(string))
     if item_beg == -1:
         item_title = ""
@@ -47,7 +44,7 @@ def _find(string : str, begin : int):
         item_title = string[title_beg + 7: end - 2].strip()
     return item_title, end
 
-def _find_items(string : str) -> list[str]:
+def find_all(string:str) -> list[str]:
     items = []
     if string:
         # 如果get没有发生异常，则对返回的html进行处理
@@ -55,7 +52,7 @@ def _find_items(string : str) -> list[str]:
         # 将返回数据中包含的愿望单物品全部添加至列表中
         while begin != -1:
             # 查找愿望单中是否有物品
-            item_title, begin = _find(string, begin)
+            item_title, begin = _find_one(string, begin)
             if item_title:
                 items.append(item_title)
     return items

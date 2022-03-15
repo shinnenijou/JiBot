@@ -67,6 +67,9 @@ async def get_all_users() -> set:
     return ret
 
 async def get_groups_on(name : str = None) -> list[int]:
+    """
+    获取订阅给定名称愿望单的群
+    """
     with sqlite3.connect(DB_PATH) as connection:
         cursor = connection.cursor()
         cursor = cursor.execute(

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Python STL
 import asyncio
+from unicodedata import name
 # Third-party Library
 import nonebot
 from nonebot.plugin import require
@@ -115,35 +116,34 @@ async def _(event: GroupDecreaseNoticeEvent):
     if event.self_id == event.user_id:
         await db.delete_group(group_id)
 
-async def _listen(target : str, bot):
-    url, groups, prev_items =  await asyncio.gather(*[
-        db.get_url(target),
-        db.get_groups_on(target),
-        db.get_items(target)
-    ])
-    items, resp = await utils.fetch_items(url)
-    if not items and not utils.check_clear(resp):
-        items = prev_items
-    buyed_items = utils.check_items(prev_items, items)
-    new_items = utils.check_items(items, prev_items)
-    msg = utils.make_notice(new_items, buyed_items, target, url)
-    if msg:
-        await asyncio.gather(*[
-            bot.send_group_msg(
-                group_id=group_id,
-                message=msg
-            )for group_id in groups],
-            db.update_commodities(target, new_items, buyed_items)
-        )
-
+# Listen
 scheduler = require("nonebot_plugin_apscheduler").scheduler
 @scheduler.scheduled_job(
     trigger='interval',
-    seconds=nonebot.get_driver().config.dict()['wishlist_listen_interval'])
-async def listen_all():
+    seconds=nonebot.get_driver().config.dict()['wishlist_listen_interval'],
+    id='wishlist')
+async def push_wishlist():
     bot = nonebot.get_bot()
-    listen_list = await db.get_all_users()
-    await asyncio.gather(*[
-        _listen(target, bot) for target in listen_list
-    ])
-    logger.success('成功刷新愿望单')
+    target_list = await db.get_all_users()
+    url_list = [db.get_url(target) for target in target_list]
+    text_list = await utils.request_many(*url_list)
+    for i in range(len(text_list)):
+        prev_items = db.get_items(target_list[i])
+        items = utils.find_all(text_list[1])
+        if not items and not utils.check_clear(text_list[i]):
+            items = prev_items
+        buyed_items = utils.check_items(prev_items, items)
+        new_items = utils.check_items(items, prev_items)
+        msg = utils.make_notice(new_items, buyed_items, target_list[i], url_list[i])
+        group_list = db.get_groups_on(target_list[i])
+        if msg:
+            logger.success(f'检测到{target_list[i]}愿望单添加了新商品, 准备推送')
+            tasks = []
+            for group_id in group_list:
+                tasks.append(
+                    bot.send_group_msg(
+                        group_id=group_id,
+                        message=msg
+                    )
+                )
+            await asyncio.gather(*tasks)
