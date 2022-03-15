@@ -123,7 +123,7 @@ async def push_live():
         # 直播状态有更新(包括开播与下播)，准备推送通知
         if updates[i]:
             logger.success(f'成功检测到{NAME_LIST[i]}({UID_LIST[i]})直播状态变化, 准备推送')
-            ROOM_LIST[i].update_key_info()
+            await ROOM_LIST[i].update_key_info()
             message = ROOM_LIST[i].make_message()
             group_list = db.get_user_groups(UID_LIST[i])[0]
             tasks = []
