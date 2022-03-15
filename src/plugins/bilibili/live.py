@@ -91,6 +91,6 @@ class Room():
             msg.append(MessageSegment.image(self.live_cover))
             return msg
         else:
-            duration = (int(time()) - self.live_start_times)/(60 * 60)
+            duration = (int(time()) - self.live_start_time)/(60 * 60)
             msg = f'{self.name}({self.uid})结束直播\n本次直播时长:{duration:.1f}小时'
             return Message(msg)
