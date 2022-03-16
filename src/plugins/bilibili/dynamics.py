@@ -24,7 +24,8 @@ REPLY_MAP = {
     DynamicType.REPOST : comment.ResourceType.DYNAMIC,
     DynamicType.TEXTDYNAMIC : comment.ResourceType.DYNAMIC,
     DynamicType.IMAGEDYNAMIC : comment.ResourceType.DYNAMIC_DRAW,
-    DynamicType.VIDEODYNAMIC : comment.ResourceType.VIDEO
+    DynamicType.VIDEODYNAMIC : comment.ResourceType.VIDEO,
+    DynamicType.COLUMNDYNAMIC : comment.ResourceType.ARTICLE
 }
 
 class Dynamic(ABC):
@@ -55,7 +56,7 @@ class Dynamic(ABC):
                 self.image_urls.append(pic['img_src'])
 
     @abstractmethod
-    def make_message(self, need_translate:int):
+    def get_message(self, need_translate:int):
         """
         构造Message供bot发送的抽象虚函数, 子类各自实现
         """
@@ -135,7 +136,7 @@ class Repost(Dynamic):
             for emoji in dy_info['display']['origin']['emoji_info']['emoji_details']:
                 self.orig_emoji_urls[emoji['text']] = emoji['url']
 
-    def make_message(self, need_translate:int):
+    def get_message(self, need_translate:int):
         """
         :param need_translate: 表示本动态是否需要翻译的整数, 只取0和1
         """
@@ -175,7 +176,7 @@ class ImageDynamic(Dynamic):
         self.reply_id = dy_info['desc']['rid']
         self.text = dy_info['card']['item']['description']
 
-    def make_message(self, need_translate:int):
+    def get_message(self, need_translate:int):
         """
         :param need_translate: 表示本动态是否需要翻译的整数, 只取0和1
         """
@@ -200,7 +201,7 @@ class TextDynamic(Dynamic):
         self.reply_id = dy_info['desc']['dynamic_id']
         self.text = dy_info['card']['item']['content']
 
-    def make_message(self, need_translate:int) -> Message:
+    def get_message(self, need_translate:int) -> Message:
         """
         :param need_translate: 表示本动态是否需要翻译的整数, 只取0和1
         """
@@ -233,7 +234,7 @@ class VideoDynamic(Dynamic):
         self.video_duration = dy_info['card']['duration']
         self.url = f'https://www.bilibili.com/video/{self.bvid}'
     
-    def make_message(self, need_translate:int):
+    def get_message(self, need_translate:int):
         """
         :param need_translate: 表示本动态是否需要翻译的整数, 只取0和1
         """
@@ -249,11 +250,46 @@ class VideoDynamic(Dynamic):
         message.append(MessageSegment.image(self.video_pic_url))
         return message
     
+class ColumnDynamic(Dynamic):
+    """
+    专栏动态ColumnDynamic类, 从返回的response中提取动态相关的信息\n
+    回复使用'rid'
+    """
+    def __init__(self, dy_info:dict[str:dict], credential:Credential):
+        """
+        :param dy_info: API返回的动态信息字典
+        """
+        # 本动态内容
+        Dynamic.__init__(self, dy_info, credential)
+        self.column_id = dy_info['desc']['rid']
+        self.reply_id = dy_info['desc']['rid']
+        self.column_title = dy_info['card']['title']
+        self.column_summary = dy_info['card']['summary']
+        self.url = f'https://www.bilibili.com/read/cv{self.column_id}'
+        self.column_banner_url = ''
+        if 'banner_url' in dy_info['card']:
+            self.column_banner_url = dy_info['card']['banner_url']
+        
+    def get_message(self, need_translate: int):
+        """
+        :param need_translate: 表示本动态是否需要翻译的整数, 对于专栏没用, 但是能统一接口
+        """
+        message = f'{self.author_name}发布了一篇新专栏:\n'\
+                + f'标题: 「{self.column_title}」\n'\
+                + f'简介: {self.column_summary}\n'\
+                + f'--------------------\n{self.url}\n'\
+                + f'(id: {self.dynamic_id})\n'
+        message = Message(message)
+        if self.column_banner_url:
+            message.append(MessageSegment.image(self.column_banner_url))
+        return message
+
 CLASS_MAP = {
     DynamicType.REPOST : Repost,
     DynamicType.IMAGEDYNAMIC : ImageDynamic,
     DynamicType.TEXTDYNAMIC : TextDynamic,
-    DynamicType.VIDEODYNAMIC : VideoDynamic
+    DynamicType.VIDEODYNAMIC : VideoDynamic,
+    DynamicType.COLUMNDYNAMIC : ColumnDynamic
 }
 
 async def get_users_timeline(credential:Credential, *uids:int) -> list[dict]:

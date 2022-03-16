@@ -91,7 +91,7 @@ async def push_dynamic():
             # 索引k: 指示订阅该用户的群
             tasks = []
             for k in range(len(group_list)):
-                message = dynamic.make_message(translate_list[k])
+                message = dynamic.get_message(translate_list[k])
                 task = asyncio.create_task(
                     bot.send_group_msg(
                         group_id=group_list[k],
@@ -124,7 +124,7 @@ async def push_live():
         if updates[i]:
             logger.success(f'成功检测到{NAME_LIST[i]}({UID_LIST[i]})直播状态变化, 准备推送')
             await ROOM_LIST[i].update_key_info()
-            message = ROOM_LIST[i].make_message()
+            message = ROOM_LIST[i].get_message()
             group_list = db.get_user_groups(UID_LIST[i])[0]
             tasks = []
             for group_id in group_list:
