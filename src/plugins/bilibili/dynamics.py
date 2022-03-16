@@ -186,7 +186,7 @@ class ImageDynamic(Dynamic):
                 + f'(id: {self.dynamic_id})\n'
         message = Message(message)
         for img in self.image_urls:
-            message.append(MessageSegment(img))
+            message.append(MessageSegment.image(img))
         return message
 
 class TextDynamic(Dynamic):
