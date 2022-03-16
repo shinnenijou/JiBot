@@ -78,7 +78,7 @@ class Room():
             logger.error(f'请求{self.room_id}直播信息时出现错误: {err}')
         return is_updated
 
-    def make_message(self) -> bool:
+    def get_message(self) -> bool:
         """
         构造用于发送qq信息的Message, 内容根据live_status生成
         WARNING: 原则上只能在更新直播状态发生变化以后调用
