@@ -42,7 +42,8 @@ class Dynamic(ABC):
         self.author_name = dy_info['desc']['user_profile']['info']['uname']
         self.dynamic_id = dy_info['desc']['dynamic_id']
         self.timestamp = dy_info['desc']['timestamp']
-        # 初始化一个空的翻译文本
+        # 初始化空文本, 等待子类根据数据初始化
+        self.text = ""
         self.translate_text = ""
         # 无emoji的动态也将包含self.emoji_urls方便统一处理
         self.emoji_urls = {}
@@ -65,9 +66,10 @@ class Dynamic(ABC):
         """
         子类通用的翻译接口, 将动态翻译为指定的语言。返回翻译后文本的同时将文本保存在类内。
         """
-        source_list, emoji_list = emojis.split_emoji(self.text)
-        target_list = await tmt.translate(source, target, *source_list)
-        self.translate_text = emojis.merge_emoji(target_list, emoji_list)
+        if self.text:
+            source_list, emoji_list = emojis.split_emoji(self.text)
+            target_list = await tmt.translate(source, target, *source_list)
+            self.translate_text = emojis.merge_emoji(target_list, emoji_list)
         return self.translate_text
 
     async def comment(self, text:str) -> None:
@@ -223,7 +225,6 @@ class VideoDynamic(Dynamic):
         # 动态基本信息
         Dynamic.__init__(self, dy_info, credential)
         self.reply_id = dy_info['desc']['rid']
-        self.text = ""
         if 'dynamic' in dy_info['card']:
             self.text = dy_info['card']['dynamic']
         # 视频信息
