@@ -243,7 +243,7 @@ class VideoDynamic(Dynamic):
                 + (f'--------------------\n{self.text}\n' if self.text else "")\
                 + (f'--------------------\n机翻:\n{self.translate_text}\n' * need_translate)\
                 + '--------------------\n'\
-                + f'标题: 「{self.video_title}」\n'\
+                + f'标题:\n「{self.video_title}」\n'\
                 + f'简介: {self.video_desc}\n'\
                 + f'--------------------\n{self.url}\n'\
                 + f'(id: {self.dynamic_id})\n'
@@ -276,8 +276,8 @@ class ColumnDynamic(Dynamic):
         :param need_translate: 表示本动态是否需要翻译的整数, 对于专栏没用, 但是能统一接口
         """
         message = f'{self.author_name}发布了一篇新专栏:\n'\
-                + f'标题: 「{self.column_title}」\n'\
-                + f'简介: {self.column_summary}\n'\
+                + f'标题:\n「{self.column_title}」\n'\
+                + f'简介:\n {self.column_summary}...\n'\
                 + f'--------------------\n{self.url}\n'\
                 + f'(id: {self.dynamic_id})\n'
         message = Message(message)

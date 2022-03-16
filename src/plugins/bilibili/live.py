@@ -42,7 +42,7 @@ class Room():
         self.uid = uid
         self.room_id = room_id
         self.name = name
-        self.live_status = LiveStatus.OFFLINE
+        self.live_status = None
         self.live_start_time = int(time())
         self.live_title = ""
         self.live_cover = ""
@@ -55,7 +55,8 @@ class Room():
         is_updated = False
         try:
             play_info = await self.room.get_room_play_info()
-            is_updated = play_info['live_status'] != self.live_status
+            is_updated = self.live_status != None\
+                and play_info['live_status'] != self.live_status
             self.live_status = play_info['live_status']
             if self.live_status == LiveStatus.LIVE:  # 只在开播时更新直播开始时间
                 self.live_start_time = int(play_info['live_time'])
