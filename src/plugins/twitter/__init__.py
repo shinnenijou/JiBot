@@ -11,8 +11,6 @@ from nonebot.log import logger
 import nonebot
 
 # Import self-utils
-import src.plugins.twitter.utils.tmt as tmt
-import src.plugins.twitter.utils.emojis as emojis
 import src.plugins.twitter.db as db
 import src.plugins.twitter.twitter as twitter
 # CONSTANTS
@@ -23,74 +21,57 @@ TWITTER_TOKEN = nonebot.get_driver().config.dict()['twitter_token']
 # INITIATE DATABASE
 db.init()
 # GLOGBAL VIABLES
-ID_LIST, USERNAME_LIST, NAME_LIST, NEWEST_TWEET_LIST = db.get_user_list()
-WHITE_LIST, _, _ = db.get_white_list()
+USER_LIST = db.get_user_list()
+WHITE_LIST = db.get_white_list()
 
-# 请求定时任务对象scheduler   
+# 请求定时任务对象scheduler
 scheduler = require('nonebot_plugin_apscheduler').scheduler
 
 # 定时请求推文
 @scheduler.scheduled_job('interval', seconds=TWEET_LISTEN_INTERVAL, id='tweet')
 async def tweet():
-    global NEWEST_TWEET_LIST
-    if not ID_LIST:
+    global USER_LIST
+    if not USER_LIST:
         return  # 监听名单里没有目标
     bot = nonebot.get_bot()
-    timeline_list = await twitter.get_users_timeline(
+    # 异步获取用户们的时间线
+    timeline_list:list[twitter.Timeline] = await twitter.get_users_timeline(
         access_token=TWITTER_TOKEN,
-        users_id=ID_LIST,
-        since_tweet_ids=NEWEST_TWEET_LIST
+        users=USER_LIST,
+        white_list=WHITE_LIST
     )
+    # 对每个用户的timeline进行处理
+    # 索引i: 指示推特用户序号
     for i in range(len(timeline_list)):
-        newest_tweet_id, tweets = twitter.reorgnize_timeline(
-            timeline_list[i], USERNAME_LIST[i], NEWEST_TWEET_LIST[i], WHITE_LIST
-        )
-        if tweets and not NEWEST_TWEET_LIST[i]:
+        timeline = timeline_list[i]
+        logger.debug(f'成功获取到{timeline.author_id}推文')
+        tweets = timeline.tweets
+        if tweets and not USER_LIST[timeline.author_id]['newest_id']:
             tweets = tweets[:1]  # 如果该用户没有过最新推文id的记录,则只推送最新一条
-        NEWEST_TWEET_LIST[i] = newest_tweet_id
-        db.update_newest_tweet(ID_LIST[i], newest_tweet_id)
+        # 更新最新id, 不论推文是否被推送都会在此被更新
+        USER_LIST[timeline.author_id]['newest_id'] = timeline.newest_id
+        db.update_newest_tweet(timeline.author_id, timeline.newest_id)
         for tweet in tweets:
-            logger.success(f'成功检测到{USERNAME_LIST[i]}推文更新, 准备推送')
-            # 初始化两个引用变量
-            referenced_tweet = {}
-            referenced_translate = ""
-            if tweet['type'] == 'quoted' or tweet['type'] == 'replied_to':
-                logger.success('存在引用推文，开始获取原引用')
-                referenced_tweet = await twitter.get_tweets(
-                    TWITTER_TOKEN, tweet['referenced_id'])
-                # 引用翻译
-                referenced_tweet = twitter.reorgnize_tweets(
-                    referenced_tweet, USERNAME_LIST[i], WHITE_LIST)[0]
-                text_list, emoji_list = emojis.split_emoji(referenced_tweet['text'])
-                text_list = await tmt.translate(TWEET_SOURCE, TWEET_TARGET, *text_list)
-                referenced_translate = emojis.merge_emoji(text_list, emoji_list)
-            # 正文翻译
-            text_list, emoji_list = emojis.split_emoji(tweet['text'])
-            text_list = await tmt.translate(TWEET_SOURCE, TWEET_TARGET, *text_list)
-            main_translate = emojis.merge_emoji(text_list, emoji_list)
+            logger.success(f'成功检测到{tweet.author_username}推文更新, 准备推送')
+            await tweet.translate(TWEET_SOURCE, TWEET_TARGET)
             # 发送通知
-            group_list, translate_on_list = db.get_user_groups(ID_LIST[i])
-            messages = []
-            for j in range(len(group_list)):
-                messages.append(twitter.make_message(
-                    NAME_LIST[i],
-                    tweet,
-                    referenced_tweet,
-                    main_translate * translate_on_list[j],
-                    referenced_translate * translate_on_list[j]
-                    )
+            group_list = db.get_user_groups(tweet.author_id)
+            tasks = []
+            for group_id, need_translate in group_list.items():
+                msg = tweet.get_message(need_translate)
+                task = asyncio.create_task(
+                    bot.send_group_msg(group_id=group_id, message=msg)
                 )
-            await asyncio.gather(*[
-                bot.send_group_msg(group_id=group_list[i], message=messages[i])\
-                    for i in range(len(group_list))
-            ])
+                tasks.append(task)
+            print(tweet.get_message(1))
+            await asyncio.gather(*tasks)
 
 # 关注推特命令(仅允许管理员操作)
 follow_user = on_command('推特关注', priority=2, temp=False, block = True,
     permission=GROUP_ADMIN|GROUP_OWNER|SUPERUSER)
 @follow_user.handle()
 async def follow(event:GroupMessageEvent):
-    global ID_LIST, USERNAME_LIST, NAME_LIST, NEWEST_TWEET_LIST
+    global USER_LIST
     group_id = event.get_session_id().split('_')[1]
     cmd = event.get_plaintext().split()
     msg = '命令格式错误, 请按照命令格式: "/推特关注 推特id(不带@)"'
@@ -105,8 +86,8 @@ async def follow(event:GroupMessageEvent):
         db.add_user(user_id, username, name)
         if db.add_group_sub(user_id, group_id):
             msg = f'{name}({username})关注成功！'
-            # 更新数据库
-            ID_LIST, USERNAME_LIST, NAME_LIST, NEWEST_TWEET_LIST = db.get_user_list()
+            # 更新全局变量
+            USER_LIST = db.get_user_list()
         else:
             msg = f'{name}({username})已经在关注列表中！'
     else:
@@ -118,6 +99,7 @@ unfollow_user = on_command('推特取关', priority=2, temp=False, block=True,
     permission=GROUP_ADMIN|GROUP_OWNER|SUPERUSER)
 @unfollow_user.handle()
 async def unfollow(event:GroupMessageEvent):
+    global USER_LIST
     group_id = event.get_session_id().split('_')[1]
     cmd = event.get_plaintext().split()
     msg = '命令格式错误, 请按照命令格式: "/推特取关 推特id(不带@)"'
@@ -126,6 +108,8 @@ async def unfollow(event:GroupMessageEvent):
         user_id, name = db.get_user_id_name(username)
         if db.delete_group_sub(user_id, group_id):
             msg = f"{name}({username})取关成功"
+            # 更新全局变量
+            USER_LIST = db.get_user_list()
         else:
             msg = f"{name}({username})不在本群关注列表中"
     Msg = Message(msg)
@@ -138,10 +122,13 @@ userlist = on_command('推特关注列表', priority=2, temp=False, block=True,
 async def get_list(event: GroupMessageEvent):
     group_id = event.get_session_id().split('_')[1]
     msg = '本群已关注以下推特:\n'
-    _, name_list, username_list, translate_list = db.get_group_sub(group_id)
-    for i in range(len(name_list)):
-        translate_text = '开启' if translate_list[i] else '关闭'
-        msg += f'\n[{i + 1}]{name_list[i]}({username_list[i]}) 翻译已{translate_text}'
+    sub_list = db.get_group_sub(group_id)
+    i = 0
+    for info in sub_list.values():
+        i += 1
+        translate_text = '开启' if info['need_translate'] else '关闭'
+        msg += f"\n[{i}]{info['name']}({info['username']}) 翻译已{translate_text}"
+    print(msg)
     await userlist.finish(Message(msg))
 
 #开启推文翻译(仅允许管理员操作)
@@ -195,7 +182,7 @@ async def add_white_list(event:GroupMessageEvent):
         name = user_info['name']
         if db.add_white_list(id, username, name):
             msg = f'{name}({username}) 添加白名单成功'
-            WHITE_LIST, _, _ = db.get_white_list()
+            WHITE_LIST[id] = {'name':name, 'username':username}
         else:
             msg = f'{name}({username}) 已在白名单中'
     else:
@@ -216,7 +203,7 @@ async def remove_white_list(event:GroupMessageEvent):
     name = db.remove_white_list(username)
     if name:
         msg = f'{name}({username}) 移除白名单成功'
-        WHITE_LIST, _, _ = db.get_white_list()
+        WHITE_LIST = db.get_white_list()
     else:
         msg = f'{name}({username}) 不在白名单中'
     await white_list_remove.finish(Message(msg))
@@ -226,10 +213,12 @@ white_list = on_command('推特白名单', priority=2, temp=False, block=True,
     permission=SUPERUSER)
 @white_list.handle()
 async def get_white_list():
-    _, username_list, name_list = db.get_white_list()
     msg = '以下推特用户已加入白名单:\n'
-    for i in range(len(username_list)):
-        msg += f'\n[{i + 1}]{name_list[i]}({username_list[i]})'
+    i = 0
+    for info in WHITE_LIST.values():
+        i += 1
+        msg += f"\n[{i}]{info['name']}({info['username']})"
+    print(msg)
     await white_list.finish(Message(msg))
 
 #帮助
@@ -255,6 +244,6 @@ async def _(event: GroupDecreaseNoticeEvent):
     # 此处user_id是退群的qq用户
     group_id = event.get_session_id().split('_')[1]
     if event.self_id == event.user_id:
-        id_list, _, _, _ = db.get_group_sub(group_id)
-        for id in id_list:
+        sub_list= db.get_group_sub(group_id)
+        for id in sub_list.keys():
             db.delete_group_sub(id, group_id)

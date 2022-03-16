@@ -1,15 +1,302 @@
 # -*- coding: utf-8 -*-
-import aiohttp
+# Python STL
 import asyncio
+from abc import abstractmethod, ABC
+# Third-party
 import nonebot
+import aiohttp
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 from nonebot.log import logger
+# Self utils
+import src.plugins.twitter.utils.emojis as emojis
+import src.plugins.twitter.utils.tmt as tmt
 
 # CONSTANT
 PROXY = nonebot.get_driver().config.dict()['proxy']
 PROXY = None if PROXY == 'None' else PROXY
 
-async def get_users_info(access_token : str, *usernames : str, ) -> list[dict[str,str]]:
+class TweetType:
+    Origin = 'origin'
+    Retweet = 'retweeted'
+    Quote = 'quoted'
+    Reply = 'replied_to'
+
+class Tweet(ABC):
+    """
+    原创推文Tweet基类, 将给定信息整理并输出用于推送的Message
+    """
+    def __init__(self, 
+        tweet_data:dict,
+        user_map:dict,
+        media_map:dict,
+        reference_map:dict):
+        """
+        :params tweet_data: 一条推文的主数据, 位于API返回中的tweet.fields的'data'
+        :params user_map: 从用户id映射到用户信息的字典, 需要自行从API返回中组织生成
+        :params media_map: 从media_key映射到媒体url的字典, 需要自行从API返回中组织生成
+        :params reference_map: 从引用推文id映射到原推详情的字典, 需要自行从API返回中组织生成
+        """
+        # 推文信息
+        self.type:str = tweet_data['referenced_tweets'][0]['type']  # 推文类型
+        self.id:str = tweet_data['id']  # 推文id
+        self.author_id:str = tweet_data['author_id']  # 作者id
+        self.author_name:str = user_map[self.author_id]['name']  # 作者名称
+        self.author_username:str = user_map[self.author_id]['username']  # 作者用户名
+        self.text:str = tweet_data['text'].strip()
+        self.text_translate = ""  # 正文翻译
+        self.url:str = f"https://twitter.com/{self.author_username}/status/{self.id}"  # 推文url
+        self.image_urls:list[str] = []  # 推文附图
+        if 'attachments' in tweet_data:
+            # 推文正文, 有附件时末尾会被推特加上有本条推文的链接,
+            # https://t.co/xxxxxxxxxx 共23个字符, 正文过长会被截断, 需要判断
+            if self.text[-23:-18] == 'https':
+                self.text = self.text[:-23].strip()
+            for media_key in tweet_data['attachments']['media_keys']:
+                url = media_map[media_key]['url'] if 'url' in media_map[media_key]\
+                    else media_map[media_key]['preview_image_url']
+                self.image_urls.append(url)
+
+    async def translate(self, source:str, target:str) -> str:
+        if self.text:
+            text_list, emoji_list = emojis.split_emoji(self.text)
+            translate_list = await tmt.translate(source, target, *text_list)
+            self.text_translate = emojis.merge_emoji(translate_list, emoji_list).strip()
+        return self.text_translate
+
+    def get_message(self, need_translate:int) -> Message:
+        # 通知抬头
+        msg = f'{self.author_name} 发布了一条新推文:\n'
+        # 推文正文
+        msg += '--------------------\n'\
+            + self.text + '\n'
+        # 正文翻译
+        msg += ('--------------------\n'\
+            + '机翻:\n'\
+            + self.text_translate + '\n')\
+            * need_translate
+        # 推文链接
+        msg += '--------------------\n'
+        msg += self.url + '\n'
+        msg = Message(msg)
+        # 推文附图
+        for image in self.image_urls:
+            msg.append(MessageSegment.image(image))
+        return msg
+    
+class ReferenceTweet(Tweet):
+    """
+    存在引用行为的ReferenceTweet抽象基类
+    """
+    def __init__(self,
+        tweet_data: dict,
+        user_map: dict,
+        media_map: dict,
+        reference_map: dict):
+        Tweet.__init__(self, tweet_data, user_map, media_map, reference_map)
+        # 原推信息
+        self.reference_id:str = tweet_data['referenced_tweets'][0]['id']  # 原推文id
+        referenced_tweet:dict = reference_map[self.reference_id]
+        self.reference_author_id:str = referenced_tweet['author_id']  # 原推作者id
+        self.reference_author_name:str = user_map[self.reference_author_id]['name']  # 原推作者名称
+        self.reference_author_username:str = user_map[self.reference_author_id]['username']  # 原推作者用户名
+        self.reference_text:str = referenced_tweet['text'].strip()  # 原推正文
+        if 'attachments' in referenced_tweet and self.reference_text[-23:-18]:
+            self.reference_text[:-23].strip()
+        self.reference_text_translate = ""  # 原推正文翻译
+        self.reference_image_urls:list[str] = []  # 原推附图, 此处暂时留空
+    
+    async def translate(self, source: str, target: str) -> str:
+        await Tweet.translate(self, source, target)
+        if self.reference_text:
+            text_list, emoji_list = emojis.split_emoji(self.reference_text)
+            translate_list = await tmt.translate(source, target, *text_list)
+            self.reference_text_translate = emojis.merge_emoji(translate_list, emoji_list)
+        return self.reference_text_translate
+
+    @abstractmethod
+    def get_message(self, need_translate: int) -> Message:
+        """
+        构造Message供bot发送的抽象虚函数, 子类各自实现
+        """
+class Retweet(ReferenceTweet):
+    """
+    转推子类Retweet类, 将给定信息整理并输出用于推送的Message
+    NOTE: 正文会复读一遍原推的正文. 原推的图片也会出现在本条信息中, 可以直接从media_map获取
+    NOTE: 原推的图片将在Tweet构造函数中当作本推文的图片保存
+    """
+    def __init__(self,
+        tweet_data: dict,
+        user_map: dict,
+        media_map: dict,
+        reference_map: dict):
+
+        ReferenceTweet.__init__(self, tweet_data, user_map, media_map, reference_map)
+        self.reference_text = ""  # 将原推正文删除, 避免重复翻译
+        
+    def get_message(self, need_translate: int) -> Message:
+        # 通知抬头
+        msg = f'{self.author_name} 转发了 {self.reference_author_name} 的一条推文:\n'
+        # 推文正文
+        msg += '--------------------\n'\
+            + self.text + '\n'
+        # 正文翻译
+        msg += ('--------------------\n'\
+            + '机翻:\n'\
+            + self.text_translate + '\n')\
+            * need_translate
+        # 推文链接
+        msg += '--------------------\n'
+        msg += self.url + '\n'
+        msg = Message(msg)
+        # 推文附图
+        for image in self.image_urls:
+            msg.append(MessageSegment.image(image))
+        for image in self.reference_image_urls:
+            msg.append(MessageSegment.image(image))
+        return msg
+
+class Reply(ReferenceTweet):
+    """
+    子类Reply类, 将给定信息整理并输出用于推送的Message
+    NOTE: 本条回复和原推都可能带有图片, 子类构造函数只处理原推带的图片(再次请求进行获取)
+    NOTE: 本条回复的图片将在Tweet构造函数中当作本推文的图片保存
+    """
+    def __init__(self,
+        tweet_data: dict,
+        user_map: dict,
+        media_map: dict,
+        reference_map: dict):
+
+        ReferenceTweet.__init__(self, tweet_data, user_map, media_map, reference_map)
+        # 暂时策略: 回复类型的推文不推送原推图片
+    
+    def get_message(self, need_translate: int) -> Message:
+        # 通知抬头
+        msg = f'{self.author_name} 回复了 {self.reference_author_name} 的一条推文:\n'
+        # 推文正文
+        msg += '--------------------\n'\
+            + self.text + '\n'
+        # 正文翻译
+        msg += ('--------------------\n'\
+            + '机翻:\n'\
+            + self.text_translate + '\n')\
+            * need_translate
+        # 原推正文
+        msg += '--------------------\n'\
+            + '引用原文:\n'\
+            + self.reference_text + '\n'
+        # 原推翻译
+        msg += ('--------------------\n'\
+            + '机翻:\n'\
+            + self.reference_text_translate + '\n')\
+            * need_translate
+        # 推文链接
+        msg += '--------------------\n'
+        msg += self.url + '\n'
+        msg = Message(msg)
+        # 推文附图
+        for image in self.image_urls:
+            msg.append(MessageSegment.image(image))
+        for image in self.reference_image_urls:
+            msg.append(MessageSegment.image(image))
+        return msg
+    
+class Quote(ReferenceTweet):
+    """
+    子类Quote类, 将给定信息整理并输出用于推送的Message
+    NOTE: 本条引用和原推都可能带有图片, 子类构造函数只处理原推带的图片(再次请求进行获取)
+    NOTE: 本条回复的图片将在Tweet构造函数中当作本推文的图片保存
+    """
+
+    def __init__(self,
+        tweet_data: dict,
+        user_map: dict,
+        media_map: dict,
+        reference_map: dict):
+
+        ReferenceTweet.__init__(self, tweet_data, user_map, media_map, reference_map)
+        # 暂时策略: 引用类型的推文不推送原推图片
+
+    def get_message(self, need_translate: int) -> Message:
+        # 通知抬头
+        msg = f'{self.author_name} 引用了 {self.reference_author_name} 的一条推文:\n'
+        # 推文正文
+        msg += '--------------------\n'\
+            + self.text + '\n'
+        # 正文翻译
+        msg += ('--------------------\n'\
+            + '机翻:\n'\
+            + self.text_translate + '\n')\
+            * need_translate
+        # 原推正文
+        msg += '--------------------\n'\
+            + '引用原文:\n'\
+            + self.reference_text + '\n'
+        # 原推翻译
+        msg += ('--------------------\n'\
+            + '机翻:\n'\
+            + self.reference_text_translate + '\n')\
+            * need_translate
+        # 推文链接
+        msg += '--------------------\n'
+        msg += self.url + '\n'
+        msg = Message(msg)
+        # 推文附图
+        for image in self.image_urls:
+            msg.append(MessageSegment.image(image))
+        for image in self.reference_image_urls:
+            msg.append(MessageSegment.image(image))
+        return msg
+        
+CLASS_MAP = {
+    TweetType.Origin: Tweet,
+    TweetType.Retweet: Retweet,
+    TweetType.Reply: Reply,
+    TweetType.Quote: Quote
+}        
+class Timeline:
+    """
+    将API的数据整理为推文列表, 会过滤掉白名单以外的回复, 转推
+    """
+    def __init__(self, user_id: str, newest_id: str, resp: dict,
+        white_list: dict[str,dict]):
+        """
+        :param resp: 推特API返回的json数据
+        """
+        self.tweets:list[Tweet] = []
+        self.author_id = user_id
+        self.newest_id = newest_id
+        if not resp or not resp['meta']['result_count']:
+            return
+        # 时间线主数据
+        self.tweets_data = resp['data']
+        self.newest_id = resp['meta']['newest_id']
+        # 用户映射表
+        self.user_map = {}
+        for user in resp['includes']['users']:
+            self.user_map[user['id']] = user
+        # 媒体映射表
+        self.media_map = {}
+        if 'media' in resp['includes']:
+            for media in resp['includes']['media']:
+                self.media_map[media['media_key']] = media
+        # 引用映射表
+        self.reference_map = {}
+        if 'tweets' in resp['includes']:
+            for reference in resp['includes']['tweets']:
+                self.reference_map[reference['id']] = reference
+        # 整理推文
+        for tweet_data in self.tweets_data:
+            if 'referenced_tweets' not in tweet_data:
+                tweet_data['referenced_tweets'] = [{'type': TweetType.Origin}]
+            tweet_type = tweet_data['referenced_tweets'][0]['type']
+            tweet = CLASS_MAP[tweet_type](
+                tweet_data, self.user_map, self.media_map,self.reference_map)
+            if tweet.type == TweetType.Origin or tweet_type == TweetType.Quote\
+                or tweet.reference_author_id in white_list:
+                self.tweets.append(tweet)
+
+async def get_users_info(access_token: str, *usernames: str, ) -> list[dict[str,str]]:
     """
     从Twitter用户id获取用户信息, 返回信息字典的列表, 不存在该用户将会返回空字典\n
     WARNING: 请求没有经过队列控制, 如果用户过多可能会超过Twitter API的请求次数限制(详见官方文档)\n
@@ -40,9 +327,9 @@ async def get_users_info(access_token : str, *usernames : str, ) -> list[dict[st
 
 async def _get_one_info(
     session: aiohttp.ClientSession,
-    username : str,
-    headers : dict[str,str],
-    params : dict[str,str],
+    username: str,
+    headers: dict[str,str],
+    params: dict[str,str],
     ) -> list[dict[str,str]]:
     user_info_api = f'https://api.twitter.com/2/users/by/username/{username}'
     async with session.get(
@@ -56,14 +343,14 @@ async def _get_one_info(
             user_info = data['data']
         except Exception as err:
             user_info = {}
-            logger.error(str(err))
-            logger.error(f"获取{username}信息失败, 请检查Access Token或网络连接设置, 并确认用户id无误")
+            logger.error(f'Twitter: 请求{username}信息时发生错误: {err}')
     return user_info
 
 async def get_users_timeline(
-    access_token : str,
-    users_id : list[str],
-    since_tweet_ids : list[str]) -> list[dict]:
+    access_token: str,
+    users: dict[str,dict],
+    white_list: list[str]
+    ) -> list[Timeline]:
     """
     从用户数字id获取用户最新的时间线\n
     WARNING: 请求没有经过队列控制, 如果用户过多可能会超过Twitter API的请求次数限制(详见官方文档)\n
@@ -86,35 +373,38 @@ async def get_users_timeline(
     timeline 'includes'/'in_replied_user_id'包含推文回复的用户id
     ---
     :param access_token: Twitter Developer Platform发行的Bearer Token, 用于标识发送只读请求的APP
-    :param users_id: 需要请求的Twitter用户数字id,用户id通常需要先通过get_users_info()获取
-    :param since_tweet_ids : 上次更新到的推文id, 顺序与users_id保持一致
+    :param users: 需要请求的Twitter用户群字典, 索引为id, value包含name, username, newest_id
     """
     headers = {
-        'Authorization' : f'BEARER {access_token}'
+        'Authorization': f'BEARER {access_token}'
     }
     async with aiohttp.ClientSession() as session:
-        tasks = [_get_one_timeline(session, users_id[i], headers, since_tweet_ids[i])\
-            for i in range(len(users_id))]
+        tasks = []
+        for user_id, info in users.items():
+            task = asyncio.create_task(
+                _get_one_timeline(session,user_id,headers,info['newest_id'],white_list)
+            )
+            tasks.append(task)
         timeline_list = await asyncio.gather(*tasks)
-        await session.close()
     return timeline_list
 
 async def _get_one_timeline(
-    session : aiohttp.ClientSession,
-    id : str,
-    headers : dict[str, str],
-    since_id : str = ""
-    ) -> dict[str,dict]:
-    timeline_api = f'https://api.twitter.com/2/users/{id}/tweets'
+    session: aiohttp.ClientSession,
+    user_id: str,
+    headers: dict[str, str],
+    newest_id: str,
+    white_list: list[str]
+    ) -> Timeline:
+    timeline_api = f'https://api.twitter.com/2/users/{user_id}/tweets'
     params = {
-        'max_results' : 10,  # 本次请求返回的最大推文数
-        #'exclude' : 'replies',  # 过滤掉回复
-        'since_id' : since_id,  # 返回指定id之后的推文
-        'tweet.fields' : 'attachments,referenced_tweets',  # 返回推文包含的附件信息(图片, 视频等),引用信息
-        'expansions' : 'attachments.media_keys,in_reply_to_user_id', # 在response中额外添加一个include字段
-        'media.fields' : 'preview_image_url,url' # 返回推文包含的媒体预览url
+        'max_results': 10,  # 本次请求返回的最大推文数
+        #'exclude': 'replies',  # 过滤掉回复
+        'since_id': newest_id,  # 返回指定id之后的推文
+        'tweet.fields': 'attachments,referenced_tweets',  # 返回推文包含的附件信息(图片, 视频等),引用信息
+        'expansions': 'attachments.media_keys,referenced_tweets.id.author_id', # 在response中额外添加一个include字段
+        'media.fields': 'preview_image_url,url' # 返回推文包含的媒体预览url
     }
-    if not since_id:
+    if not newest_id:
         del params['since_id']
     async with session.get(
         url=timeline_api,
@@ -123,149 +413,34 @@ async def _get_one_timeline(
         proxy=PROXY
     ) as resp:
         try:
-            timeline = await resp.json()
+            tweets_data = await resp.json()
         except Exception as err:
-            timeline = {}
-            logger.error(str(err))
-            logger.error(f"获取{id}推文失败, 请检查Access Token或网络连接设置")
+            logger.error(f"获取{user_id}时间线发生错误: {err}")
+            tweets_data = {}
+        timeline = Timeline(user_id, newest_id, tweets_data, white_list)
     return timeline
 
-async def get_tweets(access_token : str, *tweet_ids : str) -> dict:
+async def get_tweet_media(access_token: str, tweet_id: str) -> list[str]:
     """
-    根据推文id获取推文内容, 返回格式与timeline基本相同
+    根据推文id获取推文媒体内容, 主要用于获取原推图片
     """
-    tweet_api = f'https://api.twitter.com/2/tweets'
-    headers = { 'Authorization' : f'BEARER {access_token}' }
+    tweet_api = f'https://api.twitter.com/2/tweets/{tweet_id}'
+    headers = { 'Authorization': f'BEARER {access_token}' }
     params = {
-        'ids' : ','.join(tweet_id for tweet_id in tweet_ids),  # 请求的推文id
-        'tweet.fields' : 'attachments,referenced_tweets',  # 返回推文包含的附件信息(图片, 视频等),引用信息
-        'expansions' : 'attachments.media_keys,author_id', # 在response中额外添加一个include字段，包含media信息
-        'media.fields' : 'preview_image_url,url',  # 返回推文包含的媒体预览url
-        'user.fields' : 'name'  # 该推文作者名称
+        'tweet.fields': 'attachments',  # 返回推文包含的附件信息(图片, 视频等),引用信息
+        'expansions': 'attachments.media_keys', # 在response中额外添加一个include字段，包含media信息
+        'media.fields': 'preview_image_url,url',  # 返回推文包含的媒体预览url
     }
     async with aiohttp.ClientSession() as session:
-        async with session.get(
-            url=tweet_api,
-            headers=headers,
-            params=params,
-            proxy=PROXY
-        ) as resp:
+        async with session.get(url=tweet_api,headers=headers,params=params,proxy=PROXY) as resp:
+            image_urls = []
             try:
-                data = await resp.json()
-            except:
-                data ={}
-                logger.error(f'获取推文{tweet_ids}失败，请检查Access Token或网络连接设置')
+                tweet_data = await resp.json()
+                if 'includes' in tweet_data:
+                    for image in tweet_data['includes']['media']:
+                        url = image['url'] if 'url' in image else image['preview_image_url']
+                        image_urls.append(url)
+            except Exception as err:
+                logger.error(f'获取推文{tweet_id}发生错误: {err}')
         await session.close()
-    return data
-
-def reorgnize_tweets(
-    tweets_resp:dict[str,str],
-    username:str,
-    white_list:list[str]
-    ) -> list[dict[str,str]]:
-    """
-    将API返回的字典重新组织成以推文为单位的信息列表,表中一个字典就是一个推文\n
-    注意: 'data', 'data'/'attachment', 'includes', 'includes'/'media'等字段都不一定会被返回\n
-    'meta'字段一定会被返回, 因此主要用'meta'字段判断是否包含新推文\n
-    有'attachment'或'referenced_tweets'时'text'通常会包含一段推文链接\n
-    ---
-    :return 最新的推文id和根据推文生成的通知信息字典的列表, 字典包含'text', 'media', 'url', 'referenced_tweets'\n
-    ---
-    :param tweets_resp: _get_one_timeline()返回的包含一个用户最新时间线推文内容的字典
-    :param username: 用户id
-    :param white_list: 白名单列表, 不在白名单内的回复将会被忽略
-    """
-    tweets = []
-    for tweet_i in range(len(tweets_resp['data'])):
-        tweet = tweets_resp['data'][tweet_i]
-        if 'in_reply_to_user_id' in tweet and tweet['in_reply_to_user_id'] not in white_list:
-            continue
-        text = tweet['text'].replace('https://', '').strip()
-        tweet_message = {'text' : text}
-        tweet_message['name'] = username
-        # 如果是引用推文则保存原推文的作者名称
-        # WARNING: 通过是否存在'meta'索引来判断当前tweets是否是转推原推的信息
-        # 基于以下假设: 只有在查询原推时才会调用get_tweets()来获取推文信息, 是转推查询就有'user'
-        if not 'meta' in tweets_resp:
-            tweet_message['name'] = tweets_resp['includes']['users'][tweet_i]['name']
-        tweet_message['type'] = 'tweet'
-        tweet_message['media_url'] = []
-        tweet_message['tweet_url'] = f"https://twitter.com/{username}/status/{tweet['id']}"
-        if 'attachments' in tweet:
-            # 从文本中分离出推文URL(如果存在)
-            # 推特短链t.co/xxxxxxxxxx 一共15个字符
-            url_beg = len(text) - 15
-            if text[url_beg : url_beg + 5] == 't.co/':
-                tweet_message['text'] = text[:url_beg]
-            # 处理media, media的顺序与推文中key顺序完全一致，可以按数量直接加入列表
-            for media_key in tweet['attachments']['media_keys']:
-                for media in tweets_resp['includes']['media']:
-                    if media['media_key'] == media_key:
-                        media_url = media['url'] if 'url' in media else media['preview_image_url']
-                        tweet_message['media_url'].append(media_url)
-                        break
-        if 'referenced_tweets' in tweet:
-            # 转推和引用会在text中自动包含一段该推文的链接
-            # 从文本中分离出推文URL(如果存在), url可能会因为长度被截断, 截断则不做处理
-            # BUG: 会有用户推文中原本自带的url, 因为长度正好将推特附加的url截断而被错误提取
-            url_beg = len(text) - 15
-            if tweet['referenced_tweets'][0]['type'] != 'replied_to'\
-               and text[url_beg : url_beg + 5] == 't.co/':
-                tweet_message['text'] = text[:url_beg]
-            # 处理转推的原推, 内容获取交给外部处理
-            tweet_message['type'] = tweet['referenced_tweets'][0]['type']
-            tweet_message['referenced_id'] = tweet['referenced_tweets'][0]['id']
-        tweets.append(tweet_message)
-    return tweets
-
-def reorgnize_timeline(
-    timeline : dict[str,dict],
-    username:str,
-    tweet_since_id:str,
-    white_list:list[str]
-    ) -> tuple[str, list[dict[str,str]]]:
-    """
-    在整理推文内容的基础上处理最新推文\n
-    如果没有推文则返回原推文id和空列表
-    """
-    if not timeline['meta']['result_count']:
-        return tweet_since_id, []  # 如果推文字典里结果计数为0就直接返回表示为空的内容
-    tweet_since_id = timeline['meta']['newest_id']  # 更新最新推文id
-    tweets = reorgnize_tweets(timeline, username, white_list)
-    return tweet_since_id, tweets
-
-def make_message(
-    name:str,
-    tweet:dict[str,str],
-    referenced_tweet:dict[str,str], 
-    main_translate:str,
-    referenced_translate:str) -> Message:
-    # 通知抬头
-    msg = Message(MessageSegment.text(f'{name} 发布了一条新推文:\n'))
-    # 推文正文
-    msg.append(MessageSegment.text('--------------------\n'))
-    msg.append(MessageSegment.text(tweet['text'] + '\n'))
-    # 正文翻译
-    if main_translate:
-        msg.append(MessageSegment.text('--------------------\n'))
-        msg.append(MessageSegment.text('机翻:\n'))
-        msg.append(MessageSegment.text(main_translate.strip() + '\n'))
-    # 引用正文
-    if referenced_tweet:
-        msg.append(MessageSegment.text('--------------------\n'))
-        msg.append(MessageSegment.text(f'引用自{referenced_tweet["name"]}:\n'))
-        msg.append(MessageSegment.text(referenced_tweet['text'] + '\n'))
-    # 引用翻译
-    if referenced_translate:
-        msg.append(MessageSegment.text('--------------------\n'))
-        msg.append(MessageSegment.text('机翻:\n'))
-        msg.append(MessageSegment.text(referenced_translate.strip() + '\n'))
-    # 推文链接
-    msg.append(MessageSegment.text('--------------------\n'))
-    msg.append(MessageSegment.text(tweet['tweet_url'] + '\n'))
-    for image in tweet['media_url']:
-        msg.append(MessageSegment.image(image))
-    if referenced_tweet:
-        for image in referenced_tweet['media_url']:
-            msg.append(MessageSegment.image(image))
-    return msg
+    return image_urls
