@@ -308,12 +308,12 @@ async def get_users_timeline(credential:Credential, *uids:int) -> list[dict]:
     """
     tasks = []
     for uid in uids:
-        task = asyncio.create_task(get_ones_timeline(uid, credential))
+        task = asyncio.create_task(get_one_timeline(uid, credential))
         tasks.append(task)
     timeline_list = await asyncio.gather(*tasks)
     return timeline_list
 
-async def get_ones_timeline(uid:int, credential:Credential) -> dict:
+async def get_one_timeline(uid:int, credential:Credential) -> dict:
     """
     获取给定用户的最新动态, 一般数量为最新12条
     :return timeline: 包含用户最新动态的列表, 每一个动态是一个字典
