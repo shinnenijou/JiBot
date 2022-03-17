@@ -212,11 +212,8 @@ white_list = on_command('推特白名单', priority=2, temp=False, block=True,
     permission=SUPERUSER)
 @white_list.handle()
 async def get_white_list():
-    msg = '以下推特用户已加入白名单:\n'
-    i = 0
-    for info in WHITE_LIST.values():
-        i += 1
-        msg += f"\n[{i}]{info['name']}({info['username']})"
+    msg = '以下推特用户已加入白名单:\n\n'
+    msg += ', '.join(info['username'] for info in WHITE_LIST.values())
     await white_list.finish(Message(msg))
 
 #帮助

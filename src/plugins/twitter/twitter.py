@@ -101,7 +101,7 @@ class ReferenceTweet(Tweet):
         self.reference_author_username:str = user_map[self.reference_author_id]['username']  # 原推作者用户名
         self.reference_text:str = referenced_tweet['text'].strip()  # 原推正文
         if 'attachments' in referenced_tweet and self.reference_text[-23:-18] == 'https':
-            self.reference_text[:-23].strip()
+            self.reference_text = self.reference_text[:-23].strip()
         self.reference_text_translate = ""  # 原推正文翻译
         self.reference_image_urls:list[str] = []  # 原推附图, 此处暂时留空
     
@@ -216,10 +216,6 @@ class Quote(ReferenceTweet):
 
         ReferenceTweet.__init__(self, tweet_data, user_map, media_map, reference_map)
         # 暂时策略: 引用类型的推文不推送原推图片
-        # 推文正文, 有附件时末尾会被推特加上有本条推文的链接,
-        # https://t.co/xxxxxxxxxx 共23个字符, 正文过长会被截断, 需要判断
-        if not 'attachments' in tweet_data and self.text[-23:-18] == 'https':
-            self.text = self.text[:-23].strip()
 
     def get_message(self, need_translate: int) -> Message:
         # 通知抬头
