@@ -142,10 +142,13 @@ class Repost(Dynamic):
         """
         :param need_translate: 表示本动态是否需要翻译的整数, 只取0和1
         """
-        message = f'{self.author_name}转发了一条动态:\n'\
-                + (f'--------------------\n{self.text}\n' if self.text else '')\
-                + (f'--------------------\n机翻:\n{self.translate_text}\n' * need_translate)\
-                + f'--------------------\n引用自{self.orig_author_name}:\n'
+        message = f'{self.author_name}转发了一条动态:\n'
+        if self.text:
+            message += f'--------------------\n{self.text}\n'
+        if self.translate_text and need_translate:
+            message += f'--------------------\n机翻:\n{self.translate_text}\n'
+        
+        message += f'--------------------\n引用自{self.orig_author_name}:\n'
         # 转发视频
         if self.orig_type == DynamicType.VIDEODYNAMIC:
             message += f'{self.orig_text}\n'\
@@ -182,10 +185,12 @@ class ImageDynamic(Dynamic):
         """
         :param need_translate: 表示本动态是否需要翻译的整数, 只取0和1
         """
-        message = f'{self.author_name}发布了一条新动态:\n'\
-                + (f'--------------------\n{self.text}\n' if self.text else '')\
-                + (f'--------------------\n机翻:\n{self.translate_text}\n' * need_translate)\
-                + f'--------------------\n{self.url}\n'\
+        message = f'{self.author_name}发布了一条新动态:\n'
+        if self.text:
+            message += f'--------------------\n{self.text}\n'
+        if self.translate_text and need_translate:
+            message += f'--------------------\n机翻:\n{self.translate_text}\n'
+        message += f'--------------------\n{self.url}\n'\
                 + f'(id: {self.dynamic_id})\n'
         message = Message(message)
         for img in self.image_urls:
@@ -207,10 +212,11 @@ class TextDynamic(Dynamic):
         """
         :param need_translate: 表示本动态是否需要翻译的整数, 只取0和1
         """
-        message = f'{self.author_name}发布了一条新动态:\n'\
-                + f'--------------------\n{self.text}\n'\
-                + (f'--------------------\n机翻:\n{self.translate_text}\n' * need_translate)\
-                + f'--------------------\n{self.url}\n'\
+        message = f'{self.author_name}发布了一条新动态:\n'
+        message += f'--------------------\n{self.text}\n'
+        if need_translate:
+            message += f'--------------------\n机翻:\n{self.translate_text}\n'
+        message += f'--------------------\n{self.url}\n'\
                 + f'(id: {self.dynamic_id})\n'
         message = Message(message)
         return message
@@ -239,10 +245,12 @@ class VideoDynamic(Dynamic):
         """
         :param need_translate: 表示本动态是否需要翻译的整数, 只取0和1
         """
-        message = f'{self.author_name}发布了一个新视频:\n'\
-                + (f'--------------------\n{self.text}\n' if self.text else "")\
-                + (f'--------------------\n机翻:\n{self.translate_text}\n' * need_translate)\
-                + '--------------------\n'\
+        message = f'{self.author_name}发布了一个新视频:\n'
+        if self.text:
+            message += f'--------------------\n{self.text}\n'
+        if self.translate_text and need_translate:
+            message += f'--------------------\n机翻:\n{self.translate_text}\n'
+        message += '--------------------\n'\
                 + f'标题:\n「{self.video_title}」\n'\
                 + f'简介: {self.video_desc}\n'\
                 + f'--------------------\n{self.url}\n'\

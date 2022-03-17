@@ -28,8 +28,9 @@ WHITE_LIST = db.get_white_list()
 scheduler = require('nonebot_plugin_apscheduler').scheduler
 
 # 定时请求推文
-@scheduler.scheduled_job('interval', seconds=TWEET_LISTEN_INTERVAL, id='tweet')
-async def tweet():
+@scheduler.scheduled_job('interval', seconds=TWEET_LISTEN_INTERVAL,
+    id='tweet_pusher')
+async def push_tweet():
     global USER_LIST
     if not USER_LIST:
         return  # 监听名单里没有目标
@@ -63,7 +64,6 @@ async def tweet():
                     bot.send_group_msg(group_id=group_id, message=msg)
                 )
                 tasks.append(task)
-            print(tweet.get_message(1))
             await asyncio.gather(*tasks)
 
 # 关注推特命令(仅允许管理员操作)
@@ -128,7 +128,6 @@ async def get_list(event: GroupMessageEvent):
         i += 1
         translate_text = '开启' if info['need_translate'] else '关闭'
         msg += f"\n[{i}]{info['name']}({info['username']}) 翻译已{translate_text}"
-    print(msg)
     await userlist.finish(Message(msg))
 
 #开启推文翻译(仅允许管理员操作)
@@ -218,7 +217,6 @@ async def get_white_list():
     for info in WHITE_LIST.values():
         i += 1
         msg += f"\n[{i}]{info['name']}({info['username']})"
-    print(msg)
     await white_list.finish(Message(msg))
 
 #帮助

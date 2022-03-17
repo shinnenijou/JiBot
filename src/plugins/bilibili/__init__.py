@@ -57,7 +57,8 @@ scheduler = require('nonebot_plugin_apscheduler').scheduler
 
 ###########################
 ######### 动态推送 #########
-@scheduler.scheduled_job('interval', seconds=DYNAMIC_LISTEN_INTERVAL, id='dynamic')
+@scheduler.scheduled_job('interval', seconds=DYNAMIC_LISTEN_INTERVAL,
+    id='bili_dynamic_pusher')
 async def push_dynamic():
     global DYNAMIC_QUEUE, NEWEST_DYNAMICS
     # 清理超时动态队列, pop掉发布时间戳离当前时间超过COMMENT_EXPIRATION的动态
@@ -111,9 +112,12 @@ async def push_dynamic():
 
 ###########################
 ######### 直播推送 #########
-@scheduler.scheduled_job('interval', seconds=LIVE_LISTEN_INTERVAL, id='live')
+@scheduler.scheduled_job('interval', seconds=LIVE_LISTEN_INTERVAL,
+    id='bili_live_pusher')
 async def push_live():
     global ROOM_LIST
+    if not ROOM_LIST:
+        return
     bot = nonebot.get_bot()
     tasks = []
     for room in ROOM_LIST:
