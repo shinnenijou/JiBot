@@ -93,6 +93,10 @@ class ReferenceTweet(Tweet):
         media_map: dict,
         reference_map: dict):
         Tweet.__init__(self, tweet_data, user_map, media_map, reference_map)
+        # 引用时正文末尾会被推特加上引用推文的链接, 注意不能和图片的重复处理
+        # https://t.co/xxxxxxxxxx 共23个字符, 正文过长会被截断, 需要判断
+        if not 'attachments' in tweet_data and self.text[-23:-18] == 'https':
+            self.text = self.text[:-23].strip()
         # 原推信息
         self.reference_id:str = tweet_data['referenced_tweets'][0]['id']  # 原推文id
         referenced_tweet:dict = reference_map[self.reference_id]
