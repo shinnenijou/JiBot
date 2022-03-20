@@ -73,10 +73,10 @@ def add_user(uid:int, room_id, name:str, timestamp:int=0) -> bool:#创建用户�
     success = True
     connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
-    table_exist = cursor.execute(
+    user_exist = cursor.execute(
         f'select count(*) from sqlite_master where type="table" and name="_{uid}";'
         ).fetchone()[0]
-    if not table_exist:
+    if not user_exist:
         cursor.execute(f'insert into user_list values({uid}, {room_id}, "{name}", {timestamp});')
         cursor.execute(
             f"""
@@ -94,49 +94,66 @@ def add_user(uid:int, room_id, name:str, timestamp:int=0) -> bool:#创建用户�
     connection.close()
     return success
 
-def get_user_groups(uid:int) -> tuple[list[str], list[int]]:
+def delete_user(uid:int) -> bool:
     """
-    获取订阅了某位用户的所有群及开启翻译的状况。所有返回的列表索引一一对应
-    :return group_list: 保存群号的列表
-    :return translate_on_list: 保存群是否开启翻译的列表
+    删除一个监听用户, 如果该用户对应的表中已经没有群关注则能删除成功, 否则将返回失败
+    WARNING: 表名十分运维不友好, 手动查表前需要在user_list主表查询user的数字id
+    :param uid: bili用于唯一标识用户的数字id, 不可更改
     """
-    group_list = []
-    translate_on_list = []
+    success = False
+    connection = sqlite3.connect(DB_PATH)
+    cursor = connection.cursor()
+    user_exist = cursor.execute(
+        f'select count(*) from sqlite_master where type="table" and name="_{uid}";'
+        ).fetchone()[0]
+    if user_exist:
+        group_remain = cursor.execute(f'select count(*) from _{uid}').fetchone()[0]
+        if not group_remain:
+            cursor.execute(f'drop table _{uid};')
+            cursor.execute(f'delete from user_list where uid={uid};')
+            success = True
+            connection.commit()
+        else:
+            logger.warning(f'{uid}仍有群在订阅中, 删除失败')
+    cursor.close()
+    connection.close()
+    return success
+
+def get_user_groups(uid:int) -> dict[str, int]:
+    """
+    获取订阅了某位用户的所有群及开启翻译的状况。
+    :return group_list: 保存订阅群信息的字典, key为群号, value为是否开启翻译
+    """
+    group_list = {}
     connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
     cursor.execute(f'select * from _{uid};')
     data = cursor.fetchall()
     for row in data:
-        group_list.append(row[0])
-        translate_on_list.append(row[1])
+        group_list[row[0]] = row[1]
     cursor.close()
     connection.close()
-    return group_list, translate_on_list
+    return group_list
 
-def get_user_list() -> tuple[list[int], list[int], list[str], list[int]]:
+def get_user_list() -> dict[str,dict]:
     """
-    获取所有bili用户的信息, 用于新推文的请求。所有返回值的索引一一对应
-    :return uid_list: 保存用户数字id的列表
-    :return room_list: 订阅主播的直播间id列表
-    :return name_list: 保存每个用户显示名称的列表
-    :return newest_timestamp_list: 保存每个用户最新动态发布时间戳的列表
+    获取所有bili用户的信息, 用于新推文的请求。
+    :return user_list: 保存用户信息的字典, key为uid, value为包含name, newest_timestamp, room的字典
     """
-    uid_list = []
-    room_list = []
-    name_list = []
-    newest_timestamp_list = []
+    user_list = {}
     connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
     cursor.execute('select * from user_list;')
     data = cursor.fetchall()
     for row in data:
-        uid_list.append(row[0])
-        room_list.append(row[1])
-        name_list.append(row[2])
-        newest_timestamp_list.append(row[3])
+        user_list[row[0]] = {
+            'name':row[2],
+            'room':row[1],
+            'newest_timestamp':row[3]
+        }
     cursor.close()
     connection.close()
-    return uid_list, room_list, name_list, newest_timestamp_list
+    return user_list
 
 def get_user_name(uid:int) -> str:
     """
@@ -188,16 +205,18 @@ def remove_translator_list(qq_id:int, group_id:int) -> str:
     return name
 
 def get_translator_list():
+    """
+    返回当前评论白名单的信息
+    :return translator_list: 保存白名单的字典, key为session_id, value为名字
+    """
     connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
     cursor.execute(f'select qq_id, group_id, name from translator_list;')
-    session_id_list = []
-    name_list = []
+    translator_list = {}
     data = cursor.fetchall()
     for row in data:
-        session_id_list.append(f'group_{row[1]}_{row[0]}')
-        name_list.append(row[2])
-    return session_id_list, name_list
+        translator_list[f'group_{row[1]}_{row[0]}'] = row[2]
+    return translator_list
 
 # 群订阅操作
 def add_group_sub(uid:int, group_id:int) -> bool: #添加订阅信息
@@ -224,7 +243,6 @@ def add_group_sub(uid:int, group_id:int) -> bool: #添加订阅信息
 def delete_group_sub(uid:int, group_id:int) -> bool:  #删除订阅信息
     """
     从已存在的表中删除群记录, 如果群不在记录中则什么都不做\n
-    NOTICE: 删除某个用户的最后一条群记录时将会同时删除user_list中的记录
     :param uid: 唯一标识用户的数字uid
     :param group_id: 监听该用户的群id
     """
@@ -235,10 +253,6 @@ def delete_group_sub(uid:int, group_id:int) -> bool:  #删除订阅信息
         f'select count(*) from _{uid} where group_id={group_id};').fetchone()[0]
     if group_exist:
         cursor.execute(f'delete from _{uid} where group_id={group_id};')
-        group_remain = cursor.execute(f'select count(*) from _{uid}').fetchone()[0]
-        if not group_remain:
-            cursor.execute(f'drop table _{uid};')
-            cursor.execute(f'delete from user_list where uid={uid};')
         connection.commit()
     else:
         success = False
@@ -249,27 +263,24 @@ def delete_group_sub(uid:int, group_id:int) -> bool:  #删除订阅信息
 
 def get_group_sub(group_id:int) -> tuple[list[str],list[str],list[str]]:
     """
-    根据群号搜索该群关注的所有用户, 返回的列表索引一一对应
-    :return uid_list: 用户数字uid列表
-    :return name_list: 用户名称列表
-    :return translate_list: 用户是否需要翻译的列表
+    根据群号搜索该群关注的所有用户
+    :return sub_list: 保存订阅信息的字典, key为uid, value为包含name, need_translate的字典
     """
     connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
     cursor.execute('select uid, name from user_list')
     user_list = cursor.fetchall()
-    uid_list = []
-    name_list = []
-    translate_list = []
+    sub_list = {}
     for row in user_list:
         id = row[0]
         translate_on = cursor.execute(
             f'select translate_on from _{id} where group_id={group_id};').fetchall()
         if translate_on:
-            translate_list.append(translate_on[0][0])
-            uid_list.append(row[0])
-            name_list.append(row[1])
-    return uid_list, name_list, translate_list
+            sub_list[row[0]] = {
+                'name':row[1],
+                'need_translate':translate_on[0][0]
+            }
+    return sub_list
 
 # 翻译控制
 def translate_on(uid:int, group_id:int) -> bool:  # 开启推文翻译

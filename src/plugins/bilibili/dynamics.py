@@ -252,7 +252,7 @@ class VideoDynamic(Dynamic):
             message += f'--------------------\n机翻:\n{self.translate_text}\n'
         message += '--------------------\n'\
                 + f'标题:\n「{self.video_title}」\n'\
-                + f'简介: {self.video_desc}\n'\
+                + f'简介: \n{self.video_desc}\n'\
                 + f'--------------------\n{self.url}\n'\
                 + f'(id: {self.dynamic_id})\n'
         message = Message(message)
@@ -301,17 +301,17 @@ CLASS_MAP = {
     DynamicType.COLUMNDYNAMIC : ColumnDynamic
 }
 
-async def get_users_timeline(credential:Credential, *uids:int) -> list[dict]:
+async def get_users_timeline(credential:Credential, *uids:int) -> dict[str, list[dict]]:
     """
     获取复数用户的最新动态，
-    :return timeline_list: 多个用户时间线列表的列表, 顺序与输入顺序一致
+    :return timelines: 多个用户时间线列表的字典, key为uid, value为时间线列表
     """
     tasks = []
     for uid in uids:
         task = asyncio.create_task(get_one_timeline(uid, credential))
         tasks.append(task)
     timeline_list = await asyncio.gather(*tasks)
-    return timeline_list
+    return dict(zip(uids, timeline_list))
 
 async def get_one_timeline(uid:int, credential:Credential) -> dict:
     """

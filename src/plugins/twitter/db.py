@@ -190,7 +190,7 @@ def get_white_list() -> dict[str,dict]:
     white_list = {}
     data = cursor.fetchall()
     for row in data:
-        white_list[row[0]] = {'name':row[1], 'username':row[2]}
+        white_list[row[0]] = {'username':row[1], 'name':row[2]}
     return white_list
 
 # 群订阅操作
