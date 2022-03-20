@@ -81,8 +81,7 @@ async def push_dynamic():
         groups = db.get_user_groups(uid)
         # 从旧到新倒着扫描
         # 索引j: 该用户的第j条动态
-        for j in range(len(timeline) - 1, -1 , -1):
-            dynamic_data = timeline[j]
+        for dynamic_data in reversed(timeline):
             # 该动态时间戳比记录的要早则跳过
             if dynamic_data['desc']['timestamp'] <= USER_LIST[uid]['newest_timestamp']:
                 continue
@@ -286,7 +285,7 @@ show_translator = on_command(cmd='评论白名单', priority=2, temp=False, bloc
 async def show():
     msg = '以下用户已加入评论白名单:\n'
     i = 0
-    for session_id, name in TRANSLATOR_LIST:
+    for session_id, name in TRANSLATOR_LIST.items():
         i += 1
         group_id = session_id.split('_')[1]
         qq_id = session_id.split('_')[2]
