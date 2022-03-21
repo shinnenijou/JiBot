@@ -87,7 +87,8 @@ class Room():
         if self.live_status == LiveStatus.LIVE:
             msg = f'{self.name} 直播开始啦！\n'\
                 + f'\n标题: {self.live_title}'\
-                + f'\n开播时间: {strftime("%Y.%m.%d  %H:%M:%S", gmtime(self.live_start_time + 8 * 60 * 60))}'
+                + f'\n开播时间: {strftime("%Y.%m.%d  %H:%M:%S", gmtime(self.live_start_time + 8 * 60 * 60))}'\
+                + f'\n传送门: https://live.bilibili.com/{self.room_id}'
             msg = Message(msg)
             msg.append(MessageSegment.image(self.live_cover))
             return msg

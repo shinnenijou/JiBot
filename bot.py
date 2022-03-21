@@ -11,15 +11,20 @@ try:
     mkdir("data")
 except FileExistsError:
     pass
+try:
+    mkdir("logs")
+except FileExistsError:
+    pass
+
 
 # Custom your logger
 # 
 # from nonebot.log import logger, default_format
-# logger.add("error.log",
-#            rotation="00:00",
-#            diagnose=False,
-#            level="ERROR",
-#            format=default_format)
+nonebot.logger.add("./logs/{time}.log",
+            rotation="00:00",
+            diagnose=False,
+            level="ERROR",
+            retention='14 days')
 
 # You can pass some keyword args config to init function
 nonebot.init()

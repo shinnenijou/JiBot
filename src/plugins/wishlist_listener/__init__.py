@@ -113,6 +113,7 @@ scheduler = require("nonebot_plugin_apscheduler").scheduler
     trigger='interval',
     seconds=nonebot.get_driver().config.dict()['wishlist_listen_interval'],
     id='wishlist_pusher')
+@logger.catch
 async def push_wishlist():
     bot = nonebot.get_bot()
     target_list = list(db.get_all_users())

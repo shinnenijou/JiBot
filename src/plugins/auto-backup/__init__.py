@@ -1,6 +1,6 @@
 from importlib.resources import path
 import nonebot
-from nonebot import require
+from nonebot import require, logger
 import time
 import os
 
@@ -17,7 +17,7 @@ auto_backup = require('nonebot_plugin_apscheduler').scheduler
 @auto_backup.scheduled_job('cron', 
     day_of_week='thu', hour=5, minute=20, 
     timezone='UTC', id='db_backup')
-
+@logger.catch
 async def backup():
     for job in auto_backup.get_jobs():
         job.pause()

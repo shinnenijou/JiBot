@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import nonebot
 from nonebot.matcher import Matcher
-from nonebot import on_message, on_command
+from nonebot import on_message, on_command, logger
 from nonebot.permission import USER, SUPERUSER
 from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER, PRIVATE_FRIEND
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment, Message
@@ -109,6 +109,7 @@ async def update(matcher:Matcher):
     return matcher.permission
 
 @translator.handle()
+@logger.catch
 async def translate(event:GroupMessageEvent):
     if not event.get_plaintext():
         return None
@@ -129,7 +130,4 @@ async def translate(event:GroupMessageEvent):
             ))
             await translator.send(msg)
         except Exception as err:
-            await nonebot.get_bot().send_group_msg(
-                group_id=nonebot.get_driver().config.dict()["admin_group"],
-                message=f'发送{event.get_plaintext()}时:' + "\r\nError: " + str(err)
-            )
+            logger.error(f'Auto_translator: 翻译{session_id}时发生错误: {err}')
