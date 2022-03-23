@@ -182,6 +182,7 @@ def update_commodities(name : str, new_items : list[str], buyed_items : list[str
                     insert into {name} values({id}, '{item}');
                     """
                 )
+                id += 1
             connection.commit()
         except OperationalError:
             success = False
