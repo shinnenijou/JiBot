@@ -155,7 +155,7 @@ def add_sub(lid: str, group_id: int, name: str) -> bool:
     with sqlite3.connect(DB_PATH) as connection:
         success = False
         cursor = connection.cursor()
-        already_sub = cursor.execute(f'select group_id, name from sub_{lid};').fetchone()[0]
+        already_sub = cursor.execute(f'select count(*) from sub_{lid} where group_id={group_id};').fetchone()[0]
         if not already_sub:
             cursor.execute(f'insert into sub_{lid} values({group_id}, "{name}");')
             connection.commit()
