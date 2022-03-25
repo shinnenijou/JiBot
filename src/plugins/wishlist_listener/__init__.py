@@ -63,8 +63,7 @@ async def add_sub(event: GroupMessageEvent):
             msg = f"{name}的愿望单订阅成功"   
         else:
             msg = f"{name}的愿望单订阅已存在"
-    else:
-        await add.finish(Message(msg))
+    await add.finish(Message(msg))
 
 # ADD subscribe (SUPERUSER ONLY)
 add = on_command(cmd="愿望单关注",temp=False, priority=1, block=True,
@@ -81,8 +80,7 @@ async def add_listen(event:GroupMessageEvent):
             msg = f"{name}的愿望单订阅成功"   
         else:
             msg = f"{name}的愿望单订阅已存在"
-    else:
-        await add.finish(Message(msg))
+    await add.finish(Message(msg))
 
 # DELETE subscribe
 delete = on_command(cmd="愿望单取关",temp=False, priority=2, block=True,
