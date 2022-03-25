@@ -34,7 +34,7 @@ async def get_status(event:GroupMessageEvent):
     user_list = await db.select(group_id=group_id)
     msg = "已开启以下群成员的自动翻译功能:\n"
     for i in range(len(user_list)):
-        user_name = await emojis.get_user_name(nonebot.get_bot(), group_id, user_list[i][2])
+        user_name = await emojis.get_qq_name(nonebot.get_bot(), group_id, user_list[i][2])
         msg += f"\n[{i + 1}] {user_name}({user_list[i][2]}): {user_list[i][3]}->{user_list[i][4]}"
     await status.send(msg)
 
