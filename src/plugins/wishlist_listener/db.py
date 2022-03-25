@@ -54,7 +54,7 @@ def get_user_list() -> list[str]:
         cursor = connection.cursor()
         data = cursor.execute(
             f"""
-            select lid from wishlists;
+            select lid from user_list;
             """
         ).fetchall()
         user_list = [row[0] for row in data]
