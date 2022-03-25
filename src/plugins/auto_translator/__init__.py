@@ -87,7 +87,7 @@ async def del_user(event:GroupMessageEvent):
         source = None
         target = None
     if isValidCmd:
-        user_name = await emojis.get_user_name(nonebot.get_bot(), group_id, user_id)
+        user_name = await emojis.get_qq_name(nonebot.get_bot(), group_id, user_id)
         if await db.delete(group_id, user_id, source, target):
             USERS_ON = db.to_dict(await db.select())
             translator.permission = USER(*USERS_ON.keys())
