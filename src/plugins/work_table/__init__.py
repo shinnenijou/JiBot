@@ -46,11 +46,12 @@ work_table = nonebot.on_message(
 @work_table.handle()
 async def _(event: GroupMessageEvent):
     cmd = event.get_plaintext()
-    group_id = event.get_session_id().split('_')[1]
-    if len(cmd) == 3 and group_id in TABLES:
-        await work_table.send(Message(TABLES[group_id]))
-    else:
-        await work_table.send(Message("请先添加工作表"))
+    if len(cmd) == 3:
+        group_id = event.get_session_id().split('_')[1]
+        if group_id in TABLES:
+            await work_table.send(Message(TABLES[group_id]))
+        else:
+            await work_table.send(Message("请先添加工作表"))
 
 # ADD WORK TABLE
 add_table = nonebot.on_command(
