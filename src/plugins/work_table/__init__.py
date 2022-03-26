@@ -45,7 +45,7 @@ work_table = nonebot.on_message(
 )
 @work_table.handle()
 async def _(event: GroupMessageEvent):
-    cmd = event.get_plaintext()
+    cmd = event.get_plaintext().strip().replace(' ', '').replace('\n', '')
     if len(cmd) == 3:
         group_id = event.get_session_id().split('_')[1]
         if group_id in TABLES:
