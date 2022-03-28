@@ -27,6 +27,7 @@ async def show_menu():
         + '\n(所有群员)命令格式: "/人员注册 名称 职位"'\
         + '\n(所有群员)命令格式: "/人员注销 名称"'
 #        + '\n(bot管理)命令格式: "/注册字幕组 字幕组名"'\
+#        + '\n(bot管理)命令格式: "/强制注册字幕组 群号 字幕组名"'\
 #        + '\n(bot管理)命令格式: "/注销字幕组"'\
 #        + '\n(bot管理)命令格式: "/强制人员注册 群号 qq号 职位"'
 #        + '\n(bot管理)命令格式: "/强制人员注销 群号 qq号"'
@@ -111,6 +112,19 @@ async def register(event: GroupMessageEvent):
     else:
         msg = f'{group_name}({group_id})已存在'
     await register_group.finish(Message(msg))
+
+force_register_group = on_command(cmd='强制注册字幕组', temp=False, priority=1, block=True,
+    permission=SUPERUSER)
+@force_register_group.handle()
+async def register(event: GroupMessageEvent):
+    cmd = event.get_plaintext().split()
+    group_id = int(cmd[1])
+    group_name = cmd[2]
+    if db.add_group(group_id, group_name):
+        msg = f'{group_name}({group_id})注册成功'
+    else:
+        msg = f'{group_name}({group_id})已存在'
+    await force_register_group.finish(Message(msg))
 
 delete_group = on_command(cmd='注销字幕组', temp=False, priority=2, block=True,
     permission=SUPERUSER)
