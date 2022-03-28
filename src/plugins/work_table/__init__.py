@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import nonebot
+from nonebot import on_command, on_notice, on_message
 from nonebot.rule import startswith
-from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, MessageSegment
+from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, GroupIncreaseNoticeEvent, MessageSegment
 from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER, GROUP
 from nonebot.permission import SUPERUSER
 from os import mkdir
@@ -26,7 +27,7 @@ with open(DB_PATH, 'r') as file:
     TABLES = json.loads(file.read())
 
 # HELP
-helper = nonebot.on_command(
+helper = on_command(
     cmd="工作表帮助", temp=False, priority=5, block=True,
     permission=GROUP
 )
@@ -39,7 +40,7 @@ async def help():
     await helper.finish(menu)
 
 # CALL WORK TABLE
-work_table = nonebot.on_message(
+work_table = on_message(
     rule=startswith("工作表"), temp=False, priority=3, block=False,
     permission=GROUP
 )
@@ -54,7 +55,7 @@ async def _(event: GroupMessageEvent):
             await work_table.send(Message("请先添加工作表"))
 
 # ADD WORK TABLE
-add_table = nonebot.on_command(
+add_table = on_command(
     cmd = "添加工作表", temp=False, priority=2, block=True,
     permission=GROUP
 )
@@ -72,7 +73,7 @@ async def add(event: GroupMessageEvent):
         await work_table.send(Message("请指定工作表URL"))
 
 # DELETE WORK TABLE
-del_table = nonebot.on_command(
+del_table = on_command(
     cmd = "删除工作表", temp=False, priority=2, block=True,
     permission=GROUP
 )
@@ -86,3 +87,16 @@ async def delete(event: GroupMessageEvent):
         await work_table.send(Message("删除成功"))
     else:
         await work_table.send(Message("本群没有指定工作表"))
+
+# Welcome The New
+at_new = on_notice(temp=False, priority=2, block=True)
+@at_new.handle()
+async def welcome(event: GroupIncreaseNoticeEvent):
+    group_id = event.get_session_id().split('_')[1]
+    new_id = event.get_user_id()
+    msg = Message([
+        MessageSegment.at(new_id),
+        MessageSegment.text('进群请修改群名片为: 职务-名字, 并查看群公告内及工作表首页的组内须知。'),
+        MessageSegment.text(f'\n工作表: {TABLES[group_id]}')
+    ])
+    await at_new.finish(msg)

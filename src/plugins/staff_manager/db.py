@@ -149,7 +149,62 @@ def get_occupation_staff(group_id: int, mask: int) -> dict[int, dict]:
         cursor.close()
     return staff_list
 
-def add_staff(group_id: int, qq_id: int, name: str, occupation:int) -> bool:
+def get_one_staff(group_id: int, qq_id: int) -> dict[int, dict]:
+    """
+    获取某个人员的职位
+    """
+    with sqlite3.connect(DB_PATH) as connection:
+        staff_info = {}
+        cursor = connection.cursor()
+        staff_exist = cursor.execute(
+            f"select count(*) from _{group_id} where qq_id={qq_id};").fetchone()[0]
+        if staff_exist:
+            row = cursor.execute(
+            f"select * from _{group_id} where qq_id={qq_id};").fetchone()
+            staff_info = {row[0]: {'name':row[1], 'occupation': row[2]}}
+        cursor.close()
+    return staff_info
+
+def add_occupation(group_id: int, qq_id: int, name:str,  occupation: int) -> bool:
+    """
+    新增人员的职位, 掩码使用或运算
+    :return: 是否"更新"成功, 新增条目返回False, 更新则返回True
+    """
+    # 先尝试直接创建新条目, 如果失败则对条目内的职位进行update
+    if _add_staff(group_id, qq_id, name, occupation):
+        return False
+    with sqlite3.connect(DB_PATH) as connection:
+        cursor = connection.cursor()
+        data = cursor.execute(
+            f"select occupation from _{group_id} where qq_id={qq_id};").fetchone()[0]
+        data = data | occupation
+        cursor.execute(f'update _{group_id} set occupation={data} where qq_id={qq_id};')
+        connection.commit()
+        cursor.close()
+    return True
+
+def remove_occupation(group_id: int, qq_id: int, occupation: int) -> bool:
+    """
+    减少人员的职位, 掩码使用与非运算.注意该函数不会处理无职位的条目
+    """
+    success = False
+    with sqlite3.connect(DB_PATH) as connection:
+        cursor = connection.cursor()
+        # 查询是否有此人记录
+        staff_exist = cursor.execute(
+            f"select count(*) from _{group_id} where qq_id={qq_id};").fetchone()[0]
+        if staff_exist:
+            data = cursor.execute(
+                f"select occupation from _{group_id} where qq_id={qq_id};").fetchone()[0]
+            # 或非运算将掩码1位置上的数变成0
+            data = data & ~occupation
+            cursor.execute(f'update _{group_id} set occupation={data} where qq_id={qq_id};')
+            connection.commit()
+            cursor.close()   
+            success = True
+    return success
+
+def _add_staff(group_id: int, qq_id: int, name: str, occupation:int) -> bool:
     """
     注册一个字幕组成员, 注册成功返回True, 已存在返回False.
     :param group_id: 群号
@@ -171,7 +226,7 @@ def add_staff(group_id: int, qq_id: int, name: str, occupation:int) -> bool:
         cursor.close()
     return success
 
-def remove_staff(group_id: int, qq_id: int) -> bool:
+def _remove_staff(group_id: int, qq_id: int) -> bool:
     """
     移除一个已注册的字幕组成员。
     :param group_id: 群号
@@ -190,3 +245,4 @@ def remove_staff(group_id: int, qq_id: int) -> bool:
             success = True
         cursor.close()
     return success
+
