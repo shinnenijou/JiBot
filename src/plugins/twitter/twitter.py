@@ -95,15 +95,20 @@ class ReferenceTweet(Tweet):
         Tweet.__init__(self, tweet_data, user_map, media_map, reference_map)
         # 原推信息
         self.reference_id:str = tweet_data['referenced_tweets'][0]['id']  # 原推文id
-        referenced_tweet:dict = reference_map[self.reference_id]
-        self.reference_author_id:str = referenced_tweet['author_id']  # 原推作者id
-        self.reference_author_name:str = user_map[self.reference_author_id]['name']  # 原推作者名称
-        self.reference_author_username:str = user_map[self.reference_author_id]['username']  # 原推作者用户名
-        self.reference_text:str = referenced_tweet['text'].strip()  # 原推正文
-        if 'attachments' in referenced_tweet and self.reference_text[-23:-18] == 'https':
-            self.reference_text = self.reference_text[:-23].strip()
-        self.reference_text_translate = ""  # 原推正文翻译
-        self.reference_image_urls:list[str] = []  # 原推附图, 此处暂时留空
+        try:
+            referenced_tweet:dict = reference_map[self.reference_id]
+            self.reference_author_id:str = referenced_tweet['author_id']  # 原推作者id
+            self.reference_author_name:str = user_map[self.reference_author_id]['name']  # 原推作者名称
+            self.reference_author_username:str = user_map[self.reference_author_id]['username']  # 原推作者用户名
+            self.reference_text:str = referenced_tweet['text'].strip()  # 原推正文
+            if 'attachments' in referenced_tweet and self.reference_text[-23:-18] == 'https':
+                self.reference_text = self.reference_text[:-23].strip()
+            self.reference_text_translate = ""  # 原推正文翻译
+            self.reference_image_urls:list[str] = []  # 原推附图, 此处暂时留空
+        except Exception as err:
+            logger.error(f'Twitter: {err}')
+            self.reference_author_id = ''
+            
     
     async def translate(self, source: str, target: str) -> str:
         await Tweet.translate(self, source, target)
