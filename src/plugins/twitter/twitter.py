@@ -95,7 +95,7 @@ class ReferenceTweet(Tweet):
         Tweet.__init__(self, tweet_data, user_map, media_map, reference_map)
         # 原推信息
         self.reference_id:str = tweet_data['referenced_tweets'][0]['id']  # 原推文id
-        try:
+        try:  # 引用的推文带锁时返回数据将不会包含原推的内容信息, 进行特别处理
             referenced_tweet:dict = reference_map[self.reference_id]
             self.reference_author_id:str = referenced_tweet['author_id']  # 原推作者id
             self.reference_author_name:str = user_map[self.reference_author_id]['name']  # 原推作者名称
