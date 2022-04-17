@@ -231,7 +231,7 @@ async def remove(event: GroupMessageEvent):
     await remove_staff.finish(Message(msg))
 
 force_register_staff = on_command(cmd='强制人员注册', temp=False, priority=2, block=True,
-    permission=GROUP_ADMIN|GROUP_OWNER|GROUP_MEMBER|SUPERUSER)
+    permission=SUPERUSER)
 @force_register_staff.handle()
 async def remove(event: GroupMessageEvent):
     group_id = int(event.get_plaintext().split()[1])
@@ -271,11 +271,11 @@ async def remove(event: GroupMessageEvent):
     await register_staff.finish(Message(msg))
 
 force_remove_staff = on_command(cmd='强制人员注销', temp=False, priority=2, block=True,
-    permission=GROUP_ADMIN|GROUP_OWNER|GROUP_MEMBER|SUPERUSER)
+    permission=SUPERUSER)
 @force_remove_staff.handle()
 async def remove(event: GroupMessageEvent):
-    group_id = int(event.get_plaintext.split()[1])
-    qq_id = int(event.get_plaintext.split()[2])
+    group_id = int(event.get_plaintext().split()[1])
+    qq_id = int(event.get_plaintext().split()[2])
     if not db.is_registered(group_id):
         await remove_staff.finish(Message('本群还未注册为字幕组群'))
     # 检查输入规范
