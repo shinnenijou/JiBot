@@ -234,12 +234,18 @@ force_register_staff = on_command(cmd='强制人员注册', temp=False, priority
     permission=GROUP_ADMIN|GROUP_OWNER|GROUP_MEMBER|SUPERUSER)
 @force_register_staff.handle()
 async def remove(event: GroupMessageEvent):
-    cmd = event.get_plaintext().split()
-    group_id = int(cmd[1])
-    qq_id = int(cmd[2])
-    occupations = cmd[3:]
+    group_id = int(event.get_plaintext().split()[1])
+    qq_id = int(event.get_plaintext().split()[2])
+    # 检查群是否已注册
     if not db.is_registered(group_id):
-        await force_register_staff.finish(Message('该群还未注册为字幕组群'))
+        await register_staff.finish(Message('本群还未注册为字幕组群'))
+    # 检查输入规范
+    occupations = event.get_plaintext().split()[3:]
+    msg = '命令错误, 请按照"/人员注册 职位名称"输入命令\n职位名称严格按照以下输入: '\
+        + '剪辑, 时轴, 翻译, 校对, 美工, 特效, 后期, 皮套, 画师, 同传; 多个职位以空格隔开'
+    for occupation_name in occupations:
+        if not occupation_name in occupation.MASKS:
+            await register_staff.finish(Message(msg))
     # 获取人员qq名称
     info = await nonebot.get_bot().get_group_member_info(
         group_id=group_id, user_id=qq_id, nocache=False
@@ -247,34 +253,65 @@ async def remove(event: GroupMessageEvent):
     name = info['nickname']
     if info['card']:
         name = info['card']
-    # 计算职位和
+    # 计算职位
     occupation_sum = 0
     for occupation_name in occupations:
         occupation_sum += occupation.MASKS[occupation_name]
-    # 注册人员
-    if db._add_staff(group_id, qq_id, name, occupation_sum):
-        msg = f'群{group_id}: {qq_id}注册成功'
+    # 添加人员
+    if db.add_occupation(group_id, qq_id, name, occupation_sum):
+        curr = db.get_one_staff(group_id, qq_id)
+        occupations = []
+        for occupation_name, mask in occupation.MASKS.items():
+            if curr[qq_id]['occupation'] & mask:
+                occupations.append(occupation_name)
+        msg = f'{name}({qq_id})职位更新成功, 当前职位为: '
     else:
-        msg = f'群{group_id}: {qq_id}注册信息已存在'
-    await force_register_staff.finish(Message(msg))
+        msg = f'{name}({qq_id})注册成功, 当前职位为: '
+    msg += ', '.join(occupation_name for occupation_name in occupations)
+    await register_staff.finish(Message(msg))
 
 force_remove_staff = on_command(cmd='强制人员注销', temp=False, priority=2, block=True,
     permission=GROUP_ADMIN|GROUP_OWNER|GROUP_MEMBER|SUPERUSER)
 @force_remove_staff.handle()
 async def remove(event: GroupMessageEvent):
-    cmd = event.get_plaintext().split()
-    msg = '命令错误, 请按照"/强制人员注销 群号 qq号"输入命令'
-    if len(cmd) != 3:
-        await force_remove_staff.finish(Message(msg))
-    group_id = int(cmd[1])
-    qq_id = int(cmd[2])
+    group_id = int(event.get_plaintext.split()[1])
+    qq_id = int(event.get_plaintext.split()[2])
     if not db.is_registered(group_id):
-        await force_remove_staff.finish(Message('该群还未注册为字幕组群'))
-    if db._remove_staff(group_id, qq_id):
-        msg = f'群{group_id}: {qq_id}注销成功'
+        await remove_staff.finish(Message('本群还未注册为字幕组群'))
+    # 检查输入规范
+    occupations = event.get_plaintext().split()[3:]
+    msg = '命令错误, 请按照"/人员注销 职位名称"输入命令\n职位名称严格按照以下输入: '\
+        + '剪辑, 时轴, 翻译, 校对, 美工, 特效, 后期, 皮套, 画师, 同传; 多个职位以空格隔开'
+    for occupation_name in occupations:
+        if not occupation_name in occupation.MASKS:
+            await register_staff.finish(Message(msg))
+    # 获取人员qq名称
+    info = await nonebot.get_bot().get_group_member_info(
+        group_id=group_id, user_id=qq_id, nocache=False
+    )
+    name = info['nickname']
+    if info['card']:
+        name = info['card']
+    # 计算职位
+    occupation_sum = 0
+    for occupation_name in occupations:
+        occupation_sum += occupation.MASKS[occupation_name]
+    # 注销职位
+    if db.remove_occupation(group_id, qq_id, occupation_sum):
+        curr = db.get_one_staff(group_id, qq_id)
+        occupations = []
+        for occupation_name, mask in occupation.MASKS.items():
+            if curr[qq_id]['occupation'] & mask:
+                occupations.append(occupation_name)
+        if occupations:
+            msg = f'{name}({qq_id})职位更新成功, 当前职位: '
+            msg += ', '.join(occupation_name for occupation_name in occupations)
+        else:
+            db._remove_staff(group_id, qq_id)
+            msg = f'{name}({qq_id})已成功注销所有职位'
     else:
-        msg = f'群{group_id}: {qq_id}注册信息不存在'
-    await force_remove_staff.finish(Message(msg))
+        msg = f'{name}({qq_id})注册信息不存在'
+    await remove_staff.finish(Message(msg))
 
 ####################
 #### 人员管理应用 ####
