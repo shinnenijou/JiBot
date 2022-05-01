@@ -104,13 +104,14 @@ async def push_dynamic():
                 tasks.append(task)
             try:
                 await asyncio.gather(*tasks)
+                # 发送成功后更新内存中的时间戳
+                USER_LIST[uid]['newest_timestamp'] = dynamic_data['desc']['timestamp']
+                # 保存该动态至内存, 供回复使用
+                DYNAMIC_QUEUE.append(dynamic)
             except:
                 logger.error(f'发送{uid}群消息失败, 请检查网络连接或qq账号状态')
-            # 保存该动态至内存, 供回复使用
-            DYNAMIC_QUEUE.append(dynamic)
-        # 更新时间戳, 返回动态从新到旧, 直接取第一条更新
-        USER_LIST[uid]['newest_timestamp'] = timeline[0]['desc']['timestamp']
-        db.update_timestamp(uid, timeline[0]['desc']['timestamp'])
+        # 更新时间戳至数据库
+        db.update_timestamp(uid, USER_LIST[uid]['newest_timestamp'])
 
 ###########################
 ######### 直播推送 #########
