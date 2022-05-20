@@ -114,6 +114,7 @@ add_trim = on_command(
     permission=GROUP
 )
 @add_trim.handle()
+@logger.catch
 async def add_(event: GroupMessageEvent):
     cmd = event.get_plaintext().split()
     if len(cmd) >= 2:
@@ -141,6 +142,7 @@ remove_trim = on_command(
     permission=GROUP
 )
 @remove_trim.handle()
+@logger.catch
 async def remove_(event: GroupMessageEvent):
     if len(event.get_plaintext.split()) == 2:
         group_id = int(event.get_session_id().split('_')[1])
