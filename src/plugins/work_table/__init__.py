@@ -144,7 +144,7 @@ remove_trim = on_command(
 @remove_trim.handle()
 @logger.catch
 async def remove_(event: GroupMessageEvent):
-    if len(event.get_plaintext.split()) == 2:
+    if len(event.get_plaintext().split()) == 2:
         group_id = int(event.get_session_id().split('_')[1])
         trim = event.get_plaintext().split()[1]
         with open(TRIM_PATH, 'r') as file:
@@ -161,7 +161,7 @@ async def remove_(event: GroupMessageEvent):
 scheduler = require('nonebot_plugin_apscheduler').scheduler
 
 # 定时推送审核提醒
-@scheduler.scheduled_job('cron', hour=15, minute = 20, timezone='UTC', id='trim_remind')
+@scheduler.scheduled_job('cron', hour=15, minute = 30, timezone='UTC', id='trim_remind')
 @logger.catch
 async def remind():
     with open(TRIM_PATH, 'r') as file:
