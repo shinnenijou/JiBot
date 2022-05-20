@@ -118,8 +118,8 @@ add_trim = on_command(
 async def add_(event: GroupMessageEvent):
     cmd = event.get_plaintext().split()
     if len(cmd) >= 2:
-        group_id = int(event.get_session_id().split('_')[1])
-        qq_id = int(event.get_session_id().split('_')[2])
+        group_id = event.get_session_id().split('_')[1]
+        qq_id = event.get_session_id().split('_')[2]
         trim = event.get_plaintext().split()[1]
         if len(cmd) == 3:
             trimmer = cmd[2]
@@ -145,14 +145,15 @@ remove_trim = on_command(
 @logger.catch
 async def remove_(event: GroupMessageEvent):
     if len(event.get_plaintext().split()) == 2:
-        group_id = int(event.get_session_id().split('_')[1])
+        group_id = event.get_session_id().split('_')[1]
         trim = event.get_plaintext().split()[1]
         with open(TRIM_PATH, 'r') as file:
             trims = json.loads(file.read())
-        for trim_dict in trims[group_id]:
-            if trim in trim_dict:
-                trims[group_id].remove(trim_dict)
-                break
+        if group_id in trims:
+            for trim_dict in trims[group_id]:
+                if trim in trim_dict:
+                    trims[group_id].remove(trim_dict)
+                    break
         with open(TRIM_PATH, 'w') as file:
             file.write(json.dumps(trims))
         await add_trim.finish('待审核视频删除完成')
