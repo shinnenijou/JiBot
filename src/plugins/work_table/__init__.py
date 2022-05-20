@@ -115,7 +115,7 @@ add_trim = on_command(
 )
 @add_trim.handle()
 async def add_(event: GroupMessageEvent):
-    cmd = event.get_plaintext.split()
+    cmd = event.get_plaintext().split()
     if len(cmd) >= 2:
         group_id = int(event.get_session_id().split('_')[1])
         qq_id = int(event.get_session_id().split('_')[2])
