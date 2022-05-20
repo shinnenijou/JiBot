@@ -186,19 +186,19 @@ async def remove_(event: GroupMessageEvent):
 scheduler = require('nonebot_plugin_apscheduler').scheduler
 
 # 定时推送审核提醒
-@scheduler.scheduled_job('cron', hour=15, minute = 55, timezone='UTC', id='trim_remind')
+@scheduler.scheduled_job('cron', hour=16, minute = 7, timezone='UTC', id='trim_remind')
 @logger.catch
 async def remind():
     with open(TRIM_PATH, 'r') as file:
         trims = json.loads(file.read())
-    for trims_info, group_id in trims.items():
-        msg = '提醒审核视频小助手提醒您, 快来和我一起审核视频:\n'
+    for group_id, trims_info in trims.items():
+        msg = '提醒审核视频小助手提醒您, 快来和我一起审核视频:'
         i = 0
-        while i != len(trims_info):
-            trim = trims_info[i][0]
-            trimmer = trims_info[i][1]
+        for trim_info in trims_info:
+            trim = trim_info[0]
+            trimmer = trim_info[1]
             i = i + 1
-            msg += f'[{i}]{trim}, 剪辑: {trimmer}\n'
+            msg += f'\n[{i}]{trim}, 剪辑: {trimmer}'
         nonebot.get_bot().send_group_msg(
             group_id = group_id,
             message = msg
