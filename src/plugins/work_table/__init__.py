@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 import nonebot
-from nonebot import on_command, on_notice, on_message
+from nonebot import on_command, on_notice, on_message, require
 from nonebot.rule import startswith
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, GroupIncreaseNoticeEvent, MessageSegment
 from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER, GROUP
 from nonebot.permission import SUPERUSER
+from nonebot.log import logger
 from os import mkdir
 import json
 
 DATA_PATH = './data'
 DIR_PATH = f'{DATA_PATH}/work_table'
-DB_PATH = f'{DIR_PATH}/work_table.json'
+TABLE_PATH = f'{DIR_PATH}/work_table.json'
+TRIM_PATH = f'{DIR_PATH}/trim.json'
 
 # INITIATE
 for path in [DATA_PATH, DIR_PATH]:
@@ -18,12 +20,15 @@ for path in [DATA_PATH, DIR_PATH]:
         mkdir(path)
     except FileExistsError:
         pass
-try: 
-    with open(DB_PATH, 'x') as file:
-        file.write('{}')
-except FileExistsError:
-    pass
-with open(DB_PATH, 'r') as file:
+
+for path in [TABLE_PATH, TRIM_PATH]:
+    try: 
+        with open(path, 'x') as file:
+            file.write('{}')
+    except FileExistsError:
+        pass
+
+with open(TABLE_PATH, 'r') as file:
     TABLES = json.loads(file.read())
 
 # HELP
@@ -36,6 +41,8 @@ async def help():
     menu = '工作表模块目前支持的功能:\n\n'
     menu += '发言以"工作表"开头调用工作表\n'
     menu += '命令格式: "/添加工作表 URL"\n'
+    menu += '命令格式: /添加审核 视频文件名\n'
+    menu += '命令格式: /结束审核 视频文件名\n'
     menu += '命令格式: "/删除工作表"'
     await helper.finish(menu)
 
@@ -66,7 +73,7 @@ async def add(event: GroupMessageEvent):
     if len(cmd) == 2:
         table_url = cmd[1]
         TABLES[group_id] = table_url
-        with open(DB_PATH, 'w') as file:
+        with open(TABLE_PATH, 'w') as file:
             file.write(json.dumps(TABLES))
         await work_table.send(Message("添加成功"))
     else:
@@ -82,7 +89,7 @@ async def delete(event: GroupMessageEvent):
     group_id = event.get_session_id().split('_')[1]
     if group_id in TABLES:
         del TABLES[group_id]
-        with open(DB_PATH, 'w') as file:
+        with open(TABLE_PATH, 'w') as file:
             file.write(json.dumps(TABLES))
         await work_table.send(Message("删除成功"))
     else:
@@ -100,3 +107,72 @@ async def welcome(event: GroupIncreaseNoticeEvent):
         MessageSegment.text(f'\n工作表: {TABLES[group_id]}')
     ])
     await at_new.finish(msg)
+
+# 添加待审核切片
+add_trim = on_command(
+    cmd = "添加审核",aliases=['审核', '切片审核'], temp=False, priority=2, block=True,
+    permission=GROUP
+)
+@add_trim.handle()
+async def add_(event: GroupMessageEvent):
+    cmd = event.get_plaintext.split()
+    if len(cmd) >= 2:
+        group_id = int(event.get_session_id().split('_')[1])
+        qq_id = int(event.get_session_id().split('_')[2])
+        trim = event.get_plaintext.split()[1]
+        if len(cmd) == 3:
+            trimmer = cmd[2]
+        else:
+            trimmer = nonebot.get_bot().get_group_member_info(
+                group_id=group_id, user_id=qq_id, nocache=False
+            )
+        with open(TRIM_PATH, 'r') as file:
+            trims = json.loads(file.read())
+        if group_id not in trims:
+            trims[group_id] = []
+        trims[group_id].append({trim: trimmer})
+        with open(TRIM_PATH, 'w') as file:
+            file.write(json.dumps(trims))
+        await add_trim.finish('待审核视频添加成功')
+
+# 删除待审核切片
+remove_trim = on_command(
+    cmd = "审核完成",aliases=['审核结束', '删除审核'], temp=False, priority=2, block=True,
+    permission=GROUP
+)
+@remove_trim.handle()
+async def remove_(event: GroupMessageEvent):
+    if len(event.get_plaintext.split()) == 2:
+        group_id = int(event.get_session_id().split('_')[1])
+        trim = event.get_plaintext.split()[1]
+        with open(TRIM_PATH, 'r') as file:
+            trims = json.loads(file.read())
+        for trim_dict in trims[group_id]:
+            if trim in trim_dict:
+                trims[group_id].remove(trim_dict)
+                break
+        with open(TRIM_PATH, 'w') as file:
+            file.write(json.dumps(trims))
+        await add_trim.finish('待审核视频删除完成')
+    
+# 定时通知群成员审核视频
+scheduler = require('nonebot_plugin_apscheduler').scheduler
+
+# 定时推送审核提醒
+@scheduler.scheduled_job('cron', hour=15, minutes = 10, timezone='UTC', id='trim_remind')
+@logger.catch
+async def remind():
+    with open(TRIM_PATH, 'r') as file:
+        trims = json.loads(file.read())
+    for trims_info, group_id in trims.items():
+        msg = '提醒审核视频小助手提醒您, 快来和我一起审核视频:\n'
+        i = 0
+        while i != len(trims_info):
+            trim = trims_info[i].keys()[0]
+            trimmer = trims_info[i].keys()[1]
+            i = i + 1
+            msg += f'[{i}]{trim}, 剪辑: {trimmer}\n'
+        nonebot.get_bot().send_group_msg(
+            group_id = group_id,
+            message = msg
+        )
