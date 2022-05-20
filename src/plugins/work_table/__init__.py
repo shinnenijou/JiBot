@@ -145,9 +145,12 @@ async def add_(event: GroupMessageEvent):
         if len(cmd) == 3:
             trimmer = cmd[2]
         else:
-            trimmer = (await nonebot.get_bot().get_group_member_info(
+            info = await nonebot.get_bot().get_group_member_info(
                 group_id=group_id, user_id=qq_id, nocache=False
-            ))['nickname']
+            )
+            trimmer = info['nickname']
+            if info['card']:
+                trimmer = info['card']
         with open(TRIM_PATH, 'r') as file:
             trims = json.loads(file.read())
         if group_id not in trims:
@@ -183,7 +186,7 @@ async def remove_(event: GroupMessageEvent):
 scheduler = require('nonebot_plugin_apscheduler').scheduler
 
 # 定时推送审核提醒
-@scheduler.scheduled_job('cron', hour=15, minute = 30, timezone='UTC', id='trim_remind')
+@scheduler.scheduled_job('cron', hour=15, minute = 55, timezone='UTC', id='trim_remind')
 @logger.catch
 async def remind():
     with open(TRIM_PATH, 'r') as file:
