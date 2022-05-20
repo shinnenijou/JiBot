@@ -108,6 +108,25 @@ async def welcome(event: GroupIncreaseNoticeEvent):
     ])
     await at_new.finish(msg)
 
+# 查看待审核切片
+show_trim = on_command(
+    cmd = "待审核", temp=False, priority=2, block=True,
+    permission=GROUP
+)
+@show_trim.handle()
+@logger.catch
+async def show_(event: GroupMessageEvent):
+    group_id = event.get_session_id().split('_')[1]
+    with open(TRIM_PATH, 'r') as file:
+        trims = json.loads(file.read())
+    if group_id in trims and trims[group_id]:
+        msg = '当前待审核的切片:'
+        i = 0
+        for trim_info in trims[group_id]:
+            i = i + 1
+            msg += f'\n[{i}]{trim_info.keys()[0]}, 剪辑: {trim_info.values()[0]}'
+        await show_trim.send(msg)
+        
 # 添加待审核切片
 add_trim = on_command(
     cmd = "添加审核",aliases={'审核', '切片审核'}, temp=False, priority=2, block=True,
