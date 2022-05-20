@@ -124,9 +124,11 @@ async def show_(event: GroupMessageEvent):
         i = 0
         for trim_info in trims[group_id]:
             i = i + 1
-            msg += f'\n[{i}]{trim_info.keys()[0]}, 剪辑: {trim_info.values()[0]}'
+            msg += f'\n[{i}]{trim_info[0]}, 剪辑: {trim_info[1]}'
         await show_trim.send(msg)
-        
+    else:
+        await show_trim.send('当前无待审核视频')
+
 # 添加待审核切片
 add_trim = on_command(
     cmd = "添加审核",aliases={'审核', '切片审核'}, temp=False, priority=2, block=True,
@@ -150,7 +152,7 @@ async def add_(event: GroupMessageEvent):
             trims = json.loads(file.read())
         if group_id not in trims:
             trims[group_id] = []
-        trims[group_id].append({trim: trimmer})
+        trims[group_id].append((trim, trimmer))
         with open(TRIM_PATH, 'w') as file:
             file.write(json.dumps(trims))
         await add_trim.send('待审核视频添加成功')
@@ -169,9 +171,9 @@ async def remove_(event: GroupMessageEvent):
         with open(TRIM_PATH, 'r') as file:
             trims = json.loads(file.read())
         if group_id in trims:
-            for trim_dict in trims[group_id]:
-                if trim in trim_dict:
-                    trims[group_id].remove(trim_dict)
+            for trim_tuple in trims[group_id]:
+                if trim == trim_tuple[0]:
+                    trims[group_id].remove(trim_tuple)
                     break
         with open(TRIM_PATH, 'w') as file:
             file.write(json.dumps(trims))
@@ -190,8 +192,8 @@ async def remind():
         msg = '提醒审核视频小助手提醒您, 快来和我一起审核视频:\n'
         i = 0
         while i != len(trims_info):
-            trim = trims_info[i].keys()[0]
-            trimmer = trims_info[i].keys()[1]
+            trim = trims_info[i][0]
+            trimmer = trims_info[i][1]
             i = i + 1
             msg += f'[{i}]{trim}, 剪辑: {trimmer}\n'
         nonebot.get_bot().send_group_msg(
