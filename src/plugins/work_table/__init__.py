@@ -110,7 +110,7 @@ async def welcome(event: GroupIncreaseNoticeEvent):
 
 # 添加待审核切片
 add_trim = on_command(
-    cmd = "添加审核",aliases=['审核', '切片审核'], temp=False, priority=2, block=True,
+    cmd = "添加审核",aliases={'审核', '切片审核'}, temp=False, priority=2, block=True,
     permission=GROUP
 )
 @add_trim.handle()
@@ -137,7 +137,7 @@ async def add_(event: GroupMessageEvent):
 
 # 删除待审核切片
 remove_trim = on_command(
-    cmd = "审核完成",aliases=['审核结束', '删除审核'], temp=False, priority=2, block=True,
+    cmd = "审核完成",aliases={'审核结束', '删除审核'}, temp=False, priority=2, block=True,
     permission=GROUP
 )
 @remove_trim.handle()
@@ -159,7 +159,7 @@ async def remove_(event: GroupMessageEvent):
 scheduler = require('nonebot_plugin_apscheduler').scheduler
 
 # 定时推送审核提醒
-@scheduler.scheduled_job('cron', hour=15, minutes = 10, timezone='UTC', id='trim_remind')
+@scheduler.scheduled_job('cron', hour=15, minute = 10, timezone='UTC', id='trim_remind')
 @logger.catch
 async def remind():
     with open(TRIM_PATH, 'r') as file:
