@@ -134,7 +134,7 @@ async def add_(event: GroupMessageEvent):
         trims[group_id].append({trim: trimmer})
         with open(TRIM_PATH, 'w') as file:
             file.write(json.dumps(trims))
-        await add_trim.finish('待审核视频添加成功')
+        await add_trim.send('待审核视频添加成功')
 
 # 删除待审核切片
 remove_trim = on_command(
@@ -156,7 +156,7 @@ async def remove_(event: GroupMessageEvent):
                     break
         with open(TRIM_PATH, 'w') as file:
             file.write(json.dumps(trims))
-        await add_trim.finish('待审核视频删除完成')
+        await remove_trim.send('待审核视频删除完成')
     
 # 定时通知群成员审核视频
 scheduler = require('nonebot_plugin_apscheduler').scheduler
