@@ -3,7 +3,7 @@
 import asyncio
 # Third-party lib
 import nonebot
-from nonebot import on_command, on_notice
+from nonebot import get_bot, get_bots, on_command, on_notice
 from nonebot.params import ArgPlainText
 from nonebot.adapters.onebot.v11.permission import GROUP_ADMIN, GROUP_OWNER, GROUP_MEMBER
 from nonebot.permission import SUPERUSER
@@ -229,6 +229,33 @@ async def remove(event: GroupMessageEvent):
     else:
         msg = f'{name}({qq_id})注册信息不存在'
     await remove_staff.finish(Message(msg))
+
+# Clear quit member
+clear_quit = on_command(
+    cmd = "清理尸体", aliases={"清理死人"}, temp=False, priority=2, block=True,
+    permission=GROUP_ADMIN|GROUP_OWNER|SUPERUSER
+)
+@clear_quit.handle()
+async def clear(event: GroupMessageEvent):
+    group_id = event.get_session_id().split('_')[1]
+
+    group_member_list = await nonebot.get_bot().get_group_member_list(group_id)
+    group_qq_set = set([])
+    for member in group_member_list:
+        group_qq_set.add(member["user_id"])
+
+    staff_list = db.get_all_staff(group_id)
+    remove_list = []
+    for qq_id in staff_list.keys():
+        if qq_id not in group_qq_set:
+            db._remove_staff(group_id, qq_id)
+            remove_list.append(qq_id)
+    
+    msg = "以移除以下qq用户职位:"
+    for qq_id in remove_list:
+        msg += f"\r\n{qq_id}"
+    
+    await clear_quit.finish(msg)
 
 force_register_staff = on_command(cmd='强制人员注册', temp=False, priority=2, block=True,
     permission=SUPERUSER)
