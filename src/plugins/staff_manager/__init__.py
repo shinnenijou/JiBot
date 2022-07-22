@@ -237,9 +237,11 @@ clear_quit = on_command(
 )
 @clear_quit.handle()
 async def clear(event: GroupMessageEvent):
-    group_id = event.get_session_id().split('_')[1]
+    group_id = int(event.get_session_id().split('_')[1])
 
-    group_member_list = await nonebot.get_bot().get_group_member_list(group_id)
+    group_member_list = await nonebot.get_bot().get_group_member_list(
+        group_id = group_id
+    )
     group_qq_set = set([])
     for member in group_member_list:
         group_qq_set.add(member["user_id"])
