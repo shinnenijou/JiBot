@@ -255,7 +255,7 @@ async def clear(event: GroupMessageEvent):
     
     msg = "以移除以下qq用户职位:"
     for qq_id in remove_list:
-        msg += f"\r\n{qq_id}"
+        msg += f"{qq_id}, "
     
     await clear_quit.finish(msg)
 
