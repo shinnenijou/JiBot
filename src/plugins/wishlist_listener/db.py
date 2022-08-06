@@ -5,12 +5,18 @@ from sqlite3 import OperationalError
 from os import mkdir
 from sre_constants import SUCCESS
 from typing import Tuple
+import time
 
 from loguru import logger
 
 DATA_PATH = './data'
 WISHLIST_DIR_PATH = f'{DATA_PATH}/wishlist'
 DB_PATH = f'{WISHLIST_DIR_PATH}/wishlist.db'
+
+# message log
+def message_log(str:str):
+    with open("msg.log", "a") as file:
+        file.write(time.asctime() + str + "\n")
 
 # 数据库初始化
 def init() -> None:
@@ -24,7 +30,7 @@ def init() -> None:
     try:
         mkdir(WISHLIST_DIR_PATH)
     except FileExistsError:
-        pass
+        pass      
     _creat_user_list()
 
 def _creat_user_list():
