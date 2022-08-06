@@ -228,8 +228,8 @@ def update_items(lid: str, new_items: list[str], removed_items: list[str]) -> No
         timestamp = int(time.time())
         cursor = connection.cursor()
         for item in removed_items:
-            cursor.execute(f'update item_{lid} set delete_time=timestamp where where item_name="{item}" and status=0;')
-            cursor.execute(f'update item_{lid} set status=1 where where item_name="{item}" and status=0;')
+            cursor.execute(f'update item_{lid} set delete_time={timestamp} where where item_name="{item}" and status=0;')
+            cursor.execute(f'update item_{lid} set status=1 where item_name="{item}" and status=0;')
         for item in new_items:
             cursor = cursor.execute(f'insert into item_{lid} values("{item}", {timestamp}, 0, 0);')
         connection.commit()    
