@@ -85,7 +85,7 @@ def add_user(lid: str) -> bool:
             cursor.execute(
                 f'create table sub_{lid} (group_id int primary key not null, name varchar(255) not null);')
             cursor.execute(
-                f'create table item_{lid} (item_name varchar(255) not null);')
+                f'create table item_{lid} (item_name varchar(255) not null, add_time int, delete_time int, status int not null);')
             connection.commit()
             success = True
         cursor.close()
@@ -212,7 +212,7 @@ def get_items(lid: str) -> list[str]:
     """
     with sqlite3.connect(DB_PATH) as connection:
         cursor = connection.cursor()
-        cursor.execute(f'select item_name from item_{lid};')
+        cursor.execute(f'select item_name from item_{lid} where status=0;')
         item_list = [row[0] for row in cursor.fetchall()]
         cursor.close()
     return item_list
@@ -225,10 +225,12 @@ def update_items(lid: str, new_items: list[str], removed_items: list[str]) -> No
     :param removed_items: 被移除商品名列表
     """
     with sqlite3.connect(DB_PATH) as connection:
+        timestamp = int(time.time())
         cursor = connection.cursor()
         for item in removed_items:
-            cursor.execute(f'delete from item_{lid} where item_name="{item}";')
+            cursor.execute(f'update item_{lid} set delete_time=timestamp where where item_name="{item}" and status=0;')
+            cursor.execute(f'update item_{lid} set status=1 where where item_name="{item}" and status=0;')
         for item in new_items:
-            cursor = cursor.execute(f'insert into item_{lid} values("{item}");')
+            cursor = cursor.execute(f'insert into item_{lid} values("{item}", {timestamp}, 0, 0);')
         connection.commit()    
         cursor.close()
