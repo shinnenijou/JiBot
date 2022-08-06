@@ -141,4 +141,5 @@ async def push_wishlist():
                         message=group_msg
                     )
                 )
+                db.message_log(group_msg)
             await asyncio.gather(*tasks)
