@@ -15,7 +15,7 @@ DB_PATH = f'{WISHLIST_DIR_PATH}/wishlist.db'
 
 # message log
 def message_log(str:str):
-    with open("msg.log", "a") as file:
+    with open(f"{WISHLIST_DIR_PATH}/msg.log", "a") as file:
         file.write(time.asctime() + str + "\n")
 
 # 数据库初始化
