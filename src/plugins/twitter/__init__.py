@@ -29,7 +29,7 @@ scheduler = require('nonebot_plugin_apscheduler').scheduler
 
 # 定时请求推文
 @scheduler.scheduled_job('interval', seconds=TWEET_LISTEN_INTERVAL,
-    id='tweet_pusher')
+    id='tweet_pusher', timezone='Asia/Shanghai')
 @logger.catch
 async def push_tweet():
     global USER_LIST

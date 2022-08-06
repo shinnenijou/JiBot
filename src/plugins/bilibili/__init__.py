@@ -60,7 +60,7 @@ scheduler = require('nonebot_plugin_apscheduler').scheduler
 ###########################
 ######### 动态推送 #########
 @scheduler.scheduled_job('interval', seconds=DYNAMIC_LISTEN_INTERVAL,
-    id='bili_dynamic_pusher')
+    id='bili_dynamic_pusher', timezone='Asia/Shanghai')
 @logger.catch
 async def push_dynamic():
     global USER_LIST
@@ -116,7 +116,7 @@ async def push_dynamic():
 ###########################
 ######### 直播推送 #########
 @scheduler.scheduled_job('interval', seconds=LIVE_LISTEN_INTERVAL,
-    id='bili_live_pusher')
+    id='bili_live_pusher', timezone='Asia/Shanghai')
 @logger.catch
 async def push_live():
     global USER_LIST

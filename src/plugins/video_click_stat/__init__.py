@@ -28,7 +28,7 @@ VIDEOS = {}
 scheduler = require('nonebot_plugin_apscheduler').scheduler
 
 @scheduler.scheduled_job('interval', seconds=VIDEO_STAT_INTERVAL,
-    id='video_stat')
+    id='video_stat', timezone='Asia/Shanghai')
 async def stat():
     expired_video = []
     for bvid in VIDEOS.keys():
