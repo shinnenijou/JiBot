@@ -24,7 +24,7 @@ async def _push_to_bark(msg):
     """
     result = {}
     async with aiohttp.ClientSession() as session:
-        url = BARK_URL + "/" + msg
+        url = BARK_URL + "/" + "JiBot" + '/' + msg
         async with session.get(url=url) as resp:
             result = await resp.json()
     return result["code"] == 200
