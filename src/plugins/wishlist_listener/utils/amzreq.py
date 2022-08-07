@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 from cgitb import text
+from inspect import Parameter
 import aiohttp
 import requests
 import asyncio
 import nonebot
 from nonebot.log import logger
+from tortoise import BackwardFKRelation
 # HTTP headers line
 HEADERS = {}
 HEADERS["Host"] = "www.amazon.co.jp"
@@ -14,6 +16,28 @@ HEADERS["Connection"] = "close"
 # CONSTANT
 PROXY = nonebot.get_driver().config.dict()['proxy']
 PROXY = None if PROXY == 'None' else PROXY
+BARK_URL = nonebot.get_driver().config.dict()['bark_url']
+
+async def _push_to_bark(msg):
+    """
+    将消息推送至Bark
+    """
+    result = {}
+    async with aiohttp.ClientSession() as session:
+        url = BARK_URL + "/" + msg
+        async with session.get(url=url) as resp:
+            result = await resp.json()
+    return result["code"] == 200
+
+async def push_to_bark(msg):
+    """
+    包装函数, 对发送失败的内容进行重试
+    """
+    retry_time = 5
+    for i in range(retry_time):
+        if await _push_to_bark(msg):
+            break
+
 async def request_many(*urls:int) -> list[str]:
     """
     获取复数url的愿望单页面
