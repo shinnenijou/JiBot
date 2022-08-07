@@ -152,14 +152,14 @@ async def push_wishlist():
         if common_msg:
             tasks = []
             for group_id, name in groups.items():
-                group_msg = f'{name}的愿望单发生了变动:\n'
+                group_msg = f'{name}的愿望单发生了变动'
                 # 消息推送至Bark
                 task = asyncio.create_task(
                     amzreq.push_to_bark(group_msg)
                 )
                 tasks.append(task)
                 # 消息推送至群
-                group_msg = group_msg + common_msg
+                group_msg = group_msg + ":\n" + common_msg
                 task = asyncio.create_task(
                     send_msg_with_retry(bot, group_id, group_msg)
                 )
