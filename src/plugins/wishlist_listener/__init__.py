@@ -153,8 +153,9 @@ async def push_wishlist():
             tasks = []
             for group_id, name in groups.items():
                 group_msg = f'{name}的愿望单发生了变动:\n' + common_msg
-                tasks.append(
-                    send_msg_with_retry(bot, group_id, message)
+                task = asyncio.create_task(
+                    send_msg_with_retry(bot, group_id, group_msg)
                 )
+                tasks.append(task)
                 db.message_log(group_msg)
             await asyncio.gather(*tasks)
