@@ -24,6 +24,23 @@ db.init()
 USER_LIST = db.get_user_list()
 WHITE_LIST = db.get_white_list()
 
+##########################
+######### 包装函数 #########
+async def send_msg_with_retry(bot, group_id:int, message:str):
+    retry_time = 3
+    send_success = False
+    for i in range(retry_time):
+        if send_success or retry_time == 0:
+            break
+        try:
+            await bot.send_group_msg(
+                group_id=group_id,
+                message=message
+            )
+            send_success = True
+        except:
+            pass
+
 # 请求定时任务对象scheduler
 scheduler = require('nonebot_plugin_apscheduler').scheduler
 
@@ -62,7 +79,7 @@ async def push_tweet():
             for group_id, need_translate in group_list.items():
                 msg = tweet.get_message(need_translate)
                 task = asyncio.create_task(
-                    bot.send_group_msg(group_id=group_id, message=msg)
+                    send_msg_with_retry(bot, group_id, msg)
                 )
                 tasks.append(task)
             await asyncio.gather(*tasks)

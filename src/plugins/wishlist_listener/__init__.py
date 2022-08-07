@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Python STL
 import asyncio
+from email import message
 # Third-party Library
 import nonebot
 from nonebot.plugin import require
@@ -15,6 +16,23 @@ import src.plugins.wishlist_listener.utils.amzreq as amzreq
 
 # INITIATE DATABASE
 db.init()
+
+##########################
+######### 包装函数 #########
+async def send_msg_with_retry(bot, group_id:int, message:str):
+    retry_time = 10
+    send_success = False
+    for i in range(retry_time):
+        if send_success or retry_time == 0:
+            break
+        try:
+            await bot.send_group_msg(
+                group_id=group_id,
+                message=message
+            )
+            send_success = True
+        except:
+            pass
 
 ########################
 # HELP
@@ -136,10 +154,7 @@ async def push_wishlist():
             for group_id, name in groups.items():
                 group_msg = f'{name}的愿望单发生了变动:\n' + common_msg
                 tasks.append(
-                    bot.send_group_msg(
-                        group_id=group_id,
-                        message=group_msg
-                    )
+                    send_msg_with_retry(bot, group_id, message)
                 )
                 db.message_log(group_msg)
             await asyncio.gather(*tasks)

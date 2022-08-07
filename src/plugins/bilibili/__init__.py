@@ -38,6 +38,24 @@ TRANSLATOR_LIST = db.get_translator_list()
 DYNAMIC_QUEUE = deque()
 
 ##########################
+######### 包装函数 #########
+async def send_msg_with_retry(bot, group_id:int, message:str):
+    retry_time = 3
+    send_success = False
+    for i in range(retry_time):
+        if send_success or retry_time == 0:
+            break
+        try:
+            await bot.send_group_msg(
+                group_id=group_id,
+                message=message
+            )
+            send_success = True
+        except:
+            pass
+
+
+##########################
 ######### 命令帮助 #########
 helper = on_command(cmd='bili帮助', priority=2, temp=False, block=True, 
     permission=GROUP_OWNER|GROUP_ADMIN|SUPERUSER)
@@ -96,20 +114,15 @@ async def push_dynamic():
             for group_id, need_transtale in groups.items():
                 message = dynamic.get_message(need_transtale)
                 task = asyncio.create_task(
-                    bot.send_group_msg(
-                        group_id=group_id,
-                        message=message
-                    )
+                    send_msg_with_retry(bot, group_id, message)
                 )
                 tasks.append(task)
-            try:
-                await asyncio.gather(*tasks)
-                # 发送成功后更新内存中的时间戳
-                USER_LIST[uid]['newest_timestamp'] = dynamic_data['desc']['timestamp']
-                # 保存该动态至内存, 供回复使用
-                DYNAMIC_QUEUE.append(dynamic)
-            except:
-                logger.error(f'发送{uid}群消息失败, 请检查网络连接或qq账号状态')
+            # 发送成功后更新内存中的时间戳
+            USER_LIST[uid]['newest_timestamp'] = dynamic_data['desc']['timestamp']
+            # 保存该动态至内存, 供回复使用
+            DYNAMIC_QUEUE.append(dynamic)
+            # 先更新后发送防止反复重试
+            await asyncio.gather(*tasks)
         # 更新时间戳至数据库
         db.update_timestamp(uid, USER_LIST[uid]['newest_timestamp'])
 
@@ -137,17 +150,14 @@ async def push_live():
             tasks = []
             for group_id in groups.keys():
                 task = asyncio.create_task(
-                    bot.send_group_msg(
-                        group_id=group_id,
-                        message=message
-                    )
+                    send_msg_with_retry(bot, group_id, message)
                 )
                 tasks.append(task)
             await asyncio.gather(*tasks)
 
 ###########################
 ######### 发送评论 #########
-send_comment = on_command(cmd='评论', priority=2, temp=False, block=True,
+send_comment = on_command(cmd='评论', aliases={'回复'}, priority=2, temp=False, block=True,
     permission=USER(*TRANSLATOR_LIST.keys()))
 @send_comment.handle()
 async def send(event:GroupMessageEvent):
