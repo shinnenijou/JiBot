@@ -43,7 +43,7 @@ async def send_msg_with_retry(bot, group_id:int, message:str):
     retry_time = 3
     send_success = False
     for i in range(retry_time):
-        if send_success or retry_time == 0:
+        if send_success:
             break
         try:
             await bot.send_group_msg(
