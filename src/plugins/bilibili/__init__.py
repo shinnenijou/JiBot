@@ -40,7 +40,7 @@ DYNAMIC_QUEUE = deque()
 ##########################
 ######### 包装函数 #########
 async def send_msg_with_retry(bot, group_id:int, message:str):
-    retry_time = 3
+    retry_time = 1
     send_success = False
     for i in range(retry_time):
         if send_success:
