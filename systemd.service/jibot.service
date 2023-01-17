@@ -1,0 +1,19 @@
+[Unit]
+Description=JiBot
+Documentation=https://github.com/shinnenijou/JiBot
+After=network.target
+Requires=network.target
+
+[Service]
+WorkingDirectory=/PATH_TO_JIBOT
+ExecStart=venv/bin/python3 bot.py
+ExecReload=venv/bin/python3 bot.py
+Restart=on-failure
+RestartSec=30s
+KillMode=mixed
+
+StandardOutput=null
+StandardError=null
+
+[Install]
+WantedBy=multi-user.target
