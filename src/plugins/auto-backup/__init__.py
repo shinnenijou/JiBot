@@ -7,7 +7,9 @@ import os
 
 # 读取备份设置
 BACKUP_PATH = nonebot.get_driver().config.dict()['backup_path']
+BACKUP_DAY = nonebot.get_driver().config.dict()['backup_day']
 BACKUP_TIME = nonebot.get_driver().config.dict()['backup_time']
+
 
 # 创建用于保存备份数据库的文件夹
 try:
@@ -17,7 +19,7 @@ except FileExistsError:
 
 auto_backup = require('nonebot_plugin_apscheduler').scheduler
 @auto_backup.scheduled_job('cron', 
-    day_of_week='sun', hour=BACKUP_TIME, minute=00, 
+    day_of_week=BACKUP_DAY, hour=BACKUP_TIME, minute=00, 
     timezone='UTC', id='db_backup')
 @logger.catch
 async def backup():
