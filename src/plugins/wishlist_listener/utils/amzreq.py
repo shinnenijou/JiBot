@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
-from cgitb import text
-from inspect import Parameter
 import aiohttp
-import requests
 import asyncio
 import nonebot
 from nonebot.log import logger
-from tortoise import BackwardFKRelation
 # HTTP headers line
 HEADERS = {}
 HEADERS["Host"] = "www.amazon.co.jp"
