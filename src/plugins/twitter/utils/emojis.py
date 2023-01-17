@@ -13,7 +13,7 @@ def _extract(string: str, emoji_list: list[dict[str,str]],
 
 def split_emoji(string : str) -> tuple[list[str], list[str]]:
     string_only, emoji_only = [], []
-    emoji_list = emoji.emoji_lis(string)
+    emoji_list = emoji.emoji_list(string)
     return _extract(string, emoji_list, string_only, emoji_only)
 
 def merge_emoji(text_only : list[str], emoji_only : list[str]) -> str:
