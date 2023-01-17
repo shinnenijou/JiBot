@@ -6,8 +6,8 @@ Requires=network.target
 
 [Service]
 WorkingDirectory=/PATH_TO_JIBOT
-ExecStart=venv/bin/python3 bot.py
-ExecReload=venv/bin/python3 bot.py
+ExecStart=/PATH_TO_JIBOT/venv/bin/python3 bot.py
+ExecReload=/PATH_TO_JIBOT/venv/bin/python3 bot.py
 Restart=on-failure
 RestartSec=30s
 KillMode=mixed
