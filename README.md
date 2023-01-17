@@ -2,13 +2,19 @@
 
 ## Overview  环境依赖
 本bot基于[NoneBot2](https://github.com/nonebot/nonebot2)与[go-cqhttp](https://github.com/Mrs4s/go-cqhttp)开发，部分插件使用现有的开源插件，配置启动需要安装以下环境
+   * 在安装环境前推荐创建虚拟环境
+   ```
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+   
    * NoneBot2主框架，可以通过`pip`等工具安装（详见文档[NoneBot2](https://v2.nonebot.dev/docs/start/installation)）
       ```
       pip install nb-cli
       ```
    * 协议适配器，可以通过NoneBot2的脚手架`nb-cli`进行安装（详见文档[OneBot v11](https://adapter-onebot.netlify.app/docs/guide/installation)）
       ```
-      nb adapter install nonebot-adpater-onebot
+      nb adapter install nonebot-adapter-onebot
       ```
    * 定时任务需要额外安装一项计时器,可以通过NoneBot2的脚手架`nb-cli`进行安装(详见文档[NoneBot2](https://v2.nonebot.dev/docs/advanced/scheduler))
       ```
@@ -36,19 +42,12 @@
       pip install bilibili_api
       ```
 
-      * plugin_status: 需要使用第三方库`psutil`查询服务器运行状态
-         ```
-         pip instal psutil
-         ```
-
 ## Function  主要功能
 1. wishlist_listener: 自制插件，定时监听Amazon愿望单中物品变化情况并发送至指定群，老头快人一步
 2. auto_translator: 自制插件，指定源语言与目标语言对特定用户的所有发言进行翻译，翻译结果将保留原文中的emoji及qq自带表情，翻译引擎使用腾讯TMT，每月免费额度对于轻度使用非常友好，请求时需要TC3-HMAC-SHA256签名，签名方法详见[Tencent TMT](https://cloud.tencent.com/document/product/551/30636)
 3. manual_translator: 自制插件，指定目标语言进行翻译，翻译接口同上
 4. twitter: 自制插件，对关注的推特用户内容进行推送和翻译, 保留图片，emoji，转推原文等信息
 5. bilibili: 自制插件，对关注的bilibili主播动态, 视频发布, 直播等进行推送, 保留图片, emoji, 转发愿文等信息, 可以在群内直接回复评论某条最新动态(使用管理员账号)
-6. nonebot_plugin_status: 已发布插件，远程查询服务器cpu·内存·硬盘等使用百分比，详见[status](https://github.com/cscs181/QQ-GitHub-Bot/tree/master/src/plugins/nonebot_plugin_status)
-7. nonebot_plugin_manager: 已发布插件，对不同群的插件开启进行管理，详见[manager](https://github.com/nonepkg/nonebot-plugin-manager)
 ## Guide  启用方法
 1. 安装依赖，将本仓库克隆至本地后，在本文件目录内配置.env.prod。必须进行配置的项目
    ```
