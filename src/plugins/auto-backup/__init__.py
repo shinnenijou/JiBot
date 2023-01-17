@@ -5,8 +5,10 @@ import time
 import os
 
 
-# 读取备份地址
-BACKUP_PATH = SESSDATA = nonebot.get_driver().config.dict()['backup_path']
+# 读取备份设置
+BACKUP_PATH = nonebot.get_driver().config.dict()['backup_path']
+BACKUP_TIME = nonebot.get_driver().config.dict()['backup_time']
+
 # 创建用于保存备份数据库的文件夹
 try:
     os.mkdir(BACKUP_PATH)
@@ -14,9 +16,8 @@ except FileExistsError:
     pass
 
 auto_backup = require('nonebot_plugin_apscheduler').scheduler
-# 每周UTC Sun. 20:00(GTM+8, Mon. 4:00)启动自动备份, 
 @auto_backup.scheduled_job('cron', 
-    day_of_week='sun', hour=20, minute=00, 
+    day_of_week='sun', hour=BACKUP_TIME, minute=00, 
     timezone='UTC', id='db_backup')
 @logger.catch
 async def backup():
