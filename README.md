@@ -24,10 +24,6 @@
    
    * 根据插件情况分别需要一些额外依赖: 
 
-      * wishlist_listener: 使用`requests`同步直接请求html文件
-         ```
-         pip install requests
-         ```
       * auto_translator: 翻译的请求使用`aiohttp`进行异步请求，文本处理时需要使用`emoji`进行替换处理
          ```
          pip install aiohttp

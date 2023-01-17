@@ -41,8 +41,8 @@ async def help():
     menu = '工作表模块目前支持的功能:\n\n'
     menu += '发言以"工作表"开头调用工作表\n'
     menu += '命令格式: "/添加工作表 URL"\n'
-    menu += '命令格式: /添加审核 视频文件名\n'
-    menu += '命令格式: /结束审核 视频文件名\n'
+    menu += '命令格式: /审核 视频文件名\n'
+    menu += '命令格式: /审核完成 视频文件名\n'
     menu += '命令格式: "/删除工作表"'
     await helper.finish(menu)
 
