@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # Python STL
 import asyncio
-from email import message
 # Third-party Library
 import nonebot
 from nonebot.plugin import require
@@ -11,8 +10,8 @@ from nonebot.permission import SUPERUSER
 from nonebot.adapters.onebot.v11 import GROUP_OWNER, GROUP_ADMIN
 from nonebot.adapters.onebot.v11 import Message, GroupMessageEvent, GroupDecreaseNoticeEvent
 # Self-tools
-import src.plugins.wishlist_listener.db as db
-import src.plugins.wishlist_listener.utils.amzreq as amzreq
+from . import db
+from . import amzreq
 
 # INITIATE DATABASE
 db.init()

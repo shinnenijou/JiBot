@@ -8,9 +8,9 @@ from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment, Messa
 
 import asyncio
 # Self-Utils
-import src.plugins.auto_translator.db as db
-import src.plugins.auto_translator.utils.tmt as tmt
-import src.plugins.auto_translator.utils.emojis as emojis
+from . import db
+from ...common import tmt
+from ...common import emojis
 # Initiate database
 db.init()
 USERS_ON = db.to_dict(asyncio.run(db.select()))

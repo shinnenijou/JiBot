@@ -8,8 +8,8 @@ import aiohttp
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 from nonebot.log import logger
 # Self utils
-import src.plugins.twitter.utils.emojis as emojis
-import src.plugins.twitter.utils.tmt as tmt
+from ...common import emojis
+from ...common import tmt
 
 # CONSTANT
 PROXY = nonebot.get_driver().config.dict()['proxy']

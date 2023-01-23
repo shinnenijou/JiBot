@@ -9,8 +9,8 @@ from nonebot.adapters.onebot.v11.permission import GROUP_ADMIN, GROUP_OWNER, GRO
 from nonebot.permission import SUPERUSER
 from nonebot.adapters.onebot.v11 import Message, GroupMessageEvent, MessageSegment, GroupIncreaseNoticeEvent
 # self-utils
-import src.plugins.staff_manager.db as db
-import src.plugins.staff_manager.utils.occupation as occupation
+from . import db
+from . import occupation
 
 # Initiate Database
 db.init()

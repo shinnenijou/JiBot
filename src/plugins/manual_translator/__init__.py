@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import nonebot
-import src.plugins.manual_translator.utils.tmt as tmt
+from ...common import tmt
 from nonebot.adapters.onebot.v11 import GROUP, GroupMessageEvent, Message, MessageSegment
 from nonebot import on_command
 

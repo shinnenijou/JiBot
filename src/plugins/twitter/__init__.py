@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import asyncio
-from email import message
 from nonebot import on_command, on_notice
 from nonebot.adapters.onebot.v11 import Message,MessageSegment
 from nonebot.adapters.onebot.v11.permission import GROUP_ADMIN, GROUP_OWNER, PRIVATE_FRIEND

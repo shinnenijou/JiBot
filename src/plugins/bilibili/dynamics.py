@@ -8,8 +8,8 @@ from bilibili_api import comment, Credential, user
 from nonebot.log import logger
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 # Self
-import src.plugins.bilibili.utils.tmt as tmt
-import src.plugins.bilibili.utils.emojis as emojis
+from ...common import tmt
+from ...common import emojis
 
 # CONSTANT
 class DynamicType():

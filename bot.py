@@ -3,19 +3,12 @@
 
 import nonebot
 from nonebot.adapters.onebot.v11 import Adapter as ONEBOT_V11Adapter
-from os import mkdir
+from .src.common.utils import Mkdir
 
 # Some customized operation
 # make data directory
-try:
-    mkdir("data")
-except FileExistsError:
-    pass
-try:
-    mkdir("logs")
-except FileExistsError:
-    pass
-
+Mkdir("data")
+Mkdir("logs")
 
 # Custom your logger
 # 
