@@ -4,32 +4,17 @@ from nonebot import on_command, on_notice, on_message, require
 from nonebot.rule import startswith
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, GroupIncreaseNoticeEvent, MessageSegment
 from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER, GROUP
-from nonebot.permission import SUPERUSER
 from nonebot.log import logger
-from os import mkdir
+from ...common import utils
+from .work_table import Table
 import json
+from ...common import config
 
-DATA_PATH = './data'
-DIR_PATH = f'{DATA_PATH}/work_table'
-TABLE_PATH = f'{DIR_PATH}/work_table.json'
-TRIM_PATH = f'{DIR_PATH}/trim.json'
+TRIM_PATH = config.make_data_path('work_table/trim.json')
+TABLE = Table('work_table.json')
 
 # INITIATE
-for path in [DATA_PATH, DIR_PATH]:
-    try:
-        mkdir(path)
-    except FileExistsError:
-        pass
-
-for path in [TABLE_PATH, TRIM_PATH]:
-    try: 
-        with open(path, 'x') as file:
-            file.write('{}')
-    except FileExistsError:
-        pass
-
-with open(TABLE_PATH, 'r') as file:
-    TABLES = json.loads(file.read())
+utils.Touch(TRIM_PATH, '{}')
 
 # HELP
 helper = on_command(
@@ -53,13 +38,15 @@ work_table = on_message(
 )
 @work_table.handle()
 async def _(event: GroupMessageEvent):
-    cmd = event.get_plaintext().strip()
-    if len(cmd) == 3:
-        group_id = event.get_session_id().split('_')[1]
-        if group_id in TABLES:
-            await work_table.send(Message(TABLES[group_id]))
-        else:
-            await work_table.send(Message("请先添加工作表"))
+    cmd = utils.get_cmd_param(event)
+    if len(cmd) != 2:
+        return
+    group_id = utils.get_group_id(event)
+    obj = TABLE.get(group_id)
+    if obj:
+        await work_table.finish(Message(obj))
+    else:
+        await work_table.finish(Message("请先添加工作表"))
 
 # ADD WORK TABLE
 add_table = on_command(
@@ -68,16 +55,15 @@ add_table = on_command(
 )
 @add_table.handle()
 async def add(event: GroupMessageEvent):
-    cmd = event.get_plaintext().split()
-    group_id = event.get_session_id().split('_')[1]
-    if len(cmd) == 2:
-        table_url = cmd[1]
-        TABLES[group_id] = table_url
-        with open(TABLE_PATH, 'w') as file:
-            file.write(json.dumps(TABLES))
-        await work_table.send(Message("添加成功"))
+    cmd = utils.get_cmd_param(event)
+    group_id = utils.get_group_id(event)
+    if len(cmd) < 1:
+        await work_table.finish(Message("请指定工作表URL"))
+
+    if TABLE.add(cmd[0]):
+        await work_table.finish(Message("添加成功"))
     else:
-        await work_table.send(Message("请指定工作表URL"))
+        await work_table.finish(Message("已存在工作表，覆盖请使用/更新工作表 指令"))
 
 # DELETE WORK TABLE
 del_table = on_command(
@@ -86,25 +72,35 @@ del_table = on_command(
 )
 @del_table.handle()
 async def delete(event: GroupMessageEvent):
-    group_id = event.get_session_id().split('_')[1]
-    if group_id in TABLES:
-        del TABLES[group_id]
-        with open(TABLE_PATH, 'w') as file:
-            file.write(json.dumps(TABLES))
-        await work_table.send(Message("删除成功"))
+    group_id = utils.get_group_id(event)
+    if TABLE.delete(group_id):
+        await work_table.finish(Message("删除成功"))
     else:
-        await work_table.send(Message("本群没有指定工作表"))
+        await work_table.finish(Message("本群没有指定工作表"))
+
+# UPDATE WORK TABLE
+update_table = on_command(
+    cmd = "更新工作表", temp=False, priority=2, block=True,
+    permission=GROUP
+)
+@update_table.handle()
+async def update(event: GroupMessageEvent):
+    group_id = utils.get_group_id(event)
+    if TABLE.update(group_id):
+        await work_table.finish(Message("更新成功"))
+    else:
+        await work_table.finish(Message("不存在工作表, 添加请使用/添加工作表 指令"))
 
 # Welcome The New
 at_new = on_notice(temp=False, priority=2, block=True)
 @at_new.handle()
 async def welcome(event: GroupIncreaseNoticeEvent):
-    group_id = event.get_session_id().split('_')[1]
+    group_id = utils.get_group_id(event)
     new_id = event.get_user_id()
     msg = Message([
         MessageSegment.at(new_id),
         MessageSegment.text('进群请修改群名片为: 职务-名字, 并查看群公告内及工作表首页的组内须知。'),
-        MessageSegment.text(f'\n工作表: {TABLES[group_id]}')
+        MessageSegment.text(f'\n工作表: {TABLE.get(group_id)}')
     ])
     await at_new.finish(msg)
 

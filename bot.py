@@ -3,7 +3,7 @@
 
 import nonebot
 from nonebot.adapters.onebot.v11 import Adapter as ONEBOT_V11Adapter
-from .src.common.utils import Mkdir
+from src.common.utils import Mkdir
 
 # Some customized operation
 # make data directory
