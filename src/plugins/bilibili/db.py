@@ -281,7 +281,7 @@ def delete_group_sub(uid:int, group_id:int) -> bool:  #删除订阅信息
     connection.close()
     return success
 
-def get_group_sub(group_id:int) -> tuple[list[str],list[str],list[str]]:
+def get_group_sub(group_id:int) -> dict[str, dict[str, str]]:
     """
     根据群号搜索该群关注的所有用户
     :return sub_list: 保存订阅信息的字典, key为uid, value为包含name, need_translate的字典

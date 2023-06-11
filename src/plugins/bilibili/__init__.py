@@ -194,10 +194,12 @@ userlist = on_command(cmd='bili关注列表', priority=2, temp=False, block=True
 async def get_list(event: GroupMessageEvent):
     group_id = event.get_session_id().split('_')[1]
     msg = '本群已关注以下用户:\n'
-    uid_list, name_list, translate_list = db.get_group_sub(group_id)
-    for i in range(len(name_list)):
-        translate_text = '开启' if translate_list[i] else '关闭'
-        msg += f'\n[{i + 1}]{name_list[i]}({uid_list[i]}) 翻译已{translate_text}'
+    group_sub = db.get_group_sub(group_id)
+    i = 0
+    for uid, info in group_sub.items():
+        i = i + 1
+        translate_text = '开启' if info.get('need_translate', False) else '关闭'
+        msg += f'\n[{i}]{info.get("name", uid)}({uid}) 翻译已{translate_text}'
     await userlist.finish(Message(msg))
 
 # 关注用户
