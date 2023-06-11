@@ -69,14 +69,16 @@ def _merge_main_table():
         'select count(*) from sqlite_master where type="table" and name="user_list_old";'
         ).fetchone()[0]
 
-    if old_table_exist == 0:
+    print("old_table_exist: ",old_table_exist)
+    if old_table_exist == 1:
         cursor.execute('select * from user_list_old;')
         data = cursor.fetchall()
         for row in data:
             cursor.execute(f'insert into user_list values("{row[0]}", "{row[1]}", "{row[2]}", {row[3]});')
         
         cursor.execute('drop table user_list_old;')
-    
+        connection.commit()
+        
     cursor.close()
     connection.close()
             
