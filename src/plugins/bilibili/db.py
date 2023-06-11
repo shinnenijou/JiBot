@@ -77,8 +77,8 @@ def _merge_main_table():
         
         cursor.execute('drop table user_list_old;')
     
-    connection.close()
     cursor.close()
+    connection.close()
             
 
 # bili用户操作
