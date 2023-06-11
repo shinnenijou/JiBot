@@ -246,7 +246,7 @@ async def unfollow(event:GroupMessageEvent):
     cmd = event.get_plaintext().split()
     msg = '命令格式错误, 请按照命令格式: "/bili取关 数字uid"'
     if len(cmd) == 2 and cmd[1].isdigit():
-        uid = int(cmd[1])
+        uid = cmd[1]
         name = db.get_user_name(uid)
         if db.delete_group_sub(uid, group_id):
             msg = f"{name}({uid})取关成功"
