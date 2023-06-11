@@ -17,6 +17,7 @@ def init() -> None:
         pass
     _creat_main_table()
     _creat_translator_list()
+    _merge_main_table()
     
 def _creat_main_table():
     connection = sqlite3.connect(DB_PATH)
@@ -28,8 +29,8 @@ def _creat_main_table():
         cursor.execute(
             """
             create table user_list (
-                uid int primary key not null,
-                room_id int not null,
+                uid varchar(255) primary key not null,
+                room_id varchar(255) not null,
                 name varchar(255) not null,
                 newest_timestamp int
             );
@@ -61,6 +62,25 @@ def _creat_translator_list():
     cursor.close()
     connection.close()
 
+def _merge_main_table():
+    connection = sqlite3.connect(DB_PATH)
+    cursor = connection.cursor()
+    old_table_exist = cursor.execute(
+        'select count(*) from sqlite_master where type="table" and name="user_list_old";'
+        ).fetchone()[0]
+
+    if old_table_exist:
+        cursor.execute('select * from user_list_old;')
+        data = cursor.fetchall()
+        for row in data:
+            cursor.execute(f'insert into user_list values("{row[0]}", "{row[1]}", "{row[2]}", {row[3]});')
+        
+        cursor.execute('drop table user_list_old;')
+    
+    connection.close()
+    cursor.close()
+            
+
 # bili用户操作
 def add_user(uid:int, room_id, name:str, timestamp:int=0) -> bool:#创建用户对应的表
     """
@@ -77,7 +97,7 @@ def add_user(uid:int, room_id, name:str, timestamp:int=0) -> bool:#创建用户�
         f'select count(*) from sqlite_master where type="table" and name="_{uid}";'
         ).fetchone()[0]
     if not user_exist:
-        cursor.execute(f'insert into user_list values({uid}, {room_id}, "{name}", {timestamp});')
+        cursor.execute(f'insert into user_list values("{uid}", "{room_id}", "{name}", {timestamp});')
         cursor.execute(
             f"""
             create table _{uid} (
@@ -110,7 +130,7 @@ def delete_user(uid:int) -> bool:
         group_remain = cursor.execute(f'select count(*) from _{uid}').fetchone()[0]
         if not group_remain:
             cursor.execute(f'drop table _{uid};')
-            cursor.execute(f'delete from user_list where uid={uid};')
+            cursor.execute(f'delete from user_list where uid="{uid}";')
             success = True
             connection.commit()
         else:
@@ -161,7 +181,7 @@ def get_user_name(uid:int) -> str:
     """
     connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
-    cursor.execute(f'select name from user_list where uid={uid};')
+    cursor.execute(f'select name from user_list where uid="{uid}";')
     try:
         data = cursor.fetchone()
         name = data[0]
@@ -318,7 +338,7 @@ def translate_off(uid:int, group_id:int) -> bool:  # 关闭推文翻译
 def update_timestamp(uid:int, newest_timestamp:int):  # 更新某用户最新动态时间戳
     connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
-    cursor.execute(f'update user_list set newest_timestamp={newest_timestamp} where uid={uid};')
+    cursor.execute(f'update user_list set newest_timestamp={newest_timestamp} where uid="{uid}";')
     connection.commit()
     cursor.close()
     connection.close()
