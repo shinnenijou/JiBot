@@ -69,7 +69,7 @@ def _merge_main_table():
         'select count(*) from sqlite_master where type="table" and name="user_list_old";'
         ).fetchone()[0]
 
-    if old_table_exist:
+    if old_table_exist == 0:
         cursor.execute('select * from user_list_old;')
         data = cursor.fetchall()
         for row in data:
