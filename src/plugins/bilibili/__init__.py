@@ -214,7 +214,7 @@ async def follow(event:GroupMessageEvent):
     msg = '命令格式错误, 请按照命令格式: "/bili关注 数字uid"'
     if len(cmd) != 2 or not cmd[1].isdigit():
         await follow_user.finish(Message(msg))
-    uid = int(cmd[1])
+    uid = cmd[1]
     user_info = (await users.get_users_info(CREDENTIAL, uid))[0]
     if user_info:
         name = user_info['name']
