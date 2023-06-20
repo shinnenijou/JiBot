@@ -21,7 +21,7 @@ class Table(Singleton):
         with open(self.__path, 'w') as file:
             file.write(json.dumps(self.__data))
 
-    def add(self, group_id:int, obj:str) -> bool:
+    def add(self, group_id:str, obj:str) -> bool:
         "Return True if successfully add a new obj, False if exists obj for the group"
         if group_id in self.__data.keys():
             return False
@@ -30,7 +30,7 @@ class Table(Singleton):
         self.__write_to_db()
         return True
 
-    def delete(self, group_id:int) -> bool:
+    def delete(self, group_id:str) -> bool:
         "Return True if successfully delete obj for the group, False if not exists obj"
         if group_id not in self.__data.keys():
             return False
@@ -39,13 +39,13 @@ class Table(Singleton):
         self.__write_to_db()
         return True
 
-    def get(self, group_id:int) -> str:
+    def get(self, group_id:str) -> str:
         if group_id not in self.__data.keys():
             return ""
         
         return self.__data[group_id]
 
-    def update(self, group_id:int, obj:str) -> bool:
+    def update(self, group_id:str, obj:str) -> bool:
         "Return True if successfully update obj for the group, False if not exists obj"
         if group_id not in self.__data.keys():
             return False

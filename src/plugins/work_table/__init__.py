@@ -38,9 +38,6 @@ work_table = on_message(
 )
 @work_table.handle()
 async def _(event: GroupMessageEvent):
-    cmd = utils.get_cmd_param(event)
-    if len(cmd) != 2:
-        return
     group_id = utils.get_group_id(event)
     obj = TABLE.get(group_id)
     if obj:

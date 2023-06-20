@@ -30,8 +30,8 @@ def Touch(path: str, orig_text: str = "") -> bool:
         file.close()
 
 
-def get_group_id(event: GroupMessageEvent) -> int:
-    return int(event.get_session_id().split('_')[1])
+def get_group_id(event: GroupMessageEvent) -> str:
+    return str(event.get_session_id().split('_')[1])
 
 
 def get_cmd_param(event: GroupMessageEvent) -> list[str]:
