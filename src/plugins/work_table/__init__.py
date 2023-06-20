@@ -60,7 +60,7 @@ async def add(event: GroupMessageEvent):
     if len(cmd) < 1:
         await work_table.finish(Message("请指定工作表URL"))
 
-    if TABLE.add(cmd[0]):
+    if TABLE.add(group_id, cmd[0]):
         await work_table.finish(Message("添加成功"))
     else:
         await work_table.finish(Message("已存在工作表，覆盖请使用/更新工作表 指令"))
