@@ -35,8 +35,8 @@ def get_group_id(event: GroupMessageEvent) -> int:
 
 
 def get_cmd_param(event: GroupMessageEvent) -> list[str]:
-    return event.get_plaintext().strip()[1:]
+    return event.get_plaintext().strip().split()[1:]
 
 
 def get_cmd(event: GroupMessageEvent) -> str:
-    return event.get_plaintext().strip()[0]
+    return event.get_plaintext().strip().split()[0]
