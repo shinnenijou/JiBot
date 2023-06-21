@@ -10,7 +10,7 @@ import asyncio
 # Self-Utils
 from . import db
 from ...common import tmt
-from ...common import emojis
+from ...common import emojis, utils
 # Initiate database
 db.init()
 USERS_ON = db.to_dict(asyncio.run(db.select()))
@@ -34,7 +34,7 @@ async def get_status(event:GroupMessageEvent):
     user_list = await db.select(group_id=group_id)
     msg = "已开启以下群成员的自动翻译功能:\n"
     for i in range(len(user_list)):
-        user_name = await emojis.get_qq_name(nonebot.get_bot(), group_id, user_list[i][2])
+        user_name = await utils.get_qq_name(nonebot.get_bot(), group_id, user_list[i][2])
         msg += f"\n[{i + 1}] {user_name}({user_list[i][2]}): {user_list[i][3]}->{user_list[i][4]}"
     await status.send(msg)
 
@@ -55,7 +55,7 @@ async def add_user(event:GroupMessageEvent):
     except:
         isValidCmd = False
     if isValidCmd:
-        user_name = await emojis.get_qq_name(nonebot.get_bot(), group_id, user_id)
+        user_name = await utils.get_qq_name(nonebot.get_bot(), group_id, user_id)
         if await db.insert(group_id, user_id, source, target):
             USERS_ON = db.to_dict(await db.select())
             translator.permission = USER(*USERS_ON.keys())
@@ -87,7 +87,7 @@ async def del_user(event:GroupMessageEvent):
         source = None
         target = None
     if isValidCmd:
-        user_name = await emojis.get_qq_name(nonebot.get_bot(), group_id, user_id)
+        user_name = await utils.get_qq_name(nonebot.get_bot(), group_id, user_id)
         if await db.delete(group_id, user_id, source, target):
             USERS_ON = db.to_dict(await db.select())
             translator.permission = USER(*USERS_ON.keys())

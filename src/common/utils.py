@@ -40,3 +40,12 @@ def get_cmd_param(event: GroupMessageEvent) -> list[str]:
 
 def get_cmd(event: GroupMessageEvent) -> str:
     return event.get_plaintext().strip().split()[0]
+
+async def get_qq_name(bot, group_id, user_id) -> str:
+    user_info = await bot.get_group_member_info(
+        group_id=group_id, user_id=user_id, nocache=False
+    )
+    user_name = user_info['nickname']
+    if user_info['card']:
+        user_name = user_info['card']
+    return user_name
