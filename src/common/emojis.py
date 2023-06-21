@@ -1,4 +1,8 @@
 import emoji
+from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment, Message
+
+# CONSTANT
+PLAIN_TEXT = ['face', 'reply', 'at', 'text']
 
 def _extract(string: str, emoji_list: list[dict[str,str]],
     string_only : list[str], emoji_only : list[str]) -> tuple[list[str],list[str]]:
@@ -29,3 +33,56 @@ def merge_emoji(text_only : list[str], emoji_only : list[str]) -> str:
         string += emoji_only[i]
         i += 1
     return string
+    
+class MessageFragments():
+
+    def __init__(self, message : Message) -> None:
+        # list[[list[text], list[emoji]]]
+        self.fragments =[None] * len(message)
+        self.plain_text = []
+        self.message = Message()
+        if message:
+            self.message = message
+            i = 0
+            while i < len(message):
+                if message[i].type == 'text':
+                    text_list, emoji_list = split_emoji(
+                        message[i].data['text'].replace("http://", "").replace("https://", ""))
+                    self.fragments[i] = [text_list, emoji_list]
+                    for text in self.fragments[i][0]:
+                        self.plain_text.append(text)
+                elif message[i].type not in PLAIN_TEXT:
+                    del message[i]
+                    i -= 1
+                i += 1
+    
+    def copy(self):
+        return MessageFragments([])._copy_from(self.message, self.plain_text, self.fragments)
+
+    def update_plain_text(self, text_list : list[str]) -> None:
+        count = 0
+        self.plain_text = text_list
+        for i in range(len(self.fragments)):
+            if isinstance(self.fragments[i], list):
+                for j in range(len(self.fragments[i][0])):
+                    self.fragments[i][0][j] = text_list[count]
+                    count += 1
+                self.message[i] = MessageSegment.text(
+                    merge_emoji(
+                        self.fragments[i][0],
+                        self.fragments[i][1]
+                    )
+                )
+
+    def get_message(self) -> Message:
+        return self.message
+
+    def get_plain_text(self) -> list[str]:
+        return self.plain_text
+
+    def _copy_from(self, message: Message, plain_text : list[str],
+        fragments:list):
+        self.fragments = fragments.copy()
+        self.message = message.copy()
+        self.plain_text = plain_text.copy()
+        return self

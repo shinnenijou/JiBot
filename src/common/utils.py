@@ -49,3 +49,4 @@ async def get_qq_name(bot, group_id, user_id) -> str:
     if user_info['card']:
         user_name = user_info['card']
     return user_name
+
