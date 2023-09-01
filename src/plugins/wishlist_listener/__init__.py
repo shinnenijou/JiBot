@@ -33,6 +33,14 @@ async def send_msg_with_retry(bot, group_id:int, message:str):
         except:
             pass
 
+def safe_get_bot():
+    try:
+        bot = nonebot.get_bot()
+    except:
+        bot = None
+
+    return bot
+
 ########################
 # HELP
 helper = on_command(cmd="愿望单帮助", temp=False, priority=2, block=True,
@@ -134,7 +142,7 @@ scheduler = require("nonebot_plugin_apscheduler").scheduler
     id='wishlist_pusher', timezone='Asia/Shanghai')
 @logger.catch
 async def push_wishlist():
-    bot = nonebot.get_bot()
+    bot = safe_get_bot()
     lid_list = db.get_user_list()
     url_list = amzreq.lid_to_url(*lid_list)
     text_list = await amzreq.request_many(*url_list)
@@ -158,11 +166,12 @@ async def push_wishlist():
                 )
                 tasks.append(task)
                 # 消息推送至群
-                group_msg = group_msg + ":\n" + common_msg
-                task = asyncio.create_task(
-                    send_msg_with_retry(bot, group_id, group_msg)
-                )
-                tasks.append(task)
+                if bot is not None:
+                    group_msg = group_msg + ":\n" + common_msg
+                    task = asyncio.create_task(
+                        send_msg_with_retry(bot, group_id, group_msg)
+                    )
+                    tasks.append(task)
                 # 本地保存消息
                 db.message_log(group_msg)
             await asyncio.gather(*tasks)
