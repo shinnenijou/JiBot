@@ -14,6 +14,7 @@ import src.plugins.twitter.db as db
 import src.plugins.twitter.twitter as twitter
 import src.common.utils as utils
 # CONSTANTS
+ENABLE_TWEET = bool(nonebot.get_driver().config.dict().get('enable_tweet', False))
 TWEET_LISTEN_INTERVAL = nonebot.get_driver().config.dict()['tweet_listen_interval']
 TWEET_SOURCE = nonebot.get_driver().config.dict()['tweet_source']
 TWEET_TARGET = nonebot.get_driver().config.dict()['tweet_target']
@@ -49,6 +50,9 @@ scheduler = require('nonebot_plugin_apscheduler').scheduler
     id='tweet_pusher', timezone='Asia/Shanghai')
 @logger.catch
 async def push_tweet():
+    if not ENABLE_TWEET:
+        return
+
     global USER_LIST
     if not USER_LIST:
         return  # 监听名单里没有目标
