@@ -11,6 +11,7 @@ from nonebot.adapters.onebot.v11 import Message, GroupMessageEvent, MessageSegme
 # self-utils
 from . import db
 from . import occupation
+import src.common.utils as utils
 
 # Initiate Database
 db.init()
@@ -164,7 +165,7 @@ async def register(event: GroupMessageEvent):
         if not occupation_name in occupation.MASKS:
             await register_staff.finish(Message(msg))
     # 获取人员qq名称
-    info = await nonebot.get_bot().get_group_member_info(
+    info = await utils.safe_get_bot().get_group_member_info(
         group_id=group_id, user_id=qq_id, nocache=False
     )
     name = info['nickname']
@@ -203,7 +204,7 @@ async def remove(event: GroupMessageEvent):
         if not occupation_name in occupation.MASKS:
             await register_staff.finish(Message(msg))
     # 获取人员qq名称
-    info = await nonebot.get_bot().get_group_member_info(
+    info = await utils.safe_get_bot().get_group_member_info(
         group_id=group_id, user_id=qq_id, nocache=False
     )
     name = info['nickname']
@@ -239,7 +240,7 @@ clear_quit = on_command(
 async def clear(event: GroupMessageEvent):
     group_id = int(event.get_session_id().split('_')[1])
 
-    group_member_list = await nonebot.get_bot().get_group_member_list(
+    group_member_list = await utils.safe_get_bot().get_group_member_list(
         group_id = group_id
     )
     group_qq_set = set([])
@@ -276,7 +277,7 @@ async def remove(event: GroupMessageEvent):
         if not occupation_name in occupation.MASKS:
             await register_staff.finish(Message(msg))
     # 获取人员qq名称
-    info = await nonebot.get_bot().get_group_member_info(
+    info = await utils.safe_get_bot().get_group_member_info(
         group_id=group_id, user_id=qq_id, nocache=False
     )
     name = info['nickname']
@@ -315,7 +316,7 @@ async def remove(event: GroupMessageEvent):
         if not occupation_name in occupation.MASKS:
             await register_staff.finish(Message(msg))
     # 获取人员qq名称
-    info = await nonebot.get_bot().get_group_member_info(
+    info = await utils.safe_get_bot().get_group_member_info(
         group_id=group_id, user_id=qq_id, nocache=False
     )
     name = info['nickname']

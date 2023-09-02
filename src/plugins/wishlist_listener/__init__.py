@@ -12,6 +12,7 @@ from nonebot.adapters.onebot.v11 import Message, GroupMessageEvent, GroupDecreas
 # Self-tools
 from . import db
 from . import amzreq
+import src.common.utils as utils
 
 # INITIATE DATABASE
 db.init()
@@ -32,14 +33,6 @@ async def send_msg_with_retry(bot, group_id:int, message:str):
             send_success = True
         except:
             pass
-
-def safe_get_bot():
-    try:
-        bot = nonebot.get_bot()
-    except:
-        bot = None
-
-    return bot
 
 ########################
 # HELP
@@ -142,7 +135,7 @@ scheduler = require("nonebot_plugin_apscheduler").scheduler
     id='wishlist_pusher', timezone='Asia/Shanghai')
 @logger.catch
 async def push_wishlist():
-    bot = safe_get_bot()
+    bot = utils.safe_get_bot()
     lid_list = db.get_user_list()
     url_list = amzreq.lid_to_url(*lid_list)
     text_list = await amzreq.request_many(*url_list)

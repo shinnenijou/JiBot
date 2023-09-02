@@ -1,6 +1,7 @@
 import os
+import nonebot
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, GroupIncreaseNoticeEvent, MessageSegment
-
+from nonebot.log import logger
 
 class Singleton:
     __instance = None
@@ -41,7 +42,22 @@ def get_cmd_param(event: GroupMessageEvent) -> list[str]:
 def get_cmd(event: GroupMessageEvent) -> str:
     return event.get_plaintext().strip().split()[0]
 
-async def get_qq_name(bot, group_id, user_id) -> str:
+def safe_get_bot():
+    try:
+        bot = nonebot.get_bot()
+    except Exception as e:
+        logger.error(f"get bot error: {str(e)}")
+        bot = None
+
+    return bot
+
+
+async def get_qq_name(group_id, user_id) -> str:
+    bot = safe_get_bot()
+
+    if bot is None:
+        return "774"
+
     user_info = await bot.get_group_member_info(
         group_id=group_id, user_id=user_id, nocache=False
     )

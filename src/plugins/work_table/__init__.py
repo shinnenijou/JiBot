@@ -138,7 +138,7 @@ async def add_(event: GroupMessageEvent):
         if len(cmd) == 3:
             trimmer = cmd[2]
         else:
-            info = await nonebot.get_bot().get_group_member_info(
+            info = await utils.safe_get_bot().get_group_member_info(
                 group_id=group_id, user_id=qq_id, nocache=False
             )
             trimmer = info['nickname']
@@ -192,7 +192,7 @@ async def remind():
             trimmer = trim_info[1]
             i = i + 1
             msg += f'\n[{i}]{trim}, 剪辑: {trimmer}'
-        await nonebot.get_bot().send_group_msg(
+        await utils.safe_get_bot().send_group_msg(
             group_id = group_id,
             message = msg
         )

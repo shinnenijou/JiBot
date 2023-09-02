@@ -12,6 +12,7 @@ from nonebot.permission import SUPERUSER, USER
 from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, MessageSegment
 # Self
+import src.common.utils as utils
 import src.plugins.bilibili.dynamics as dynamics
 import src.plugins.bilibili.db as db
 import src.plugins.bilibili.users as users
@@ -91,7 +92,11 @@ async def push_dynamic():
 
     if not USER_LIST:
         return  # 监听名单里没有目标
-    bot = nonebot.get_bot()
+    bot = utils.safe_get_bot()
+
+    if bot is None:
+        return
+
     timelines = await dynamics.get_users_timeline(CREDENTIAL, *USER_LIST.keys())
     # 每个用户的最新动态分别处理
     # 索引i: 指示第几个用户
@@ -135,7 +140,11 @@ async def push_live():
     global USER_LIST
     if not USER_LIST:
         return
-    bot = nonebot.get_bot()
+    bot = utils.safe_get_bot()
+
+    if bot is None:
+        return
+    
     tasks = []
     for info in USER_LIST.values():
         tasks.append(asyncio.create_task(info['room'].update_live()))
@@ -289,7 +298,7 @@ async def add(event:GroupMessageEvent):
         group_id = int(cmd[1])
         qq_id = int(cmd[2])
         try:
-            qq_user_info = await nonebot.get_bot().get_group_member_info(
+            qq_user_info = await utils.safe_get_bot().get_group_member_info(
                 group_id=group_id, user_id=qq_id, nocache=False
             )
             qq_name = qq_user_info['card'] if qq_user_info['card'] else qq_user_info['nickname']
@@ -315,7 +324,7 @@ async def remove(event:GroupMessageEvent):
         group_id = int(cmd[1])
         qq_id = int(cmd[2])
         try:
-            qq_user_info = await nonebot.get_bot().get_group_member_info(
+            qq_user_info = await utils.safe_get_bot().get_group_member_info(
                 group_id=group_id, user_id=qq_id, nocache=False
             )
             qq_name = qq_user_info['card'] if qq_user_info['card'] else qq_user_info['nickname']

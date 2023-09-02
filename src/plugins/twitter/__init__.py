@@ -12,6 +12,7 @@ import nonebot
 # Import self-utils
 import src.plugins.twitter.db as db
 import src.plugins.twitter.twitter as twitter
+import src.common.utils as utils
 # CONSTANTS
 TWEET_LISTEN_INTERVAL = nonebot.get_driver().config.dict()['tweet_listen_interval']
 TWEET_SOURCE = nonebot.get_driver().config.dict()['tweet_source']
@@ -51,7 +52,11 @@ async def push_tweet():
     global USER_LIST
     if not USER_LIST:
         return  # 监听名单里没有目标
-    bot = nonebot.get_bot()
+    bot = utils.safe_get_bot()
+
+    if bot is None:
+        return
+
     # 异步获取用户们的时间线
     timeline_list:list[twitter.Timeline] = await twitter.get_users_timeline(
         access_token=TWITTER_TOKEN,
