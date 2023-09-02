@@ -20,4 +20,6 @@ RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
 RUN rm rebuild.py
 
+EXPOSE 8080
+
 CMD ["python3", "bot.py"]
