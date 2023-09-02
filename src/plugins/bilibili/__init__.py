@@ -298,7 +298,7 @@ async def add(event:GroupMessageEvent):
         if qq_user_info and db.add_translator_list(qq_id, group_id, qq_name):
             msg = f'群{group_id}: {qq_name}({qq_id})添加成功'
             TRANSLATOR_LIST = db.get_translator_list()
-            send_comment.permission = USER(*TRANSLATOR_LIST.keys())
+            add_translator.permission = USER(*TRANSLATOR_LIST.keys())
         else:
             msg = '查无此人, 请确认群号 QQ号无误'
     await add_translator.finish(Message(msg))
@@ -324,7 +324,7 @@ async def remove(event:GroupMessageEvent):
         if qq_user_info and db.remove_translator_list(qq_id, group_id):
             msg = f'群{group_id}: {qq_name}({qq_id})移除成功'
             TRANSLATOR_LIST = db.get_translator_list()
-            send_comment.permission = USER(*TRANSLATOR_LIST.keys())
+            remove_translator.permission = USER(*TRANSLATOR_LIST.keys())
         else:
             msg = '查无此人, 请确认群号 QQ号无误'
     await remove_translator.finish(Message(msg))
