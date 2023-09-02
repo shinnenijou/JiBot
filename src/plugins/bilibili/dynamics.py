@@ -19,15 +19,6 @@ class DynamicType():
     VIDEODYNAMIC = 8
     COLUMNDYNAMIC = 64
 
-# TODO COLUMN DYNAMIC
-REPLY_MAP = {
-    DynamicType.REPOST : comment.ResourceType.DYNAMIC,
-    DynamicType.TEXTDYNAMIC : comment.ResourceType.DYNAMIC,
-    DynamicType.IMAGEDYNAMIC : comment.ResourceType.DYNAMIC_DRAW,
-    DynamicType.VIDEODYNAMIC : comment.ResourceType.VIDEO,
-    DynamicType.COLUMNDYNAMIC : comment.ResourceType.ARTICLE
-}
-
 class Dynamic(ABC):
     """
     动态基类
@@ -71,17 +62,6 @@ class Dynamic(ABC):
             target_list = await tmt.translate(source, target, *source_list)
             self.translate_text = emojis.merge_emoji(target_list, emoji_list)
         return self.translate_text
-
-    async def comment(self, text:str) -> None:
-        """
-        子类通用发送动态评论接口
-        """
-        return await comment.send_comment(
-            text=text,
-            oid=self.reply_id,
-            type_=REPLY_MAP[self.type],
-            credential=self.credential
-        )
 
 class Repost(Dynamic):
     """

@@ -156,36 +156,6 @@ async def push_live():
             await asyncio.gather(*tasks)
 
 ###########################
-######### 发送评论 #########
-send_comment = on_command(cmd='评论', aliases={'回复'}, priority=2, temp=False, block=True,
-    permission=USER(*TRANSLATOR_LIST.keys()))
-@send_comment.handle()
-async def send(event:GroupMessageEvent):
-    args = event.get_plaintext().partition(' ')[2]
-    dynamic_id = args.split()[0]
-    msg = '命令格式错误, 请按照命令格式: "/评论 动态id 评论内容"'
-    if not dynamic_id.isdigit():
-        return
-    text = args[len(dynamic_id):].strip()
-    dynamic_id = int(dynamic_id)
-    for dynamic in DYNAMIC_QUEUE:
-        if dynamic.dynamic_id == dynamic_id:
-            try:
-                await comment.send_comment(
-                    text=text,
-                    oid=dynamic.reply_id,
-                    type_=dynamics.REPLY_MAP[dynamic.type],
-                    credential=CREDENTIAL
-                )
-                msg = '评论发送成功'
-            except:
-                logger.error('发送评论失败, 请检查网络状况或Bili账号配置')
-            break
-    else:
-        msg = '发送失败, 请检查动态id'
-    await send_comment.finish(Message(msg))
-
-###########################
 ######### 订阅管理 #########
 # 显示本群中的关注列表 
 userlist = on_command(cmd='bili关注列表', priority=2, temp=False, block=True,
