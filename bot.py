@@ -16,7 +16,7 @@ Mkdir("logs")
 nonebot.logger.add("./logs/{time}.log",
             rotation="00:00",
             diagnose=False,
-            level="ERROR",
+            level="INFO",
             retention='14 days')
 
 # You can pass some keyword args config to init function
