@@ -238,7 +238,12 @@ clear_quit = on_command(
 )
 @clear_quit.handle()
 async def clear(event: GroupMessageEvent):
-    group_id = int(event.get_session_id().split('_')[1])
+    group_id: str = event.get_plaintext().split()[-1]
+
+    if not group_id.isnumeric():
+        await clear_quit.finish("参数错误")
+    else:
+        group_id = int(group_id)
 
     group_member_list = await utils.safe_get_bot().get_group_member_list(
         group_id = group_id
