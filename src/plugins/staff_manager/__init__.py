@@ -68,13 +68,16 @@ async def show(event: GroupMessageEvent):
     """
     查询某个职位的人员名单, 或查询某个人员的职位
     """
-    group_id = event.get_session_id().split('_')[1]
+    cmd = event.get_plaintext().split()
+    if len(cmd) >= 3 and cmd[-1].isnumeric():
+         group_id = cmd[-1]
+    else:
+        group_id = event.get_session_id().split('_')[1]
     if not db.is_registered(group_id):
         await show_staff.finish(Message('本群还未注册为字幕组群'))
-    cmd = event.get_plaintext().split()
     msg = '命令错误, 请按照"/人员查询 职位名称(或人员qq号)"输入命令\n职位名称严格按照以下输入: '\
-        + '剪辑, 时轴, 翻译, 校对, 美工, 特效, 后期, 皮套, 画师, 同传'
-    if len(cmd) != 2 or (cmd[1] not in occupation.MASKS and not cmd[1].isdigit()):
+        + '剪辑, 时轴, 翻译, 校对, 美工, 特效, 后期, 皮套, 画师, 同传, 未录入'
+    if len(cmd)< 2 or len(cmd) > 3 or (cmd[1] not in occupation.MASKS and not cmd[1].isdigit()):
         await show_staff.finish(Message(msg))
     # 查询某位人员
     if cmd[1].isdigit():
@@ -86,6 +89,24 @@ async def show(event: GroupMessageEvent):
             msg += ', '.join(_ for _ in occupations)
         else:
             msg = '查无此人'
+    # 查询未录入人员
+    elif cmd[1] == "未录入":
+        group_member_list = await utils.safe_get_bot().get_group_member_list(
+            group_id = group_id
+        )
+
+        user_list = []
+    
+        for member in group_member_list:
+            qq_id = int(member["user_id"])
+            if not db.get_one_staff(group_id, qq_id):
+                user_list.append(qq_id)
+
+        msg = ''
+        index = 1
+        for id in user_list:
+            msg += f"[{index}]{id}\n"
+            index +=1
     # 查询某职位所有人员
     else:
         staff_list = db.get_occupation_staff(group_id, occupation.MASKS[cmd[1]])
@@ -354,16 +375,30 @@ at_staff = on_command(cmd='来点', aliases={'召唤', '有无'}, temp=False, pr
     permission=GROUP_ADMIN|GROUP_OWNER|SUPERUSER)
 @at_staff.handle()
 async def at(event: GroupMessageEvent):
-    occupation_name = event.get_plaintext().strip()[3:].strip()
     group_id = event.get_session_id().split('_')[1]
     if not db.is_registered(group_id):
         await at_staff.finish(Message('该群还未注册为字幕组群'))
-    msg = '命令错误, 请按照"/来点(召唤, 有无)职位名称"输入命令\n职位名称严格按照以下输入: '\
-        + '剪辑, 时轴, 翻译, 校对, 美工, 特效, 后期, 皮套, 画师, 同传'
-    if not occupation_name in occupation.MASKS:
-        await at_staff.finish(Message(msg))
-    staff_list = db.get_occupation_staff(group_id, occupation.MASKS[occupation_name])
-    msg = Message()
-    for qq_id in staff_list.keys():
-        msg.append(MessageSegment.at(qq_id))
-    await at_staff.finish(msg)
+
+    occupation_names = event.get_plaintext().split()[1:]
+    msg = None
+
+    for occupation_name in occupation_names:        
+        if not occupation_name in occupation.MASKS:
+            continue
+
+        staff_list = db.get_occupation_staff(group_id, occupation.MASKS[occupation_name])
+
+        if not staff_list:
+            continue
+
+        msg = Message()
+        for qq_id in staff_list.keys():
+            msg.append(MessageSegment.at(qq_id))
+
+        await at_staff.send(msg)
+            
+    if msg is None:
+        msg = '命令错误, 请按照"/来点(召唤, 有无) 职位名称"输入命令\n职位名称严格按照以下输入: '\
+            + '剪辑, 时轴, 翻译, 校对, 美工, 特效, 后期, 皮套, 画师, 同传'
+        
+        await at_staff.finish(msg)
