@@ -15,7 +15,6 @@ thread_pool: list[Thread] = []
 
 # Constant
 RECORD_FORMAT = 'ts'
-TRANCODE_FORMAT = 'mp4'
 
 # Initialize
 DATA_DIR = os.path.join(nonebot.get_driver().config.dict()['data_path'], 'recorder')
@@ -35,7 +34,6 @@ if not os.path.exists(CONFIG_FILE):
 
 # Add schedule task
 scheduler = require('nonebot_plugin_apscheduler').scheduler
-
 
 @scheduler.scheduled_job('interval', seconds=RECORD_LISTEN_INTERVAL, id='recorder', timezone='Asia/Shanghai')
 def try_record():

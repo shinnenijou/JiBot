@@ -16,9 +16,9 @@ WORKDIR /app
 
 COPY ./ /app/
 
-RUN pip install --upgrade -r requirements.txt
-
-RUN rm rebuild.py
+RUN pip install --upgrade -r requirements.txt \
+    && sudo apt install ffmpeg \
+    && rm rebuild.py
 
 EXPOSE 8080
 

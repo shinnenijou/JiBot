@@ -1,8 +1,10 @@
 import os
 from threading import Thread, Event
 
-from nonebot import logger
+from nonebot import logger, get_driver
 
+# Constant
+TRANSCODE_FORMAT = 'mp4'
 
 class Recorder(Thread):
     def __init__(self, live_url: str, record_file: str, running_flag: Event, options: dict[str, str], *args, **kwargs) -> None:
@@ -34,3 +36,21 @@ class Recorder(Thread):
         self.running_flag.clear()
 
         # TODO 录像结束时通知QQ群
+
+        # 转码
+        self.transcode()
+    
+    def transcode(self):
+        index = self.filename.rfind('.')
+
+        if self.filename[index + 1:] == TRANSCODE_FORMAT:
+            return
+
+        to_filename: str = self.self.filename[:index] + TRANSCODE_FORMAT
+
+        cmds = ['ffmpeg', '-i', self.filename, '-y', '-c:v', 'copy', '-c:a', 'copy', to_filename]
+
+        if os.system(' '.join(cmd for cmd in cmds)) == 0:
+            os.remove(self.filename)
+        elif os.path.exists(to_filename):
+            os.remove(to_filename)

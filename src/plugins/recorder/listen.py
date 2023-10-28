@@ -4,8 +4,7 @@ import json
 from nonebot import logger, get_driver
 
 # Initialize
-TEMP_DIR = os.path.join(get_driver().config.dict()[
-                        'data_path'], 'recorder', 'temp')
+TEMP_DIR = os.path.join(get_driver().config.dict()['data_path'], 'recorder', 'temp')
 
 if not os.path.exists(TEMP_DIR):
     os.mkdir(TEMP_DIR)
