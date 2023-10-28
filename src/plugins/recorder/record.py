@@ -32,13 +32,14 @@ class Recorder(Thread):
             cmds.append(k.strip())
             cmds.append(v.strip())
 
-        if os.system(' '.join(cmd for cmd in cmds)) != 0 or not os.path.exists(self.filename):
-            self.running_flag.clear()
-            logger.error("Recording failed.")
-            return
-
+        os.system(' '.join(cmd for cmd in cmds))
+        
         # 录像结束后即重置flag, 不等转码结束
         self.running_flag.clear()
+
+        if not os.path.exists(self.filename):
+            logger.error("Recording failed.")
+            return
 
         logger.success(f'{self.filename} recording finished')
 
