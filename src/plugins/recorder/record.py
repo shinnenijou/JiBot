@@ -60,7 +60,13 @@ class Recorder(Thread):
 
         to_filename: str = self.self.filename[:index] + TRANSCODE_FORMAT
 
-        cmds = ['ffmpeg', '-i', self.filename, '-y',
+        ffmpeg_bin = get_driver().config.dict().get('ffmpeg_bin', '/bin/ffmpeg')
+        
+        if not os.path.exists(ffmpeg_bin):
+            logger.error("ffmpeg bin not found.")
+            return
+
+        cmds = [ffmpeg_bin, '-i', self.filename, '-y',
                 '-c:v', 'copy', '-c:a', 'copy', to_filename]
 
         if os.system(' '.join(cmd for cmd in cmds)) == 0:
