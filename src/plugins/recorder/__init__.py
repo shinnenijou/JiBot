@@ -35,6 +35,7 @@ if not os.path.exists(CONFIG_FILE):
 # Add schedule task
 scheduler = require('nonebot_plugin_apscheduler').scheduler
 
+
 @scheduler.scheduled_job('interval', seconds=RECORD_LISTEN_INTERVAL, id='recorder', timezone='Asia/Shanghai')
 def try_record():
     global record_status
@@ -73,7 +74,7 @@ def try_record():
         if 'url' not in record_config:
             continue
 
-        live_status:dict = listen(record_config['platform'], record_config['id'])
+        live_status: dict = listen(record_config['platform'], record_config['id'])
 
         if not live_status.get('Result', False):
             continue
@@ -88,8 +89,13 @@ def try_record():
         # 需要保证不会重复录像, 但录像完成后还需要转码的时间，这段时间是可以进行新的录像任务的
         # 不能按照线程的生命周期去判断, 需要使用额外的Event, 在进程内自行进行状态的记录
         record_status[streamer_name] = Event()
-        recorder = Recorder(live_url=record_config['url'], record_file=record_file,
-                            running_flag=record_status[streamer_name], options=record_config.get('options', {}))
+        recorder = Recorder(
+            live_url=record_config['url'],
+            record_file=record_file,
+            running_flag=record_status[streamer_name],
+            options=record_config.get('options', {}),
+            notice_group=record_config.get('notice_group', '')
+        )
 
         # 先启动后加入线程池
         recorder.start()
