@@ -97,11 +97,13 @@ def try_record():
         # 不能按照线程的生命周期去判断, 需要使用额外的Event, 在进程内自行进行状态的记录
         record_status[streamer_name] = Event()
         recorder = Recorder(
+            streamer=streamer_name,
             live_url=record_config['url'],
-            record_file=record_file,
+            out_path=record_file,
             running_flag=record_status[streamer_name],
+            notice_group=record_config.get('notice_group', ''),
+            upload_to=f"{record_config.get('upload_to', '')}/{streamer_name}",
             options=record_config.get('options', {}),
-            notice_group=record_config.get('notice_group', '')
         )
 
         # 先启动后加入线程池
