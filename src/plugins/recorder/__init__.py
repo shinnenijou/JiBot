@@ -72,7 +72,7 @@ def try_record():
         if 'url' not in record_config:
             continue
 
-        live_status = listen(record_config['platform'], record_config['id'])
+        live_status:dict = listen(record_config['platform'], record_config['id'])
 
         if not live_status.get('Result', False):
             continue

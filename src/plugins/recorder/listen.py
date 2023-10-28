@@ -12,13 +12,16 @@ if not os.path.exists(TEMP_DIR):
 
 
 def listen_twicast(id: str) -> dict:
+    ret = {}
+
     API = f"https://twitcasting.tv/streamserver.php?target={id}&mode=client"
 
     resp_file = os.path.join(TEMP_DIR, f'{id}_resp.json')
 
     if os.system(f'curl -s -o "{resp_file}" "{API}"') != 0:
         logger.error(f"[Recorder]Requests Response Error: {API}")
-        return False
+        ret['Result'] = False
+        return ret
     
     with open(resp_file, 'r', encoding='utf-8') as file:
         text = file.read() 
@@ -28,11 +31,9 @@ def listen_twicast(id: str) -> dict:
     try:
         live_info = json.loads(text)
     except Exception as e:
-        logger.error(
-            "[Recorder]Responce format error. Not a valid json format. ")
-        return False
-
-    ret = {}
+        logger.error("[Recorder]Responce Not a valid json format.")
+        ret['Result'] = False
+        return ret
 
     ret['Result'] = live_info.get('movie', {}).get('live', 0) == 1
     ret['Title'] = ''
@@ -41,13 +42,16 @@ def listen_twicast(id: str) -> dict:
 
 
 def listen_bilibili(id: str) -> dict:
+    ret = {}
+
     API = f"https://api.live.bilibili.com/room/v1/Room/get_info?room_id={id}&from=room"
 
     resp_file = os.path.join(TEMP_DIR, f'{id}_resp.json')
 
     if os.system(f'curl -s -o "{resp_file}" "{API}"') != 0:
         logger.error(f"[Recorder]Requests Response Error: {API}")
-        return False
+        ret['Result'] = False
+        return ret
 
     with open(resp_file, 'r', encoding='utf-8') as file:
         text = file.read()
@@ -59,9 +63,9 @@ def listen_bilibili(id: str) -> dict:
     except Exception as e:
         logger.error(
             "[Recorder]Responce format error. Not a valid json format. ")
-        return False
+        ret['Result'] = False
+        return ret
 
-    ret = {}
 
     ret['Result'] = live_info.get('data', {}).get('live_status', 0) == 1
     ret['Title'] = live_info.get('data', {}).get('title', '').replace(' ', '_')
