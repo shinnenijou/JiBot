@@ -5,7 +5,7 @@ from threading import Event, Thread
 import nonebot
 from nonebot import require
 
-from src.plugins.recorder.listen import listen
+from src.plugins.recorder.listen import listen, get_driver
 from src.plugins.recorder.record import Recorder
 from src.common.utils import get_hhmmss_time
 
@@ -17,10 +17,11 @@ thread_pool: list[Thread] = []
 RECORD_FORMAT = 'ts'
 
 # Initialize
-DATA_DIR = os.path.join(nonebot.get_driver().config.dict()['data_path'], 'recorder')
+DATA_DIR = os.path.join(get_driver().config.dict()['data_path'], 'recorder')
 CONFIG_FILE = os.path.join(DATA_DIR, 'config.json')
 RECORD_DIR = os.path.join(DATA_DIR, 'record')
-RECORD_LISTEN_INTERVAL = int(nonebot.get_driver().config.dict()['record_listen_interval'])
+RECORD_LISTEN_INTERVAL = int(get_driver().config.dict()['record_listen_interval'])
+TEMP_DIR = os.path.join(get_driver().config.dict()['data_path'], 'recorder', 'temp')
 
 if not os.path.exists(DATA_DIR):
     os.mkdir(DATA_DIR)
@@ -31,6 +32,9 @@ if not os.path.exists(RECORD_DIR):
 if not os.path.exists(CONFIG_FILE):
     with open(CONFIG_FILE, 'w') as file:
         file.write("{}")
+
+if not os.path.exists(TEMP_DIR):
+    os.mkdir(TEMP_DIR)
 
 # Add schedule task
 scheduler = require('nonebot_plugin_apscheduler').scheduler

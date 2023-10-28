@@ -6,10 +6,6 @@ from nonebot import logger, get_driver
 # Initialize
 TEMP_DIR = os.path.join(get_driver().config.dict()['data_path'], 'recorder', 'temp')
 
-if not os.path.exists(TEMP_DIR):
-    os.mkdir(TEMP_DIR)
-
-
 def listen_twicast(id: str) -> dict:
     ret = {}
 
@@ -38,7 +34,6 @@ def listen_twicast(id: str) -> dict:
     ret['Title'] = ''
 
     return ret  
-
 
 def listen_bilibili(id: str) -> dict:
     ret = {}
