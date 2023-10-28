@@ -1,7 +1,11 @@
 import os
+import time
+from datetime import datetime
+import pytz
 import nonebot
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, GroupIncreaseNoticeEvent, MessageSegment
 from nonebot.log import logger
+
 
 class Singleton:
     __instance = None
@@ -42,6 +46,7 @@ def get_cmd_param(event: GroupMessageEvent) -> list[str]:
 def get_cmd(event: GroupMessageEvent) -> str:
     return event.get_plaintext().strip().split()[0]
 
+
 def safe_get_bot():
     try:
         bot = nonebot.get_bot()
@@ -66,3 +71,8 @@ async def get_qq_name(group_id, user_id) -> str:
         user_name = user_info['card']
     return user_name
 
+
+def get_hhmmss_time(timezone: str) -> str:
+    tz = pytz.timezone(timezone)
+    dt_now = datetime.now(tz)
+    return dt_now.strftime("%Y%m%d_%H%M%S")
