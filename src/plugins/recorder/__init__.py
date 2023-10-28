@@ -60,6 +60,9 @@ def try_record():
         i += 1
 
     for streamer_name, record_config in config['record_list'].items():
+        if not record_config.get('record', False):
+            continue
+
         if streamer_name in record_status and record_status[streamer_name].is_set():
             continue
 
