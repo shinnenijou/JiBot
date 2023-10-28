@@ -44,8 +44,11 @@ scheduler = require('nonebot_plugin_apscheduler').scheduler
 def try_record():
     global record_status
 
-    with open(CONFIG_FILE, 'r') as file:
-        config: dict = json.loads(file.read())
+    try:
+        with open(CONFIG_FILE, 'r') as file:
+            config: dict = json.loads(file.read())
+    except:
+        return
 
     if 'record_list' not in config:
         return
