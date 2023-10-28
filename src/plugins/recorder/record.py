@@ -32,20 +32,20 @@ class Recorder(Thread):
             cmds.append(k.strip())
             cmds.append(v.strip())
 
-        os.system(' '.join(cmd for cmd in cmds))
+        if os.system(' '.join(cmd for cmd in cmds)) != 0 or not os.path.exists(self.filename):
+            self.running_flag.clear()
+            logger.error("Recording failed.")
+            return
 
         # 录像结束后即重置flag, 不等转码结束
         self.running_flag.clear()
 
-        if not os.path.exists(self.filename):
-            logger.error("Recording failed.")
-            return
-
         logger.success(f'{self.filename} recording finished')
 
         # 发送群消息通知. 对录像文件进行一定的统计
-        size = os.path.getsize(self.filename) / (1 * 1024 * 1024)  # Mb
-        self.send_to_group(f"录像完成:\n{self.filename}\nsize:{size} Mb") 
+        outbound_filename = self.filename[self.filename.rfind('/'):]
+        size = os.path.getsize(outbound_filename) / (1 * 1024 * 1024)  # Mb
+        self.send_to_group(f"录像完成:\n{outbound_filename}\nsize:{size} Mb") 
 
         # 转码
         self.transcode()
