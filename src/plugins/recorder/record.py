@@ -18,7 +18,7 @@ class Recorder(Thread):
 
         # TODO 录像开始时通知QQ群
 
-        logger.success(f'[Recorder]Start recording {self.filename}')
+        logger.success(f'Start recording {self.filename}')
 
         cmds = ['streamlink', self.url, 'best', '-s', '-o', self.filename]
 
@@ -28,7 +28,7 @@ class Recorder(Thread):
 
         os.system(' '.join(cmd for cmd in cmds))
 
-        logger.success(f'[Recorder]{self.filename} recording finished')
+        logger.success(f'{self.filename} recording finished')
 
         # 录像结束后即重置flag, 不等转码结束
         self.running_flag.clear()

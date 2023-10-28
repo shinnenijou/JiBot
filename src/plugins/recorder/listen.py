@@ -19,7 +19,7 @@ def listen_twicast(id: str) -> dict:
     resp_file = os.path.join(TEMP_DIR, f'{id}_resp.json')
 
     if os.system(f'curl -s -o "{resp_file}" "{API}"') != 0:
-        logger.error(f"[Recorder]Requests Response Error: {API}")
+        logger.error(f"Requests Response Error: {API}")
         ret['Result'] = False
         return ret
     
@@ -31,7 +31,7 @@ def listen_twicast(id: str) -> dict:
     try:
         live_info = json.loads(text)
     except Exception as e:
-        logger.error("[Recorder]Responce Not a valid json format.")
+        logger.error("Responce Not a valid json format.")
         ret['Result'] = False
         return ret
 
@@ -49,7 +49,7 @@ def listen_bilibili(id: str) -> dict:
     resp_file = os.path.join(TEMP_DIR, f'{id}_resp.json')
 
     if os.system(f'curl -s -o "{resp_file}" "{API}"') != 0:
-        logger.error(f"[Recorder]Requests Response Error: {API}")
+        logger.error(f"Requests Response Error: {API}")
         ret['Result'] = False
         return ret
 
@@ -62,7 +62,7 @@ def listen_bilibili(id: str) -> dict:
         live_info = json.loads(text)
     except Exception as e:
         logger.error(
-            "[Recorder]Responce format error. Not a valid json format. ")
+            "Responce format error. Not a valid json format. ")
         ret['Result'] = False
         return ret
 
@@ -79,7 +79,7 @@ SUPPORT_PLATFORM = {
 
 def listen(platform: str, id: str) -> bool:
     if not SUPPORT_PLATFORM.get(platform.lower(), False):
-        logger.error(f"[Recorder]Platform not supported: {platform}.")
+        logger.error(f"Platform not supported: {platform}.")
         return
 
     return SUPPORT_PLATFORM[platform](id)
