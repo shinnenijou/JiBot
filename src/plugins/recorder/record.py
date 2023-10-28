@@ -26,7 +26,6 @@ class Recorder(Thread):
         self.running_flag.set()
 
         logger.success(f'Start recording {self.path}')
-        self.send_to_group(f"录像开始:\n{self.path}")
 
         cmds = ['streamlink', self.url, 'best', '-o', self.path]
 
@@ -46,9 +45,9 @@ class Recorder(Thread):
         logger.success(f'{self.path} recording finished')
 
         # 发送群消息通知. 对录像文件进行一定的统计
-        outbound_filename = self.path[self.path.rfind('/'):]
-        size = os.path.getsize(outbound_filename) / (1 * 1024 * 1024)  # Mb
-        self.send_to_group(f"录像完成:\n{outbound_filename}\nsize:{size} Mb")
+        filename = self.path[self.path.rfind('/'):]
+        size = os.path.getsize(filename) / (1 * 1024 * 1024)
+        self.send_to_group(f"录像完成:\n{filename}\nsize:{size:.1f} Mb")
 
         # 转码
         self.transcode()
@@ -91,8 +90,7 @@ class Recorder(Thread):
         cmds = [rclone_bin, 'copyto', self.path,
                 f'{self.upload_to}/{filename}']
 
-        if os.system(' '.join(cmd for cmd in cmds)) == 0:
-            self.send_to_group(f"上传成功:{filename}")
+        os.system(' '.join(cmd for cmd in cmds))
 
     def send_to_group(self, message: str):
         bot = utils.safe_get_bot()
