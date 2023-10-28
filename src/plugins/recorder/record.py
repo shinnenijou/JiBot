@@ -26,7 +26,7 @@ class Recorder(Thread):
         logger.success(f'Start recording {self.filename}')
         self.send_to_group(f"录像开始:\n{self.filename}")
 
-        cmds = ['streamlink', self.url, 'best', '-s', '-o', self.filename]
+        cmds = ['streamlink', self.url, 'best', '-o', self.filename]
 
         for k, v in self.options.items():
             cmds.append(k.strip())
