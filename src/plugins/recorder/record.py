@@ -74,7 +74,7 @@ class Recorder(Thread):
         cmds = [ffmpeg_bin, '-i', self.path, '-y',
                 '-c:v', 'copy', '-c:a', 'copy', to_filename]
 
-        if os.system(' '.join(cmd for cmd in cmds)) == 0:
+        if os.system(' '.join(cmd for cmd in cmds)) == 0 and os.path.exists(to_filename):
             os.remove(self.path)
             self.path = to_filename
         elif os.path.exists(to_filename):
