@@ -3,7 +3,7 @@ import json
 from threading import Event, Thread
 
 import nonebot
-from nonebot import require
+from nonebot import require, logger
 
 from src.plugins.recorder.listen import listen, get_driver
 from src.plugins.recorder.record import Recorder
@@ -60,6 +60,7 @@ def try_record():
 
         if not thread.is_alive():
             thread.join()
+            logger.debug(f"Thread [{thread.name}] joined.")
             thread_pool.pop(i)
             i -= 1
 
@@ -90,8 +91,8 @@ def try_record():
             os.mkdir(os.path.join(RECORD_DIR, streamer_name))
 
         # record args
-        record_file = os.path.join(
-            RECORD_DIR, streamer_name, f"{get_hhmmss_time('Asia/Shanghai')}_{live_status.get('Title', '')}_{streamer_name}.{RECORD_FORMAT}")
+        filename = f"{get_hhmmss_time('Asia/Shanghai')}_{live_status.get('Title', '')}_{streamer_name}"
+        out_path = os.path.join(RECORD_DIR, streamer_name, f"{filename}.{RECORD_FORMAT}")
 
         # 需要保证不会重复录像, 但录像完成后还需要转码的时间，这段时间是可以进行新的录像任务的
         # 不能按照线程的生命周期去判断, 需要使用额外的Event, 在进程内自行进行状态的记录
@@ -99,11 +100,12 @@ def try_record():
         recorder = Recorder(
             streamer=streamer_name,
             live_url=record_config['url'],
-            out_path=record_file,
+            out_path=out_path,
             running_flag=record_status[streamer_name],
             notice_group=record_config.get('notice_group', ''),
             upload_to=f"{record_config.get('upload_to', '')}/{streamer_name}",
             options=record_config.get('options', {}),
+            name=filename,
         )
 
         # 先启动后加入线程池
