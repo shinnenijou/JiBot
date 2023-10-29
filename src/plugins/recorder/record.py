@@ -49,7 +49,7 @@ class Recorder(Thread):
 
         # 发送群消息通知. 对录像文件进行一定的统计
         filename = self.path[self.path.rfind('/'):]
-        size = os.path.getsize(filename) / (1 * 1024 * 1024)
+        size = os.path.getsize(self.path) / (1 * 1024 * 1024)
         self.send_to_group(f"录像完成:\n{filename}\nsize:{size:.1f} Mb")
 
         # 上传
