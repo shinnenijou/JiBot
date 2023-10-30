@@ -6,12 +6,12 @@ from nonebot import require
 
 from src.plugins.recorder.listen import listen, get_driver
 from src.plugins.recorder.record import Recorder
-from src.plugins.recorder.threads import ThreadPool
+from src.plugins.recorder.threads import thread_pool
+
 from src.common.utils import get_datetime
 
 # A map Store the record status flag. streamer -> Event
 record_status: dict[str, Event] = {}
-thread_pool = ThreadPool()
 
 # Constant
 RECORD_FORMAT = 'ts'

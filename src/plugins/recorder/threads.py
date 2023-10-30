@@ -26,3 +26,6 @@ class ThreadPool:
 
         for name in remove_list:
             self.__pool.pop(name)
+
+
+thread_pool = ThreadPool()
