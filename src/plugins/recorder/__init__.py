@@ -2,9 +2,9 @@ import os
 import json
 from threading import Event
 
-from nonebot import require
+from nonebot import require, get_driver
 
-from src.plugins.recorder.listen import listen, get_driver
+from src.plugins.recorder.listen import listener
 from src.plugins.recorder.record import Recorder
 from src.plugins.recorder.threads import thread_pool
 from src.plugins.recorder.clean import cleaner
@@ -74,7 +74,7 @@ async def try_record():
         if 'url' not in record_config:
             continue
 
-        live_status: dict = listen(record_config['platform'], record_config['id'])
+        live_status: dict = await listener.listen(record_config['platform'], record_config['id'])
 
         if not live_status.get('Result', False):
             continue
