@@ -14,9 +14,6 @@ from src.common.utils import get_datetime, send_to_admin
 # A map Store the record status flag. streamer -> Event
 record_status: dict[str, Event] = {}
 
-# Constant
-RECORD_FORMAT = 'ts'
-
 # Initialize
 DATA_DIR = os.path.join(get_driver().config.dict()['data_path'], 'recorder')
 CONFIG_FILE = os.path.join(DATA_DIR, 'config.json')
@@ -86,9 +83,9 @@ async def try_record():
         if not cleaner.disk_enough():
             await send_to_admin("[Warning][Recorder]Disk NOT ENOUGH.")
 
-        # record args
+        # record file (WITHOUT extension filename)
         filename = f"{get_datetime('Asia/Shanghai')}_{live_status.get('Title', '')}_{streamer_name}"
-        out_path = os.path.join(RECORD_DIR, streamer_name, f"{filename}.{RECORD_FORMAT}")
+        out_path = os.path.join(RECORD_DIR, streamer_name, f"{filename}")
 
         # 需要保证不会重复录像, 但录像完成后还需要转码的时间，这段时间是可以进行新的录像任务的
         # 不能按照线程的生命周期去判断, 需要使用额外的Event, 在进程内自行进行状态的记录

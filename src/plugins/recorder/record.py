@@ -6,9 +6,10 @@ from nonebot import logger, get_driver
 
 import src.common.utils as utils
 
-# Constant
-TRANSCODE_FORMAT = 'mp4'
 
+# Constant
+RECORD_FORMAT = 'ts'
+TRANSCODE_FORMAT = 'mp4'
 
 class Recorder(Thread):
     def __init__(self, streamer: str, live_url: str, out_path: str, running_flag: Event, notice_group: str, upload_to: str, options: dict[str, str], *args, **kwargs) -> None:
@@ -16,7 +17,7 @@ class Recorder(Thread):
 
         self.streamer = streamer
         self.url: str = live_url
-        self.path: str = out_path
+        self.path: str = f"{out_path}.{RECORD_FORMAT}"
         self.running_flag: Event = running_flag
         self.options: dict[str, str] = options
         self.notice_group = notice_group
