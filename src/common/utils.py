@@ -1,7 +1,8 @@
 import os
-import time
 from datetime import datetime
 import pytz
+import asyncio
+
 import nonebot
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, GroupIncreaseNoticeEvent, MessageSegment
 from nonebot.log import logger
@@ -56,7 +57,6 @@ def safe_get_bot():
 
     return bot
 
-
 async def get_qq_name(group_id, user_id) -> str:
     bot = safe_get_bot()
 
@@ -71,8 +71,36 @@ async def get_qq_name(group_id, user_id) -> str:
         user_name = user_info['card']
     return user_name
 
-
-def get_datetime(timezone: str) -> str:
+def get_datetime(timezone: str = "Asia/Shanghai") -> str:
     tz = pytz.timezone(timezone)
     dt_now = datetime.now(tz)
     return dt_now.strftime("%Y%m%d_%H%M%S")
+
+def parse_datetime(timestr: str, timezone: str = "Asia/Shanghai") -> int:
+    tz = pytz.timezone(timezone)
+
+    try:
+        dt = datetime.strptime(timestr, "%Y%m%d_%H%M%S").astimezone(tz)
+    except ValueError:
+        return 0
+
+    return int(dt.timestamp())
+
+async def send_to_admin(message: str):
+    bot = safe_get_bot()
+
+    if bot is None:
+        return
+
+    admin_group = nonebot.get_driver().config.dict().get('admin_group', '')
+
+    if not admin_group:
+        return
+
+    try:
+        await bot.send_group_msg(
+            group_id=admin_group,
+            message=message
+        )
+    except Exception as e:
+        logger.error(f"Send message error: {str(e)}")

@@ -7,8 +7,9 @@ from nonebot import require
 from src.plugins.recorder.listen import listen, get_driver
 from src.plugins.recorder.record import Recorder
 from src.plugins.recorder.threads import thread_pool
+from src.plugins.recorder.clean import cleaner
 
-from src.common.utils import get_datetime
+from src.common.utils import get_datetime, send_to_admin
 
 # A map Store the record status flag. streamer -> Event
 record_status: dict[str, Event] = {}
@@ -41,7 +42,7 @@ scheduler = require('nonebot_plugin_apscheduler').scheduler
 
 
 @scheduler.scheduled_job('interval', seconds=RECORD_LISTEN_INTERVAL, id='recorder', timezone='Asia/Shanghai')
-def try_record():
+async def try_record():
     try:
         with open(CONFIG_FILE, 'r') as file:
             config: dict = json.loads(file.read())
@@ -53,6 +54,9 @@ def try_record():
 
     # clean zombie thread
     thread_pool.clean_threads()
+
+    # clean disk
+    cleaner.clean(RECORD_DIR)
 
     for streamer_name, record_config in config['record_list'].items():
         if not record_config.get('record', False):
@@ -77,6 +81,10 @@ def try_record():
 
         if not os.path.exists(os.path.join(RECORD_DIR, streamer_name)):
             os.mkdir(os.path.join(RECORD_DIR, streamer_name))
+
+        # 开始录像前检查磁盘空间, 空间不足时向管理员发出警告
+        if not cleaner.disk_enough():
+            await send_to_admin("[Warning][Recorder]Disk NOT ENOUGH.")
 
         # record args
         filename = f"{get_datetime('Asia/Shanghai')}_{live_status.get('Title', '')}_{streamer_name}"
