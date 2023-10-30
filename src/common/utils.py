@@ -72,7 +72,7 @@ async def get_qq_name(group_id, user_id) -> str:
     return user_name
 
 
-def get_hhmmss_time(timezone: str) -> str:
+def get_datetime(timezone: str) -> str:
     tz = pytz.timezone(timezone)
     dt_now = datetime.now(tz)
     return dt_now.strftime("%Y%m%d_%H%M%S")

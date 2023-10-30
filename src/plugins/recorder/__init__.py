@@ -1,17 +1,17 @@
 import os
 import json
-from threading import Event, Thread
+from threading import Event
 
-import nonebot
-from nonebot import require, logger
+from nonebot import require
 
 from src.plugins.recorder.listen import listen, get_driver
 from src.plugins.recorder.record import Recorder
-from src.common.utils import get_hhmmss_time
+from src.plugins.recorder.threads import ThreadPool
+from src.common.utils import get_datetime
 
 # A map Store the record status flag. streamer -> Event
 record_status: dict[str, Event] = {}
-thread_pool: list[Thread] = []
+thread_pool = ThreadPool()
 
 # Constant
 RECORD_FORMAT = 'ts'
@@ -42,8 +42,6 @@ scheduler = require('nonebot_plugin_apscheduler').scheduler
 
 @scheduler.scheduled_job('interval', seconds=RECORD_LISTEN_INTERVAL, id='recorder', timezone='Asia/Shanghai')
 def try_record():
-    global record_status
-
     try:
         with open(CONFIG_FILE, 'r') as file:
             config: dict = json.loads(file.read())
@@ -54,17 +52,7 @@ def try_record():
         return
 
     # clean zombie thread
-    i = 0
-    while i < len(thread_pool):
-        thread = thread_pool[i]
-
-        if not thread.is_alive():
-            thread.join()
-            logger.debug(f"Thread [{thread.name}] joined.")
-            thread_pool.pop(i)
-            i -= 1
-
-        i += 1
+    thread_pool.clean_threads()
 
     for streamer_name, record_config in config['record_list'].items():
         if not record_config.get('record', False):
@@ -91,7 +79,7 @@ def try_record():
             os.mkdir(os.path.join(RECORD_DIR, streamer_name))
 
         # record args
-        filename = f"{get_hhmmss_time('Asia/Shanghai')}_{live_status.get('Title', '')}_{streamer_name}"
+        filename = f"{get_datetime('Asia/Shanghai')}_{live_status.get('Title', '')}_{streamer_name}"
         out_path = os.path.join(RECORD_DIR, streamer_name, f"{filename}.{RECORD_FORMAT}")
 
         # 需要保证不会重复录像, 但录像完成后还需要转码的时间，这段时间是可以进行新的录像任务的
@@ -110,4 +98,4 @@ def try_record():
 
         # 先启动后加入线程池
         recorder.start()
-        thread_pool.append(recorder)
+        thread_pool.add_thread(recorder)
