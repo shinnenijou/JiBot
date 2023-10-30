@@ -45,7 +45,7 @@ class Cleaner:
                 break
 
     def disk_enough(self):
-        disk_usage = psutil.disk_usage()
+        disk_usage = psutil.disk_usage("/")
         return disk_usage.free 
 
     def clean_path(self, path: str):
