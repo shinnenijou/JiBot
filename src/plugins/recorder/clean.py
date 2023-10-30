@@ -46,7 +46,7 @@ class Cleaner:
 
     def disk_enough(self):
         disk_usage = psutil.disk_usage("/")
-        return disk_usage.free 
+        return disk_usage.free > self.reserve_size 
 
     def clean_path(self, path: str):
         """NOT RECURSIVE"""
@@ -81,6 +81,6 @@ class Cleaner:
 
 
 cleaner = Cleaner(
-   reserve_size=get_driver().config.dict().get('disk_reserve_size', 10 * 1024 * 1024 * 1024),
+   reserve_size=get_driver().config.dict().get('disk_reserve_size', 50 * 1024 * 1024 * 1024),
    expire_time=24 * 60 * 60
 )

@@ -77,10 +77,13 @@ def get_datetime(timezone: str = "Asia/Shanghai") -> str:
     return dt_now.strftime("%Y%m%d_%H%M%S")
 
 def parse_datetime(timestr: str, timezone: str = "Asia/Shanghai") -> int:
+    if len(timestr) < 15:
+        return 0
+    
     tz = pytz.timezone(timezone)
 
     try:
-        dt = datetime.strptime(timestr, "%Y%m%d_%H%M%S").astimezone(tz)
+        dt = datetime.strptime(timestr[:15], "%Y%m%d_%H%M%S").astimezone(tz)
     except ValueError:
         return 0
 
