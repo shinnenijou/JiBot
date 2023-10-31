@@ -62,7 +62,7 @@ class Recorder(Thread):
         if self.path[index + 1:] == TRANSCODE_FORMAT:
             return
 
-        to_filename: str = self.path[:index] + TRANSCODE_FORMAT
+        to_filename: str = f"{self.path[:index]}.{TRANSCODE_FORMAT}"
 
         ffmpeg_bin = get_driver().config.dict().get('ffmpeg_bin', '/bin/ffmpeg')
 
