@@ -1,42 +1,10 @@
 # JiBot(鸡器人)
 
 ## Overview  环境依赖
-本bot基于[NoneBot2](https://github.com/nonebot/nonebot2)与[go-cqhttp](https://github.com/Mrs4s/go-cqhttp)开发，部分插件使用现有的开源插件，配置启动需要安装以下环境
-   * 在安装环境前推荐创建虚拟环境
-   ```
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
-   
-   * NoneBot2主框架，可以通过`pip`等工具安装（详见文档[NoneBot2](https://v2.nonebot.dev/docs/start/installation)）
-      ```
-      pip install nb-cli
-      ```
-   * 协议适配器，可以通过NoneBot2的脚手架`nb-cli`进行安装（详见文档[OneBot v11](https://adapter-onebot.netlify.app/docs/guide/installation)）
-      ```
-      nb adapter install nonebot-adapter-onebot
-      ```
-   * 定时任务需要额外安装一项计时器,可以通过NoneBot2的脚手架`nb-cli`进行安装(详见文档[NoneBot2](https://v2.nonebot.dev/docs/advanced/scheduler))
-      ```
-      nb plugin install nonebot_plugin_apscheduler
-      ```
-   * 安装协议端go-cqhttp，下载对应平台build的文件解压即可(详见[go-cqhttp release](https://github.com/Mrs4s/go-cqhttp/releases))
-   
-   * 根据插件情况分别需要一些额外依赖: 
-
-      * auto_translator: 翻译的请求使用`aiohttp`进行异步请求，文本处理时需要使用`emoji`进行替换处理
-         ```
-         pip install aiohttp
-         pip install emoji
-         ```
-      * manual_translator: 同auto_translator
-
-      * twitter: 需要第三方库`emoji`及`aiohttp`
-
-      * bilibili: 需要使用第三方库`emoji`, `aiohttp`及`bilibili_api`所需要的一些其他依赖
-      ```
-      pip install bilibili_api
-      ```
+本bot基于[NoneBot2](https://github.com/nonebot/nonebot2)与[go-cqhttp](https://github.com/Mrs4s/go-cqhttp)开发，部分插件使用现有的开源插件。使用docker构建并运行即可。可以运行`rebuild.py`脚本构建并创建网络，数据文件夹挂载等
+```
+python3 rebuild.py --sudo
+```
 
 ## Function  主要功能
 1. wishlist_listener: 自制插件，定时监听Amazon愿望单中物品变化情况并发送至指定群，老头快人一步
@@ -44,6 +12,7 @@
 3. manual_translator: 自制插件，指定目标语言进行翻译，翻译接口同上
 4. twitter: 自制插件，对关注的推特用户内容进行推送和翻译, 保留图片，emoji，转推原文等信息
 5. bilibili: 自制插件，对关注的bilibili主播动态, 视频发布, 直播等进行推送, 保留图片, emoji, 转发愿文等信息, 可以在群内直接回复评论某条最新动态(使用管理员账号)
+6. recorder: 自制插件，监听主播直播状态并进行录像, 上传。现仅支持bilibili, twicast平台
 ## Guide  启用方法
 1. 安装依赖，将本仓库克隆至本地后，在本文件目录内配置.env.prod。必须进行配置的项目
    ```
@@ -84,12 +53,7 @@
    ```
    其他可选配置项目参考各个插件文档
 
-2. 在本文件目录运行nonebot
-```
-nb run
-```
 3. （可选）非海外服务器需要设置HTTP, HTTPS代理以请求Twitter及Amazon
-4. （可选）将Jibot与go-cqhttps配置为systemd service并设置开机启动，需要后于network.target以及代理服务启动
 ## Doc  参考文档
 See [NoneBot2](https://v2.nonebot.dev/)
 
