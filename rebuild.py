@@ -50,6 +50,7 @@ cmd = f"{sudo}docker run --name jibot " \
     + "--restart=always " \
     + f"--mount type=bind,source={CUR_DIR}/data,target=/app/data " \
     + f"--mount type=bind,source={CUR_DIR}/logs,target=/app/logs " \
+    + f"--mount type=bind,source={CUR_DIR}/src,target=/app/src " \
     + f"--mount type=bind,source={CUR_DIR}/.env.prod,target=/app/.env.prod " \
     + "-d " \
     + "jibot:latest"
