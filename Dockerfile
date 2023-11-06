@@ -14,12 +14,7 @@ FROM tiangolo/uvicorn-gunicorn-fastapi:python3.10
 
 WORKDIR /app
 
-COPY ./src/             /app/src
-COPY ./utils/           /app/utils
-COPY ./.env.prod        /app
-COPY ./bot.py           /app
-COPY ./pyproject.toml   /app
-COPY ./requirements.txt /app
+COPY . /app
 
 RUN pip install --upgrade -r requirements.txt
 
