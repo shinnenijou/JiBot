@@ -24,6 +24,11 @@ auto_backup = require('nonebot_plugin_apscheduler').scheduler
     timezone='UTC', id='db_backup')
 @logger.catch
 async def backup():
+    allow_backup:str = nonebot.get_driver().config.dict().get('backup', 'False')
+
+    if allow_backup != 'True':
+        return
+
     for job in auto_backup.get_jobs():
         job.pause()
     date = time.strftime('%Y%m%d',time.gmtime(time.time() + 8 * 60 * 60))  # 文件名时间用GTM+8
