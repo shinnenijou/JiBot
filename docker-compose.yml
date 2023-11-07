@@ -3,6 +3,7 @@ services:
   # 其他配置参考 https://hub.docker.com/r/tiangolo/uvicorn-gunicorn-fastapi/
   nonebot:
     build: .
+    container_name: nonebot
     volumes:
       - "/etc/localtime:/etc/localtime"
       - "./src:/app/src"
@@ -15,28 +16,24 @@ services:
       - ENVIRONMENT=prod # 配置 nonebot 运行环境，此项会被 .env 文件覆盖
       - APP_MODULE=bot:app # 配置 asgi 入口
       - MAX_WORKERS=1 # 如果你有多个QQ，且存在 self_id 指定，多个 worker 会导致无法找到其他 websocket 连接
-    network_mode: bridge
     restart: always
 
   go-cqhttp:
     image: "silicer/go-cqhttp:latest"
+    container_name: go-cqhttp
     volumes:
       - "/etc/localtime:/etc/localtime"
       - "/data/go-cqhttp:/data"
-    network_mode: bridge
     depends_on:
       - qsign
-    links:
-      - "qsign:jibot.qsign"
-      - "nonebot:jibot.nonebot"
     restart: always
 
   qsign:
     image: "xzhouqd/qsign:core-1.1.9"
+    container_name: qsign
     volumes:
       - "/etc/localtime:/etc/localtime"
       - "/data/qsign/config.json:/srv/qsign/qsign/txlib/8.9.73/config.json"
-    network_mode: bridge
     environment:
       - BASE_PATH=/srv/qsign/qsign/txlib/8.9.73
     restart: always
