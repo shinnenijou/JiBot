@@ -10,8 +10,8 @@ from nonebot.log import logger
 import nonebot
 
 # Import self-utils
-import src.plugins.twitter.db as db
-import src.plugins.twitter.twitter as twitter
+import src.plugins._twitter.db as db
+import src.plugins._twitter.twitter as twitter
 import src.common.utils as utils
 # CONSTANTS
 ENABLE_TWEET = bool(nonebot.get_driver().config.dict().get('enable_tweet', False))

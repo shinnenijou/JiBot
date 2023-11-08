@@ -13,10 +13,10 @@ from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, MessageSegment
 # Self
 import src.common.utils as utils
-import src.plugins.bilibili.dynamics as dynamics
-import src.plugins.bilibili.db as db
-import src.plugins.bilibili.users as users
-from src.plugins.bilibili.live import LiveStatus, Room
+import src.plugins._bilibili.dynamics as dynamics
+import src.plugins._bilibili.db as db
+import src.plugins._bilibili.users as users
+from src.plugins._bilibili.live import LiveStatus, Room
 # Initiate Database
 db.init()
 # Credential
