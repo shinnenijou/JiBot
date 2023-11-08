@@ -31,5 +31,3 @@ class ConfigWarpper:
     
     def get_value(self, _option: str, _fallback: str = '') -> str:
         return self.__config.get(_option.lower(), _fallback) 
-
-config = ConfigWarpper()
