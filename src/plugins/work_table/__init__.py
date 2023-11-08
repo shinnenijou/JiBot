@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import nonebot
 from nonebot import on_command, on_notice, on_message, require
 from nonebot.rule import startswith
@@ -8,9 +9,8 @@ from nonebot.log import logger
 from ...common import utils
 from .work_table import Table
 import json
-from ...common import config
 
-TRIM_PATH = config.make_data_path('work_table/trim.json')
+TRIM_PATH = os.path.join(nonebot.get_driver().config.dict().get('data_path', 'data'), 'work_table', 'trim.json')
 TABLE = Table('work_table.json')
 
 # INITIATE

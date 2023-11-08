@@ -1,10 +1,11 @@
+import os
+import nonebot
 from ...common.utils import Singleton, Mkdir, Touch
-from ...common import config
 import json
 
 class Table(Singleton):
     def __init__(self, filename:str) -> None:
-        self.__dir = config.make_data_path('work_table')
+        self.__dir = os.path.join(nonebot.get_driver().config.dict().get('data_path', 'data'), 'work_table')
         Mkdir(self.__dir)
         self.__path = self.__dir + '/' + filename
         Touch(self.__path, '{}')
