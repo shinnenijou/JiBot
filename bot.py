@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import os
+
 import nonebot
 from nonebot.adapters.onebot.v11 import Adapter as ONEBOT_V11Adapter
-from src.common.utils import Mkdir
+import src.common.utils as utils
+from src.common.config import config
 
 # Some customized operation
 # make data directory
-Mkdir("data")
-Mkdir("logs")
+utils.Mkdir(config.get_value('data_path', 'data'))
+utils.Mkdir(config.get_value('data_path', 'logs'))
 
 # Custom your logger
 # 
 # from nonebot.log import logger, default_format
-nonebot.logger.add("./logs/{time}.log",
+nonebot.logger.add(os.path.join(config.get_value('data_path', 'logs'), "{time}.log"),
             rotation="00:00",
             diagnose=False,
             level="INFO",
