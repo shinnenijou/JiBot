@@ -11,12 +11,12 @@ from src.common.config import config
 # Some customized operation
 # make data directory
 utils.Mkdir(config.get_value('data_path', 'data'))
-utils.Mkdir(config.get_value('data_path', 'logs'))
+utils.Mkdir(config.get_value('log_path', 'logs'))
 
 # Custom your logger
 # 
 # from nonebot.log import logger, default_format
-nonebot.logger.add(os.path.join(config.get_value('data_path', 'logs'), "{time}.log"),
+nonebot.logger.add(os.path.join(config.get_value('log_path', 'logs'), "{time}.log"),
             rotation="00:00",
             diagnose=False,
             level="INFO",
