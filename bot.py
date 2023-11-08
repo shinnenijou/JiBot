@@ -5,22 +5,6 @@ import os
 
 import nonebot
 from nonebot.adapters.onebot.v11 import Adapter as ONEBOT_V11Adapter
-import src.common.utils as utils
-from src.common.config import config
-
-# Some customized operation
-# make data directory
-utils.Mkdir(config.get_value('data_path', 'data'))
-utils.Mkdir(config.get_value('log_path', 'logs'))
-
-# Custom your logger
-# 
-# from nonebot.log import logger, default_format
-nonebot.logger.add(os.path.join(config.get_value('log_path', 'logs'), "{time}.log"),
-            rotation="00:00",
-            diagnose=False,
-            level="INFO",
-            retention='14 days')
 
 # You can pass some keyword args config to init function
 nonebot.init()
@@ -37,8 +21,23 @@ nonebot.load_builtin_plugins("echo")
 nonebot.load_from_toml("pyproject.toml")
 
 # Modify some config / config depends on loaded configs
+# make data directory
+data_path = nonebot.get_driver().config.dict().get('data_path', 'data')
+if not os.path.exists(data_path):
+    os.mkdir(data_path)
 
+log_path = nonebot.get_driver().config.dict().get('log_path', 'logs')
+if not os.path.exists(log_path):
+    os.mkdir(log_path)
 
+# Custom your logger
+# 
+# from nonebot.log import logger, default_format
+nonebot.logger.add(os.path.join(log_path, "{time}.log"),
+            rotation="00:00",
+            diagnose=False,
+            level="INFO",
+            retention='14 days')
 
 if __name__ == "__main__":
     nonebot.logger.warning("Always use `nb run` to start the bot instead of manually running!")
