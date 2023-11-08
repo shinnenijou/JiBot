@@ -18,26 +18,37 @@ class Singleton:
         return cls.__instance
 
 
-def Mkdir(path: str):
+def Mkdir(path: str) -> bool :
     "Create a directary if not exists"
-    if Path.exists(path):
-        return
+    path = os.path.abspath(path)
+
+    if os.path.exists(path):
+        return True
     
-    Path.mkdir(path, parents=True)
+    dir = os.path.dirname(path)
+
+    if dir and not os.path.exists(dir):
+        Mkdir(dir)
+
+    os.mkdir(path)
+
+    return True
 
 
 def Touch(path: str, orig_text: str = "") -> bool:
     "Create a new file if not exists"
-    if Path.exists(path):
-        return
+    if os.path.exists(path):
+        return False
     
     dir = os.path.dirname(path)
 
-    if not Path.exists(dir):
-        Path.mkdir(dir, parents=True)
+    if not os.path.exists(dir):
+        return False
     
     with open(path, 'w') as file:
         file.write(orig_text)
+
+    return True
 
 
 def get_group_id(event: GroupMessageEvent) -> str:
