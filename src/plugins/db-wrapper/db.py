@@ -67,7 +67,7 @@ class DBClient:
         sql = SQL()
         sql.add('CREATE', 'TABLE', table)
 
-        sql.add('(', ', '.join(f'{key} {value}' for key, value in kwargs.items()), ')')
+        sql.add('(')
 
         sections = []
         for key, value in kwargs.items():
