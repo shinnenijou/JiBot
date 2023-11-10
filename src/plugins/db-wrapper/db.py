@@ -82,7 +82,7 @@ class DBClient:
         sql.add(')')
 
         try:
-            self.__cur.execute(sql).fetchall()
+            self.__cur.execute(str(sql)).fetchall()
             self.commit()
             return True
         except Exception as e:
