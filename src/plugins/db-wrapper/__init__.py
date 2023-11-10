@@ -1,3 +1,1 @@
-from .db import DBClient
-
-db = DBClient()
+from .db import db

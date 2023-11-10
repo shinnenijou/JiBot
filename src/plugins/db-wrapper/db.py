@@ -158,3 +158,5 @@ class DBClient:
         except Exception as e:
             logger.error(str(e))
             return False
+
+db = DBClient()
