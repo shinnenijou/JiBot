@@ -37,7 +37,7 @@ class NoticeManager:
                 destination='varchar(255)'
             )
 
-        result:list = db.select('id', self.__table_name)
+        result: list = db.select('id', self.__table_name)
 
         if len(result) > 0:
             result.sort(key=lambda x: x[0])
@@ -64,10 +64,10 @@ class NoticeManager:
         result = db.select('type destination', self.__table_name, id=_id)
 
         if len(result) == 0:
-           return False
-        
+            return False
+
         _type = result[0][0]
-        _to =result[0][1] 
+        _to = result[0][1]
 
         return await self.__push(_type, _content, _to)
 
@@ -76,8 +76,8 @@ class NoticeManager:
 
         for _id in _ids:
             tasks.append(asyncio.create_task(self.push(_content, _id)))
-        
+
         await asyncio.gather(*tasks)
-            
+
 
 pusher = NoticeManager()

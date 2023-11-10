@@ -4,6 +4,7 @@ import sqlite3 as dblib
 import nonebot
 from nonebot import logger
 
+
 class SQL:
     def __init__(self):
         self.__sections = []
@@ -13,12 +14,13 @@ class SQL:
 
     def add(self, *args) -> None:
         self.__sections.extend(args)
-    
+
 
 class DBClient:
 
     def __init__(self) -> None:
-        self.__path = os.path.join(nonebot.get_driver().config.dict().get('data_path', 'data'), 'data.db')
+        self.__path = os.path.join(nonebot.get_driver(
+        ).config.dict().get('data_path', 'data'), 'data.db')
         self.__conn = dblib.connect(self.__path)
         self.__cur = self.__conn.cursor()
 
@@ -34,7 +36,7 @@ class DBClient:
         if isinstance(value, int):
             return str(value)
 
-        return value 
+        return value
 
     def commit(self) -> None:
         self.__conn.commit()
@@ -57,7 +59,8 @@ class DBClient:
         return result
 
     def exists(self, table: str) -> bool:
-        result = self.select('count(*)', 'sqlite_master', type='table', name=table)
+        result = self.select('count(*)', 'sqlite_master',
+                             type='table', name=table)
         return result[0][0] != 0
 
     def create(self, table: str, primary: str | None = None, **kwargs) -> bool:
@@ -76,7 +79,7 @@ class DBClient:
             if primary is not None and key == primary:
                 section.append('primary key')
 
-            sections.append(' '.join(_ for _ in section)) 
+            sections.append(' '.join(_ for _ in section))
 
         sql.add(', '.join(_ for _ in sections))
         sql.add(')')
@@ -88,8 +91,8 @@ class DBClient:
         except Exception as e:
             logger.error(str(e))
             return False
-    
-    def drop(self, table:str) -> bool:
+
+    def drop(self, table: str) -> bool:
         sql = SQL()
         sql.add('DROP', 'TABLE', table)
 
@@ -100,17 +103,18 @@ class DBClient:
         except Exception as e:
             logger.error(str(e))
             return False
-    
+
     def insert(self, table: str, **kwargs) -> bool:
         if len(kwargs) == 0:
             return False
 
         sql = SQL()
         sql.add('INSERT INTO', table)
-        
+
         sql.add()
         sql.add('(', ', '.join(key for key in kwargs.keys()), ')')
-        sql.add('VALUES(', ', '.join(self.__normalize(value) for value in kwargs.values()), ')')
+        sql.add('VALUES(', ', '.join(self.__normalize(value)
+                for value in kwargs.values()), ')')
 
         try:
             self.__cur.execute(str(sql))
@@ -129,13 +133,14 @@ class DBClient:
         sql.add('UPDATE', table)
 
         sql.add('SET')
-        sql.add(', '.join(f'{key}={self.__normalize(value)}' for key, value in set.items()))
-        
+        sql.add(
+            ', '.join(f'{key}={self.__normalize(value)}' for key, value in set.items()))
+
         sql.add('WHERE', '1=1')
 
         for key, value in kwargs.items():
             sql.add('AND', f'{key}={self.__normalize(value)}')
-        
+
         try:
             self.__cur.execute(str(sql))
             self.commit()
@@ -158,5 +163,6 @@ class DBClient:
         except Exception as e:
             logger.error(str(e))
             return False
+
 
 db = DBClient()

@@ -4,6 +4,7 @@ import aiohttp
 from nonebot import logger, get_bot, get_bots
 from nonebot.adapters.onebot.v12.message import Message, MessageSegment
 
+
 class Pusher(ABC):
 
     @abstractmethod
@@ -43,7 +44,7 @@ class QQPusher(Pusher):
     async def call_api(self, api: str, **kwargs) -> bool:
         if len(get_bots()) == 0:
             return False
-        
+
         bot = get_bot()
 
         try:
@@ -55,11 +56,10 @@ class QQPusher(Pusher):
 
 
 class QQPrivatePusher(QQPusher):
-    async def push(self, _message: str | Message | MessageSegment, _to:str) -> bool:
+    async def push(self, _message: str | Message | MessageSegment, _to: str) -> bool:
         await self.call_api('send_private_msg', user_id=_to, message=_message)
 
 
 class QQGroupPusher(QQPusher):
-     async def push(self, _message: str | Message | MessageSegment, _to:str) -> bool:
+    async def push(self, _message: str | Message | MessageSegment, _to: str) -> bool:
         await self.call_api('send_group_msg', group_id=_to, message=_message)
-     
