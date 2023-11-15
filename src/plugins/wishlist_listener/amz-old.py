@@ -17,35 +17,8 @@ import src.common.utils as utils
 # INITIATE DATABASE
 db.init()
 
-##########################
-######### 包装函数 #########
-async def send_msg_with_retry(bot, group_id:int, message:str):
-    retry_time = 5
-    send_success = False
-    for i in range(retry_time):
-        if send_success:
-            break
-        try:
-            await bot.send_group_msg(
-                group_id=group_id,
-                message=message
-            )
-            send_success = True
-        except:
-            pass
-
 ########################
-# HELP
-helper = on_command(cmd="愿望单帮助", temp=False, priority=2, block=True,
-    permission=GROUP_ADMIN | GROUP_OWNER | SUPERUSER)
-@helper.handle()
-async def help_menu():
-    menu = '愿望单模块目前支持的功能:\n'\
-         + '(LID为愿望单URL中一串连续的数字+大写字母)\n\n'\
-         + '命令格式: "/愿望单列表"\n'\
-         + '命令格式: "/愿望单关注 对象名称 LID"\n'\
-         + '命令格式: "/愿望单取关 对象名称"'
-    await helper.finish(menu)
+
 
 # STATUS
 sub_status = on_command(cmd="愿望单列表", temp=False, priority=2, block=True,
