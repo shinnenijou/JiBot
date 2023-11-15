@@ -31,8 +31,13 @@ class Recorder(Thread):
         cmds = ['streamlink', self.url, 'best', '-o', self.path]
 
         for k, v in self.options.items():
-            cmds.append(k.strip())
-            cmds.append(v.strip())
+            if isinstance(v, str):
+                cmds.append(k.strip()) 
+                cmds.append(v.strip())
+            elif isinstance(v, list):
+                for value in v:
+                    cmds.append(k.strip()) 
+                    cmds.append(value.strip())
 
         os.system(' '.join(cmd for cmd in cmds))
 
