@@ -4,16 +4,7 @@ import sqlite3 as dblib
 import nonebot
 from nonebot import logger
 
-
-class SQL:
-    def __init__(self):
-        self.__sections = []
-
-    def __str__(self) -> str:
-        return ' '.join(_ for _ in self.__sections) + ';'
-
-    def add(self, *args) -> None:
-        self.__sections.extend(args)
+from .sql import SQL
 
 
 class DBClient:
@@ -38,91 +29,92 @@ class DBClient:
 
         return value
 
+    ################ Basic Operation ##############
+
     def commit(self) -> None:
         self.__conn.commit()
 
-    def select(self, prop: str, table: str, **kwargs) -> list:
-        sql = SQL()
-
-        sql.add('SELECT', prop, 'FROM', table)
-        sql.add('WHERE', '1=1')
-
-        for key, value in kwargs.items():
-            sql.add('AND', f'{key}={self.__normalize(value)}')
-
+    def try_excute(self, sql: SQL) -> list:
         try:
             result = self.__cur.execute(str(sql)).fetchall()
+            return True, result
         except Exception as e:
             result = []
             logger.error(str(e))
+            return False, result
+        
+    def excute(self, sql: SQL) -> bool:
+        status, _ = self.try_excute(sql)
 
-        return result
+        if status:
+            self.commit()
+        
+        return status
+
+    ################ Simple Wrappers ##############
+
+    def select(self, attr: str, table: str, **kwargs) -> tuple[bool, list]:
+        sql = SQL()
+
+        sql.Select(attr).From(table)
+        sql.Where('1=1')
+
+        for key, value in kwargs.items():
+            sql.And(f'{key}={self.__normalize(value)}')
+
+        _, result = self.try_excute(sql)
+
+        return result 
 
     def exists(self, table: str) -> bool:
-        result = self.select('count(*)', 'sqlite_master',
-                             type='table', name=table)
-        return result[0][0] != 0
+        result = self.select('*', 'sqlite_master', type='table', name=table)
+        return len(result) > 0
 
     def create(self, table: str, primary: str | None = None, **kwargs) -> bool:
         if len(kwargs) == 0:
             return False
 
         sql = SQL()
-        sql.add('CREATE', 'TABLE', table)
+        sql.Create(table)
 
-        sql.add('(')
-
-        sections = []
         for key, value in kwargs.items():
             section = [key, value, 'not null']
 
             if primary is not None and key == primary:
                 section.append('primary key')
 
-            sections.append(' '.join(_ for _ in section))
+            sql.add(' '.join(_ for _ in section), ',')
 
-        sql.add(', '.join(_ for _ in sections))
-        sql.add(')')
+        sql.EndValues(len(kwargs))
 
-        try:
-            self.__cur.execute(str(sql)).fetchall()
-            self.commit()
-            return True
-        except Exception as e:
-            logger.error(str(e))
-            return False
+        return self.excute(sql)
 
     def drop(self, table: str) -> bool:
         sql = SQL()
-        sql.add('DROP', 'TABLE', table)
+        sql.Drop(table)
 
-        try:
-            self.__cur.execute(str(sql))
-            self.commit()
-            return True
-        except Exception as e:
-            logger.error(str(e))
-            return False
+        return self.excute(sql)
 
     def insert(self, table: str, **kwargs) -> bool:
         if len(kwargs) == 0:
             return False
 
         sql = SQL()
-        sql.add('INSERT INTO', table)
+        sql.InsertTo(table)
 
-        sql.add()
-        sql.add('(', ', '.join(key for key in kwargs.keys()), ')')
-        sql.add('VALUES(', ', '.join(self.__normalize(value)
-                for value in kwargs.values()), ')')
+        for key in kwargs.keys():
+            sql.add(key, ',')
 
-        try:
-            self.__cur.execute(str(sql))
-            self.commit()
-            return True
-        except Exception as e:
-            logger.error(str(e))
-            return False
+        sql.EndValues(len(kwargs.keys()))
+
+        sql.Values()
+        
+        for value in kwargs.values():
+            sql.add(self.__normalize(value), ',')
+
+        sql.EndValues(len(kwargs.values()))
+
+        return self.excute(sql)
 
     def update(self, table: str, set: dict, **kwargs) -> bool:
         if len(set) == 0:
@@ -130,39 +122,30 @@ class DBClient:
 
         sql = SQL()
 
-        sql.add('UPDATE', table)
+        sql.Update(table)
 
-        sql.add('SET')
-        sql.add(
-            ', '.join(f'{key}={self.__normalize(value)}' for key, value in set.items()))
+        sql.Set()
 
-        sql.add('WHERE', '1=1')
+        for key, value in set.items():
+            sql.add(f'{key}={self.__normalize(value)}', ',')
+        
+        sql.EndValues(len(set))
+
+        sql.Where('1=1')
 
         for key, value in kwargs.items():
-            sql.add('AND', f'{key}={self.__normalize(value)}')
+            sql.And(f'{key}={self.__normalize(value)}')
 
-        try:
-            self.__cur.execute(str(sql))
-            self.commit()
-            return True
-        except Exception as e:
-            logger.error(str(e))
-            return False
+        return self.excute(sql)
 
     def delete(self, table: str, **kwargs) -> bool:
         sql = SQL()
-        sql.add('DELETE FROM', table, 'WHERE', '1=1')
+        sql.Delete(table).Where('1=1')
 
         for key, value in kwargs.items():
-            sql.add('AND', f'{key}={self.__normalize(value)}')
+            sql.And(f'{key}={self.__normalize(value)}')
 
-        try:
-            self.__cur.execute(str(sql))
-            self.commit()
-            return True
-        except Exception as e:
-            logger.error(str(e))
-            return False
+        return self.excute(sql)
 
 
 db = DBClient()
