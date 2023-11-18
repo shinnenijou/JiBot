@@ -1,14 +1,13 @@
-import os
 from enum import IntEnum
 import asyncio
 
-from nonebot import logger
 from nonebot.plugin import require
 
 from .pushers import *
 
 
-db = require("db-wrapper").db
+db_proxy = require("db").db_proxy
+Data = require("db").NoticeMethod
 
 
 class NoticeType(IntEnum):
@@ -24,25 +23,6 @@ class NoticeManager:
         NoticeType.QQGroup: QQGroupPusher(),
     }
 
-    def __init__(self) -> None:
-        self.__table_name = 'notice_info'
-        self.__next_id = 1
-
-        if not db.exists(self.__table_name):
-            db.create(
-                self.__table_name,
-                'id',
-                id='int',
-                type='int',
-                destination='varchar(255)'
-            )
-
-        result: list = db.select('id', self.__table_name)
-
-        if len(result) > 0:
-            result.sort(key=lambda x: x[0])
-            self.__next_id = result[-1][0] + 1
-
     async def __push(self, _type: NoticeType, _content: any, _to: str) -> bool:
         if _type not in self.__PusherMap:
             logger.error('Pusher not found: type = ', _type)
@@ -50,24 +30,29 @@ class NoticeManager:
 
         return await self.__PusherMap[_type].push(_content, _to)
 
-    def register(self, _type: NoticeType, _to: str) -> int | None:
-        if db.insert(self.__table_name, id=self.__next_id, type=_type, destination=_to):
-            self.__next_id += 1
-            return self.__next_id - 1
+    @staticmethod
+    def register(_type: NoticeType, _to: str) -> int:
+        new_data = Data(type=_type, dst=_to)
+        db_proxy.add(new_data)
+        db_proxy.flush()
 
-        return None
+        return new_data.id
 
-    def unregister(self, _id: int) -> None:
-        db.delete(self.__table_name, id=_id)
+    @staticmethod
+    def unregister(_id: int) -> None:
+        data = db_proxy.get(Data, _id)
+
+        if data is not None:
+            db_proxy.delete(data)
 
     async def push(self, _content: any, _id: int) -> bool:
-        result = db.select('type destination', self.__table_name, id=_id)
+        data = db_proxy.get(Data, _id)
 
-        if len(result) == 0:
+        if data is None:
             return False
 
-        _type = result[0][0]
-        _to = result[0][1]
+        _type = data.type
+        _to = data.dst
 
         return await self.__push(_type, _content, _to)
 
