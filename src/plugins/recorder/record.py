@@ -11,6 +11,7 @@ import src.common.utils as utils
 RECORD_FORMAT = 'ts'
 TRANSCODE_FORMAT = 'mp4'
 
+
 class Recorder(Thread):
     def __init__(self, streamer: str, live_url: str, out_path: str, running_flag: Event, notice_group: str, upload_to: str, options: dict[str, str], *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -69,7 +70,11 @@ class Recorder(Thread):
 
         to_filename: str = f"{self.path[:index]}.{TRANSCODE_FORMAT}"
 
-        ffmpeg_bin = get_driver().config.dict().get('ffmpeg_bin', '/bin/ffmpeg')
+        ffmpeg_bin = os.path.join(
+            get_driver().config.dict().get('vendor_dir', 'utils'),
+            get_driver().config.dict().get('ffmpeg_dir', 'ffmpeg'),
+            'ffmpeg'
+        )
 
         if not os.path.exists(ffmpeg_bin):
             logger.error("ffmpeg bin not found.")
@@ -90,7 +95,11 @@ class Recorder(Thread):
         if not self.upload_to:
             return
 
-        rclone_bin = get_driver().config.dict().get('rclone_bin', '/bin/rclone')
+        rclone_bin = os.path.join(
+            get_driver().config.dict().get('vendor_dir', 'utils'),
+            get_driver().config.dict().get('rclone_dir', 'rclone'),
+            'rclone'
+        )
 
         if not os.path.exists(rclone_bin):
             logger.error("rclone bin not found.")
