@@ -14,9 +14,9 @@ driver = nonebot.get_driver()
 driver.register_adapter(ONEBOT_V11Adapter)
 
 # make data directory
-data_path = nonebot.get_driver().config.dict().get('data_path', 'data')
-if not os.path.exists(data_path):
-    os.mkdir(data_path)
+data_dir = nonebot.get_driver().config.dict().get('data_dir', 'data')
+if not os.path.exists(data_dir):
+    os.mkdir(data_dir)
 
 log_path = nonebot.get_driver().config.dict().get('log_path', 'logs')
 if not os.path.exists(log_path):

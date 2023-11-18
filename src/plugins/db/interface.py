@@ -10,7 +10,7 @@ from .define import *
 from .base import Base
 
 
-engine = create_engine(f"sqlite:///{os.path.join(get_driver().config.dict().get('data_path', 'data'), '_data.db')}")
+engine = create_engine(f"sqlite:///{os.path.join(get_driver().config.dict().get('data_dir', 'data'), '_data.db')}")
 Base.metadata.create_all(engine)
 
 db_proxy = Session(engine)

@@ -5,7 +5,7 @@ import json
 
 class Table(Singleton):
     def __init__(self, filename:str) -> None:
-        self.__dir = os.path.join(nonebot.get_driver().config.dict().get('data_path', 'data'), 'work_table')
+        self.__dir = os.path.join(nonebot.get_driver().config.dict().get('data_dir', 'data'), 'work_table')
         Mkdir(self.__dir)
         self.__path = self.__dir + '/' + filename
         Touch(self.__path, '{}')

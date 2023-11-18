@@ -6,7 +6,7 @@ import os
 
 
 # 读取备份设置
-DATA_PATH = nonebot.get_driver().config.dict()['data_path']
+DATA_PATH = nonebot.get_driver().config.dict()['data_dir']
 BACKUP_PATH = os.path.join(DATA_PATH, nonebot.get_driver().config.dict()['backup_path'])
 BACKUP_DAY = nonebot.get_driver().config.dict()['backup_day']
 BACKUP_TIME = nonebot.get_driver().config.dict()['backup_time']
