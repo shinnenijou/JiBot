@@ -14,6 +14,7 @@ Data = require("db").NoticeMethod
 
 
 class NoticeType(IntEnum):
+    DebugLog = 0
     Bark = 1
     QQPrivate = 2
     QQGroup = 3
@@ -21,6 +22,7 @@ class NoticeType(IntEnum):
 
 class NoticeManager:
     __PusherMap: dict[NoticeType, Pusher] = {
+        NoticeType.DebugLog: DebugLogPusher(),
         NoticeType.Bark: BarkPusher(),
         NoticeType.QQPrivate: QQPrivatePusher(),
         NoticeType.QQGroup: QQGroupPusher(),

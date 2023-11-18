@@ -12,6 +12,13 @@ class Pusher(ABC):
         pass
 
 
+class DebugLogPusher(Pusher):
+
+    async def push(self, _message: str, _to: str) -> bool:
+        logger.debug(_message)
+        return True
+
+
 class BarkPusher(Pusher):
     def __init__(self) -> None:
         super().__init__()
