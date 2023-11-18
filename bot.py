@@ -18,9 +18,9 @@ data_dir = nonebot.get_driver().config.dict().get('data_dir', 'data')
 if not os.path.exists(data_dir):
     os.mkdir(data_dir)
 
-log_path = nonebot.get_driver().config.dict().get('log_path', 'logs')
-if not os.path.exists(log_path):
-    os.mkdir(log_path)
+log_dir = nonebot.get_driver().config.dict().get('log_dir', 'logs')
+if not os.path.exists(log_dir):
+    os.mkdir(log_dir)
 
 nonebot.load_builtin_plugins("single_session")
 nonebot.load_builtin_plugins("echo")
@@ -35,7 +35,7 @@ nonebot.load_from_toml("pyproject.toml")
 # Custom your logger
 # 
 # from nonebot.log import logger, default_format
-nonebot.logger.add(os.path.join(log_path, "{time}.log"),
+nonebot.logger.add(os.path.join(log_dir, "{time}.log"),
             rotation="00:00",
             diagnose=False,
             level="INFO",
