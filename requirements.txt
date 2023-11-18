@@ -7,3 +7,4 @@ emoji
 bilibili-api-python
 psutil
 streamlink
+sqlalchemy
