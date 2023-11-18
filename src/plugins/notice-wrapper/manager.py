@@ -9,6 +9,9 @@ from .pushers import *
 db_proxy = require("db").db_proxy
 Data = require("db").NoticeMethod
 
+# for type check. DO NOT uncomment when commit
+# from src.plugins.db import NoticeMethod as Data, db_proxy
+
 
 class NoticeType(IntEnum):
     Bark = 1
