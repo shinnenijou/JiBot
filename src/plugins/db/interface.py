@@ -14,3 +14,9 @@ engine = create_engine(f"sqlite:///{os.path.join(get_driver().config.dict().get(
 Base.metadata.create_all(engine)
 
 db_proxy = Session(engine)
+
+
+@get_driver().on_shutdown
+def close():
+    db_proxy.commit()
+    db_proxy.close()
