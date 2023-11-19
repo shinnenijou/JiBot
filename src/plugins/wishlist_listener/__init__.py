@@ -6,12 +6,16 @@
 命令格式: "/愿望单取关 对象名称
 """
 
+
 from nonebot import on_command, require
 from nonebot.adapters.onebot.v12 import GroupMessageEvent, GROUP
 from nonebot.plugin import PluginMetadata
 
+# __init__ -> listener -> utils -> db
+from .listener import listener
 
-pusher = require('notice-wrapper').pusher
+
+pusher = require('notification').pusher
 
 __plugin_meta__ = PluginMetadata(
     name="AmazonWishlist",
@@ -21,10 +25,10 @@ __plugin_meta__ = PluginMetadata(
 )
 
 # HELP
-helper = on_command(cmd='愿望单帮助', temp=False, priority=2, permission=GROUP)
+matcher = on_command(cmd='愿望单帮助', temp=False, priority=2, permission=GROUP)
 
 
-@helper.handle()
+@matcher.handle()
 async def help_menu(event: GroupMessageEvent):
     """命令格式: /愿望单帮助"""
-    await helper.finish(__doc__)
+    await matcher.finish(__doc__)

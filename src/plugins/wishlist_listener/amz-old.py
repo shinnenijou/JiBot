@@ -22,9 +22,11 @@ db.init()
 
 # STATUS
 sub_status = on_command(cmd="愿望单列表", temp=False, priority=2, block=True,
-    permission=GROUP_ADMIN | GROUP_OWNER | SUPERUSER)
+                        permission=GROUP_ADMIN | GROUP_OWNER | SUPERUSER)
+
+
 @sub_status.handle()
-async def show_sub(event: GroupMessageEvent):  
+async def show_sub(event: GroupMessageEvent):
     group_id = int(event.get_session_id().split('_')[1])
     sub_list = db.get_group_sub(group_id)
     if sub_list:
@@ -37,12 +39,15 @@ async def show_sub(event: GroupMessageEvent):
         msg = "本群还未订阅任何愿望单"
     await sub_status.finish(Message(msg))
 
+
 # ADD subscribe
 add = on_command(cmd="愿望单关注", temp=False, priority=2, block=True,
-    permission=GROUP_ADMIN | GROUP_OWNER)
+                 permission=GROUP_ADMIN | GROUP_OWNER)
+
+
 @add.handle()
-async def add_sub(event: GroupMessageEvent): 
-    cmd =event.get_plaintext().split()
+async def add_sub(event: GroupMessageEvent):
+    cmd = event.get_plaintext().split()
     msg = "命令错误, 请检查输入格式:\n/愿望单关注 对象名称 LID"
     if len(cmd) == 3:
         group_id = int(event.get_session_id().split('_')[1])
@@ -51,33 +56,39 @@ async def add_sub(event: GroupMessageEvent):
         if 'WQJIE8LKY4EB' in lid:
             await add.finish("谁准你关注我的阿猪了？")
         if db.add_sub(lid, group_id, name):
-            msg = f"{name}的愿望单订阅成功"   
+            msg = f"{name}的愿望单订阅成功"
         else:
             msg = f"{name}的愿望单订阅已存在"
     await add.finish(Message(msg))
 
+
 # ADD subscribe (SUPERUSER ONLY)
-add = on_command(cmd="愿望单关注",temp=False, priority=1, block=True,
-    permission=SUPERUSER)
+add = on_command(cmd="愿望单关注", temp=False, priority=1, block=True,
+                 permission=SUPERUSER)
+
+
 @add.handle()
-async def add_listen(event:GroupMessageEvent):  
-    cmd =event.get_plaintext().split()
+async def add_listen(event: GroupMessageEvent):
+    cmd = event.get_plaintext().split()
     msg = "命令错误, 请检查输入格式:\n/愿望单关注 对象名称 LID"
     if len(cmd) == 3:
         group_id = int(event.get_session_id().split('_')[1])
         name = cmd[1]
         lid = cmd[2]
         if db.add_sub(lid, group_id, name):
-            msg = f"{name}的愿望单订阅成功"   
+            msg = f"{name}的愿望单订阅成功"
         else:
             msg = f"{name}的愿望单订阅已存在"
     await add.finish(Message(msg))
 
+
 # DELETE subscribe
-delete = on_command(cmd="愿望单取关",temp=False, priority=2, block=True,
-    permission=GROUP_ADMIN | GROUP_OWNER | SUPERUSER)
+delete = on_command(cmd="愿望单取关", temp=False, priority=2, block=True,
+                    permission=GROUP_ADMIN | GROUP_OWNER | SUPERUSER)
+
+
 @delete.handle()
-async def delete_listen(event:GroupMessageEvent):
+async def delete_listen(event: GroupMessageEvent):
     cmd = event.get_plaintext().split()
     msg = "命令错误, 请检查输入格式:\n/愿望单取关 对象名称"
     if len(cmd) == 2:
@@ -92,16 +103,22 @@ async def delete_listen(event:GroupMessageEvent):
             msg = f"本群没有订阅{name}的愿望单"
     await delete.finish(Message(msg))
 
+
 # DELETE after quit from group
 group_decrease = on_notice(temp=False, priority=2, block=False)
+
+
 @group_decrease.handle()
 async def _(event: GroupDecreaseNoticeEvent):
     group_id = event.get_session_id().split('_')[1]
     if event.self_id == event.user_id:
         db.delete_group(group_id)
 
+
 # Listen
 scheduler = require("nonebot_plugin_apscheduler").scheduler
+
+
 @scheduler.scheduled_job(
     trigger='interval',
     seconds=nonebot.get_driver().config.dict()['wishlist_listen_interval'],
