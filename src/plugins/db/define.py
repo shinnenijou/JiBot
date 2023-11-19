@@ -48,6 +48,8 @@ class AmazonCommodity(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
+    lid: Mapped[str]
+
     name: Mapped[str]
 
     # Timestamp
@@ -57,5 +59,5 @@ class AmazonCommodity(Base):
     deleteTime: Mapped[int]
 
     def __repr__(self):
-        return f"AmazonCommodity(id={self.id!r}, name={self.name!r}, addTime={self.addTime!r}, " \
-               f"deleteTime={self.deleteTime!r})"
+        return f"AmazonCommodity(id={self.id!r}, lid={self.lid!r}, name={self.name!r}, " \
+               f"addTime={self.addTime!r}, deleteTime={self.deleteTime!r})"

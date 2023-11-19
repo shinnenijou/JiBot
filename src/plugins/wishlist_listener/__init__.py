@@ -12,10 +12,8 @@ from nonebot import on_command, require, get_driver
 from nonebot.adapters.onebot.v12 import MessageEvent, PrivateMessageEvent, GroupMessageEvent, GROUP, PRIVATE
 from nonebot.plugin import PluginMetadata
 
-ascheduler = require()
-
 # __init__ -> listener  -> db
-from .listener import Utils
+from .listener import listener
 
 pusher = require('notification').pusher
 
@@ -60,7 +58,7 @@ async def subscribe(event: GroupMessageEvent):
         notice_type = params[3]
         push_to = params[4]
 
-    matcher.finish(Utils.subscribe(
+    matcher.finish(listener.subscribe(
         _user_id=event.group_id,
         _name=name,
         _lid=lid,
@@ -84,10 +82,10 @@ async def unsubscribe(event: GroupMessageEvent):
     if len(params) < 2:
         matcher.finish(unsubscribe.__doc__.strip())
 
-    if Utils.unsubscribe_by_lid(params[1]):
+    if listener.unsubscribe_by_lid(params[1]):
         matcher.finish('取关成功')
 
-    if Utils.unsubscribe_by_name(params[1]):
+    if listener.unsubscribe_by_name(params[1]):
         matcher.finish('取关成功')
 
     matcher.finish('没有找到对应订阅')
@@ -99,7 +97,7 @@ matcher = on_command(cmd='愿望单关注名单', priority=2, permission=GROUP)
 
 @matcher.handle()
 async def query_sub(event: GroupMessageEvent):
-    matcher.finish(Utils.query_sub(event.group_id))
+    matcher.finish(listener.query_sub(event.group_id))
 
 
 # Listen
@@ -111,12 +109,36 @@ scheduler = require("nonebot_plugin_apscheduler").scheduler
     seconds=int(get_driver().config.dict().get('wishlist_listen_interval', 300)),
     id=__plugin_meta__.name, timezone='Asia/Shanghai')
 async def try_listen():
-    subscriptions = Utils.select_targets()
+    subscriptions = listener.select_targets()
 
     tasks = []
 
     for subscription in subscriptions:
-        asyncio.create_task(Utils.request(subscription.target))
+        tasks.append(asyncio.create_task(listener.request(subscription.target)))
 
     resp = await asyncio.gather(*tasks)
 
+    tasks = []
+
+    for lid, text in resp:
+
+        new_commodities = listener.parse_resp(text)
+
+        if new_commodities is None:
+            continue
+
+        old_commodities = set()
+
+        for commodity in listener.select_commodities(lid):
+            old_commodities.add(commodity.name)
+
+        add_commodities = new_commodities.difference(old_commodities)
+        delete_commodities = old_commodities.difference(new_commodities)
+
+        message = listener.build_message(add_commodities, delete_commodities, lid)
+
+        for subscription in listener.select_notices(lid):
+            tasks.append(asyncio.create_task(pusher.push(message, subscription.notice_id)))
+
+    if tasks:
+        await asyncio.gather(*tasks)
