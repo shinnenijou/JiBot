@@ -33,6 +33,9 @@ class AmazonListenTarget(Base):
     # should be integer but may be logger than 32-bit integer
     user_id: Mapped[str]
 
+    # human-readable name to show to the user
+    name: Mapped[str]
+
     # listened target
     target: Mapped[str]
 
@@ -40,7 +43,7 @@ class AmazonListenTarget(Base):
 
     def __repr__(self):
         return f"AmazonListenTarget(id={self.id!r}, type={self.type!r}, user_id={self.user_id!r}, " \
-               f"target={self.target!r}, notice_id={self.notice_id!r})"
+               f"name={self.name!r}, target={self.target!r}, notice_id={self.notice_id!r})"
 
 
 class AmazonCommodity(Base):
