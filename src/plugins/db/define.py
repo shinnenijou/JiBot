@@ -27,9 +27,6 @@ class AmazonListenTarget(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    # User Type, may be private/group/channel or any other defined by module.
-    type: Mapped[int]
-
     # should be integer but may be logger than 32-bit integer
     user_id: Mapped[str]
 
@@ -42,7 +39,7 @@ class AmazonListenTarget(Base):
     notice_id = mapped_column(ForeignKey(NoticeMethod.__tablename__ + '.id'))
 
     def __repr__(self):
-        return f"AmazonListenTarget(id={self.id!r}, type={self.type!r}, user_id={self.user_id!r}, " \
+        return f"AmazonListenTarget(id={self.id!r}, user_id={self.user_id!r}, " \
                f"name={self.name!r}, target={self.target!r}, notice_id={self.notice_id!r})"
 
 
