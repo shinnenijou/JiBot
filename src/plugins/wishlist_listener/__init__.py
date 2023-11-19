@@ -106,9 +106,12 @@ scheduler = require("nonebot_plugin_apscheduler").scheduler
 
 @scheduler.scheduled_job(
     trigger='interval',
-    seconds=int(get_driver().config.dict().get('wishlist_listen_interval', 300)),
+    seconds=int(get_driver().config.dict().get('amazon_listen_interval', 300)),
     id=__plugin_meta__.name, timezone='Asia/Shanghai')
 async def try_listen():
+    if get_driver().config.dict().get("amazon_switch", 'True') != 'True':
+        return
+
     subscriptions = listener.select_targets()
 
     tasks = []
