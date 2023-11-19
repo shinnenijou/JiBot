@@ -37,6 +37,9 @@ class NoticeManager:
 
     @staticmethod
     def register(_type: NoticeType, _to: str) -> int:
+        """
+        return a unique id that represents a notification info(primary key)
+        """
         new_data = Data(type=_type, dst=_to)
         db_proxy.add(new_data)
         db_proxy.flush()

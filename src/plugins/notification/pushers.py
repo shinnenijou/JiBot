@@ -38,7 +38,7 @@ class BarkPusher(Pusher):
 
         try:
             async with self.__session.get(_to) as resp:
-                await resp.start()
+                await resp.text()
                 status = resp.status
 
             return status == 200
@@ -64,9 +64,9 @@ class QQPusher(Pusher):
 
 class QQPrivatePusher(QQPusher):
     async def push(self, _message: str | Message | MessageSegment, _to: str) -> bool:
-        await self.call_api('send_private_msg', user_id=_to, message=_message)
+        return await self.call_api('send_private_msg', user_id=_to, message=_message)
 
 
 class QQGroupPusher(QQPusher):
     async def push(self, _message: str | Message | MessageSegment, _to: str) -> bool:
-        await self.call_api('send_group_msg', group_id=_to, message=_message)
+        return await self.call_api('send_group_msg', group_id=_to, message=_message)
