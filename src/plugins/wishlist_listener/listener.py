@@ -1,15 +1,11 @@
 import aiohttp
 
-from nonebot import require, logger
+from nonebot import logger
 
-Subscription = require("db").AmazonListenTarget
-Commodity = require("db").AmazonCommodity
-
-pusher = require('notification').pusher
-
-# for type check. DO NOT uncomment when commit
-from src.plugins.db import AmazonListenTarget as Subscription, AmazonCommodity as Commodity, db_proxy, select
-from src.plugins.notification import pusher, NoticeType
+from src.plugins.db import db_proxy
+from src.plugins.db import select
+from src.plugins.db import AmazonListenTarget as Subscription, AmazonCommodity as Commodity
+from src.plugins.notification import NoticeType, pusher
 
 
 class Listener:
@@ -21,8 +17,8 @@ class Listener:
     }
 
     def __init__(self):
-        self.__http_session = None
-        self.__db_session: type(db_proxy) = require("db").db_proxy
+        self.__http_session: aiohttp.ClientSession | None = None
+        self.__db_session = db_proxy
 
     def select_subs(self, _user_id: str):
         stmt = select(Subscription).where(Subscription.user_id == _user_id)
@@ -125,7 +121,7 @@ class Listener:
         return index
 
     @staticmethod
-    def parse_resp(self, text: str) -> set[str] | None:
+    def parse_resp(text: str) -> set[str] | None:
         """
         解析html页面文本, 提取出包含的商品title.
         请求错误产生的空字符串将会返回None与没有商品区分
@@ -165,9 +161,10 @@ class Listener:
     @staticmethod
     def build_message(_add_items: set[str], _delete_items: set[str], _lid: str):
         """
-        通过给定的new_items和buyed_items构造通知信息, 如果两个items都是空则返回空的字符串
+        通过给定的add_items和delete_items构造通知信息, 如果两个items都是空则返回空的字符串
         """
         msg = ""
+
         if _add_items:
             msg += "--------------------\n"
             msg += f"以下の商品が追加されました:\n"
@@ -175,6 +172,7 @@ class Listener:
             for item in _add_items:
                 msg += f'[{index}]{item}\n'
                 index += 1
+
         if _delete_items:
             msg += "--------------------\n"
             msg += f"以下の商品が削除されました:\n"
@@ -182,9 +180,11 @@ class Listener:
             for item in _delete_items:
                 msg += f'[{index}]{item}\n'
                 index += 1
+
         if msg:
             msg += "--------------------\n"
             msg += Listener._build_url(_lid)
+
         return msg
 
     def delete_commodity(self, _lid: str, _name: str, delete_time: int):

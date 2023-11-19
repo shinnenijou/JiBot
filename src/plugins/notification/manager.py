@@ -1,16 +1,8 @@
 from enum import IntEnum
 import asyncio
 
-from nonebot.plugin import require
-
+from src.plugins.db import db_proxy, NoticeMethod as Data
 from .pushers import *
-
-
-db_proxy = require("db").db_proxy
-Data = require("db").NoticeMethod
-
-# for type check. DO NOT uncomment when commit
-# from src.plugins.db import NoticeMethod as Data, db_proxy
 
 
 class NoticeType(IntEnum):
