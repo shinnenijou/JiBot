@@ -81,7 +81,7 @@ class Repost(Dynamic):
         # 上一条动态
         self.pre_dynamic_id = self.dynamic_id = dy_info['desc']['pre_dy_id']
         # 原动态内容
-        origin_card = json.loads(dy_info['card'].get('origin', {}))
+        origin_card = json.loads(dy_info['card'].get('origin', '{}'))
         self.orig_author_uid = dy_info['card'].get('origin_user', {}).get('info', {}).get('uid', '')
         self.orig_author_name = dy_info['card'].get('origin_user', {}).get('info', {}).get('uname', {})
         self.orig_dynamic_id = dy_info['desc']['orig_dy_id']
