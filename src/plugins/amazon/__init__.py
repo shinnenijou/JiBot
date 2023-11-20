@@ -12,8 +12,8 @@ from nonebot import on_command, require, get_driver
 from nonebot.adapters.onebot.v12 import MessageEvent, PrivateMessageEvent, GroupMessageEvent, GROUP, PRIVATE
 from nonebot.plugin import PluginMetadata
 
-# __init__ -> listener  -> db
-from .listener import listener
+# __init__ -> interface  -> backend -> db
+from .interface import manager
 
 pusher = require('notification').pusher
 
@@ -40,31 +40,9 @@ matcher = on_command(cmd='愿望单关注', force_whitespace=True, priority=2, p
 
 @matcher.handle()
 async def subscribe(event: GroupMessageEvent):
-    """
-    命令格式: 愿望单关注 名称 LID [推送途径 推送目的地]
-    """
-
+    group_id = event.group_id
     params = event.get_plaintext().split()
-
-    if len(params) < 3:
-        matcher.finish(subscribe.__doc__.strip())
-
-    name = params[1]
-    lid = params[2]
-    notice_type = 'group'
-    push_to = event.group_id
-
-    if len(params) >= 5:
-        notice_type = params[3]
-        push_to = params[4]
-
-    matcher.finish(listener.subscribe(
-        _user_id=event.group_id,
-        _name=name,
-        _lid=lid,
-        _notice_type=notice_type,
-        _push_to=push_to,
-    ))
+    await matcher.finish(manager.subscribe(group_id, params))
 
 
 # Unsubscribe
@@ -73,22 +51,8 @@ matcher = on_command(cmd='愿望单关注', force_whitespace=True, priority=2, p
 
 @matcher.handle()
 async def unsubscribe(event: GroupMessageEvent):
-    """
-    命令格式: 愿望单取关 名称|LID
-    """
-
     params = event.get_plaintext().split()
-
-    if len(params) < 2:
-        matcher.finish(unsubscribe.__doc__.strip())
-
-    if listener.unsubscribe_by_lid(params[1]):
-        matcher.finish('取关成功')
-
-    if listener.unsubscribe_by_name(params[1]):
-        matcher.finish('取关成功')
-
-    matcher.finish('没有找到对应订阅')
+    matcher.finish(manager.unsubscribe(params))
 
 
 # Query
@@ -97,7 +61,8 @@ matcher = on_command(cmd='愿望单关注名单', priority=2, permission=GROUP)
 
 @matcher.handle()
 async def query_sub(event: GroupMessageEvent):
-    matcher.finish(listener.query_sub(event.group_id))
+    group_id = event.group_id
+    matcher.finish(manager.query(group_id))
 
 
 # Listen
@@ -112,36 +77,21 @@ async def try_listen():
     if get_driver().config.dict().get("amazon_switch", 'True') != 'True':
         return
 
-    subscriptions = listener.select_targets()
+    tasks = manager.create_requests()
 
-    tasks = []
-
-    for subscription in subscriptions:
-        tasks.append(asyncio.create_task(listener.request(subscription.target)))
+    if len(tasks) == 0:
+        return
 
     resp = await asyncio.gather(*tasks)
 
+    notifications = manager.create_notifications(resp)
+
+    if len(notifications) == 0:
+        return
+
     tasks = []
 
-    for lid, text in resp:
+    for notice_id, message in notifications:
+        tasks.append(asyncio.create_task(pusher.push(message, notice_id)))
 
-        new_commodities = listener.parse_resp(text)
-
-        if new_commodities is None:
-            continue
-
-        old_commodities = set()
-
-        for commodity in listener.select_commodities(lid):
-            old_commodities.add(commodity.name)
-
-        add_commodities = new_commodities.difference(old_commodities)
-        delete_commodities = old_commodities.difference(new_commodities)
-
-        message = listener.build_message(add_commodities, delete_commodities, lid)
-
-        for subscription in listener.select_notices(lid):
-            tasks.append(asyncio.create_task(pusher.push(message, subscription.notice_id)))
-
-    if tasks:
-        await asyncio.gather(*tasks)
+    await asyncio.gather(*tasks)

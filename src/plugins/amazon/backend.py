@@ -8,7 +8,7 @@ from src.plugins.db import AmazonListenTarget as Subscription, AmazonCommodity a
 from src.plugins.notification import NoticeType, pusher
 
 
-class Listener:
+class Backend:
     __NoticeMap = {
         'debug': NoticeType.DebugLog,
         'bark': NoticeType.Bark,
@@ -133,19 +133,19 @@ class Listener:
             return None
 
         # 没有商品时返回空列表
-        if Listener._find(text, "このリストにはアイテムはありません") != len(text):
+        if Backend._find(text, "このリストにはアイテムはありません") != len(text):
             return commodities
 
         # 商品名是个标准的<a>标签, 找到包含id为itemName的a标签html内容既为商品标题
-        index = Listener._find(text, 'itemName')
+        index = Backend._find(text, 'itemName')
 
         while index != len(text):
-            begin = Listener._find(text, '>', index)
+            begin = Backend._find(text, '>', index)
 
             if begin == len(text):
                 break
 
-            end = Listener._find(text, '</a>', begin)
+            end = Backend._find(text, '</a>', begin)
 
             if end == len(text):
                 break
@@ -154,7 +154,7 @@ class Listener:
 
             commodities.add(name)
 
-            index = Listener._find(text, 'itemName', end)
+            index = Backend._find(text, 'itemName', end)
 
         return commodities
 
@@ -183,7 +183,7 @@ class Listener:
 
         if msg:
             msg += "--------------------\n"
-            msg += Listener._build_url(_lid)
+            msg += Backend._build_url(_lid)
 
         return msg
 
@@ -197,4 +197,4 @@ class Listener:
         return self.__db_session.scalars(stmt).all()
 
 
-listener = Listener()
+backend = Backend()
