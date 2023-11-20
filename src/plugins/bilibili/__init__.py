@@ -106,28 +106,31 @@ async def push_dynamic():
         # 从旧到新倒着扫描
         # 索引j: 该用户的第j条动态
         for dynamic_data in reversed(timeline):
-            # 该动态时间戳比记录的要早则跳过
-            if dynamic_data['desc']['timestamp'] <= USER_LIST[uid]['newest_timestamp']:
-                continue
-            logger.success(f'成功检测到{USER_LIST[uid]["name"]}发布新动态, 准备推送')
-            # 示例化为动态类
-            dynamic = dynamics.CLASS_MAP[dynamic_data['desc']['type']](dynamic_data, CREDENTIAL)
-            await dynamic.translate(BILI_SOURCE, BILI_TARGET)
-            # 推送至群
-            # 索引k: 指示订阅该用户的群
-            tasks = []
-            for group_id, need_transtale in groups.items():
-                message = dynamic.get_message(need_transtale)
-                task = asyncio.create_task(
-                    send_msg_with_retry(bot, group_id, message)
-                )
-                tasks.append(task)
-            # 发送成功后更新内存中的时间戳
-            USER_LIST[uid]['newest_timestamp'] = dynamic_data['desc']['timestamp']
-            # 保存该动态至内存, 供回复使用
-            DYNAMIC_QUEUE.append(dynamic)
-            # 先更新后发送防止反复重试
-            await asyncio.gather(*tasks)
+            try:
+                # 该动态时间戳比记录的要早则跳过
+                if dynamic_data['desc']['timestamp'] <= USER_LIST[uid]['newest_timestamp']:
+                    continue
+                logger.success(f'成功检测到{USER_LIST[uid]["name"]}发布新动态, 准备推送')
+                # 示例化为动态类
+                dynamic = dynamics.CLASS_MAP[dynamic_data['desc']['type']](dynamic_data, CREDENTIAL)
+                await dynamic.translate(BILI_SOURCE, BILI_TARGET)
+                # 推送至群
+                # 索引k: 指示订阅该用户的群
+                tasks = []
+                for group_id, need_transtale in groups.items():
+                    message = dynamic.get_message(need_transtale)
+                    task = asyncio.create_task(
+                        send_msg_with_retry(bot, group_id, message)
+                    )
+                    tasks.append(task)
+                # 发送成功后更新内存中的时间戳
+                USER_LIST[uid]['newest_timestamp'] = dynamic_data['desc']['timestamp']
+                # 保存该动态至内存, 供回复使用
+                DYNAMIC_QUEUE.append(dynamic)
+                # 先更新后发送防止反复重试
+                await asyncio.gather(*tasks)
+            except:
+                pass
         # 更新时间戳至数据库
         db.update_timestamp(uid, USER_LIST[uid]['newest_timestamp'])
 
