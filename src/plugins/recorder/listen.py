@@ -3,9 +3,17 @@ import json
 import aiohttp
 
 from nonebot import logger, get_driver
+from bilibili_api import Credential
+from bilibili_api.live import LiveRoom
 
 # Initialize
-TEMP_DIR = os.path.join(get_driver().config.dict()['data_path'], 'recorder', 'temp')
+TEMP_DIR = os.path.join(get_driver().config.dict()[
+                        'data_path'], 'recorder', 'temp')
+SESSDATA = get_driver().config.dict()['bili_sessdata']
+BILI_JCT = get_driver().config.dict()['bili_jct']
+BUVID3 = get_driver().config.dict()['bili_buvid3']
+CREDENTIAL = Credential(SESSDATA, BILI_JCT, BUVID3)
+
 
 class Listener:
     def __init__(self) -> None:
@@ -18,7 +26,8 @@ class Listener:
 
     async def __aiohttp_get(self, url: str):
         if self.__session is None:
-            self.__session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=5))
+            self.__session = aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=5))
 
         text = ""
 
@@ -38,10 +47,10 @@ class Listener:
         if os.system(f'curl -s -o "{resp_file}" "{url}"') != 0:
             logger.error(f"Requests Response Error: {url}")
             return text
-        
+
         with open(resp_file, 'r', encoding='utf-8') as file:
-            text = file.read() 
-        
+            text = file.read()
+
         os.remove(resp_file)
 
         return text
@@ -50,7 +59,7 @@ class Listener:
         ret = {}
 
         API = f"https://twitcasting.tv/streamserver.php?target={id}&mode=client"
-        text = await self.__aiohttp_get(API)        
+        text = await self.__aiohttp_get(API)
 
         try:
             live_info = json.loads(text)
@@ -62,18 +71,16 @@ class Listener:
         ret['Result'] = live_info.get('movie', {}).get('live', 0) == 1
         ret['Title'] = ''
 
-        return ret  
+        return ret
 
     async def __listen_bilibili(self, id: str) -> dict:
         ret = {}
 
         # 获取直播状态
-        API1 = f"https://api.live.bilibili.com/xlive/web-room/v1/index/getRoomPlayInfo?room_id={id}"
-
-        text = await self.__aiohttp_get(API1)
+        room = LiveRoom(id, CREDENTIAL)
 
         try:
-            live_info = json.loads(text)
+            live_info = await room.get_room_info()
         except Exception as e:
             logger.error(
                 "Responce format error. Not a valid json format. ")
@@ -81,20 +88,6 @@ class Listener:
             return ret
 
         ret['Result'] = live_info.get('data', {}).get('live_status', 0) == 1
-
-        if not ret['Result']:
-            return ret
-
-        # 获取标题
-        API2 = f"https://api.live.bilibili.com/room/v1/Room/get_info?room_id={id}&from=room"
-
-        text = await self.__aiohttp_get(API2)
-
-        try:
-            live_info = json.loads(text)
-        except Exception as e:
-            return ret
-
         ret['Title'] = live_info.get('data', {}).get('title', '').replace(' ', '_')
 
         return ret
