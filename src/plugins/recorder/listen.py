@@ -67,8 +67,10 @@ class Listener:
     async def __listen_bilibili(self, id: str) -> dict:
         ret = {}
 
-        API = f"https://api.live.bilibili.com/room/v1/Room/get_info?room_id={id}&from=room"
-        text = await self.__aiohttp_get(API)
+        # 获取直播状态
+        API1 = f"https://api.live.bilibili.com/xlive/web-room/v1/index/getRoomPlayInfo?room_id={id}"
+
+        text = await self.__aiohttp_get(API1)
 
         try:
             live_info = json.loads(text)
@@ -79,6 +81,20 @@ class Listener:
             return ret
 
         ret['Result'] = live_info.get('data', {}).get('live_status', 0) == 1
+
+        if not ret['Result']:
+            return ret
+
+        # 获取标题
+        API2 = f"https://api.live.bilibili.com/room/v1/Room/get_info?room_id={id}&from=room"
+
+        text = await self.__aiohttp_get(API2)
+
+        try:
+            live_info = json.loads(text)
+        except Exception as e:
+            return ret
+
         ret['Title'] = live_info.get('data', {}).get('title', '').replace(' ', '_')
 
         return ret
@@ -89,5 +105,6 @@ class Listener:
             return
 
         return await self.__handlers[platform](id)
+
 
 listener = Listener()
