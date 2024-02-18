@@ -16,7 +16,7 @@ CONFIG_FILE = os.path.join(DATA_DIR, 'config.json')
 RECORD_DIR = os.path.join(DATA_DIR, 'record')
 RECORD_LISTEN_INTERVAL = int(get_driver().config.dict()['record_listen_interval'])
 TEMP_DIR = os.path.join(get_driver().config.dict()['data_path'], 'recorder', 'temp')
-STREAMER = {}
+STREAMERS = {}
 
 if not os.path.exists(DATA_DIR):
     os.mkdir(DATA_DIR)
