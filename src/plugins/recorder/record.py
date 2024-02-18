@@ -121,8 +121,8 @@ class Recorder(Thread):
             ))
         except Exception as e:
             logger.error(f"Send message error: {str(e)}")
-
-    async def send_to_bark(self, message: str):
+    
+    def send_to_bark(self, message: str):
         """
         将消息推送至Bark
         """
@@ -131,18 +131,12 @@ class Recorder(Thread):
         if not bark_url:
             return
 
-        result = {}
+        async def _send_to_bark(message: str):
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url=f"{bark_url}/JiBot/{message}") as resp:
+                    await resp.json()
 
-        retry_time = 5
-
-        for _ in range(retry_time):
-            try:
-                async with aiohttp.ClientSession() as session:
-                    url = bark_url + "/" + "JiBot" + '/' + message
-                    async with session.get(url=url) as resp:
-                        result = await resp.json()
-
-                if result["code"] == 200:
-                    break
-            except:
-                pass
+        try:
+            asyncio.run(_send_to_bark(message))
+        except Exception as e:
+            logger.error(f"Send message error: {str(e)}")
