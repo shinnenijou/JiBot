@@ -110,6 +110,11 @@ async def push_dynamic():
                 # 该动态时间戳比记录的要早则跳过
                 if dynamic_data['desc']['timestamp'] <= USER_LIST[uid]['newest_timestamp']:
                     continue
+
+                # 超过3天的动态不进行推送
+                if dynamic_data['desc']['timestamp'] <= int(time()) - 3 * 24 * 60 * 60:
+                    continue
+
                 logger.success(f'成功检测到{USER_LIST[uid]["name"]}发布新动态, 准备推送')
                 # 示例化为动态类
                 dynamic = dynamics.CLASS_MAP[dynamic_data['desc']['type']](dynamic_data, CREDENTIAL)
