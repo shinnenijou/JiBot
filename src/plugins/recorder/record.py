@@ -1,6 +1,7 @@
 import os
 from threading import Thread, Event
 import asyncio
+import aiohttp
 
 from nonebot import logger, get_driver
 
@@ -10,6 +11,7 @@ import src.common.utils as utils
 # Constant
 RECORD_FORMAT = 'ts'
 TRANSCODE_FORMAT = 'mp4'
+
 
 class Recorder(Thread):
     def __init__(self, streamer: str, live_url: str, out_path: str, running_flag: Event, notice_group: str, upload_to: str, options: dict[str, str], *args, **kwargs) -> None:
@@ -32,11 +34,11 @@ class Recorder(Thread):
 
         for k, v in self.options.items():
             if isinstance(v, str):
-                cmds.append(k.strip()) 
+                cmds.append(k.strip())
                 cmds.append(v.strip())
             elif isinstance(v, list):
                 for value in v:
-                    cmds.append(k.strip()) 
+                    cmds.append(k.strip())
                     cmds.append(value.strip())
 
         os.system(' '.join(cmd for cmd in cmds))
@@ -57,6 +59,7 @@ class Recorder(Thread):
         filename = self.path[self.path.rfind('/'):]
         size = os.path.getsize(self.path) / (1 * 1024 * 1024)
         self.send_to_group(f"录像完成:\n{filename}\nsize:{size:.1f} Mb")
+        self.send_to_bark(f"录像完成:\n{filename}\nsize:{size:.1f} Mb")
 
         # 上传
         self.upload()
@@ -118,3 +121,28 @@ class Recorder(Thread):
             ))
         except Exception as e:
             logger.error(f"Send message error: {str(e)}")
+
+    async def send_to_bark(self, message: str):
+        """
+        将消息推送至Bark
+        """
+        bark_url = get_driver().config.dict().get('bark_url', '')
+
+        if not bark_url:
+            return
+
+        result = {}
+
+        retry_time = 5
+
+        for _ in range(retry_time):
+            try:
+                async with aiohttp.ClientSession() as session:
+                    url = bark_url + "/" + "JiBot" + '/' + message
+                    async with session.get(url=url) as resp:
+                        result = await resp.json()
+
+                if result["code"] == 200:
+                    break
+            except:
+                pass
