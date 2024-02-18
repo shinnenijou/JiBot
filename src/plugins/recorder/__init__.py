@@ -1,7 +1,7 @@
 import os
 import json
 
-from nonebot import require, get_driver
+from nonebot import require, get_driver, logger
 
 from src.plugins.recorder.listen import listener
 from src.plugins.recorder.record import Recorder
@@ -66,6 +66,11 @@ async def try_record():
 
         if 'url' not in record_config:
             continue
+
+        # 监听对象记录一下日志
+        if streamer_name not in STREAMERS:
+            logger.info("添加录像监听对象: ", streamer_name)
+            STREAMERS[streamer_name] = True
 
         live_status: dict = await listener.listen(record_config['platform'], record_config['id'])
 
