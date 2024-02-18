@@ -19,27 +19,29 @@ except FileExistsError:
     pass
 
 auto_backup = require('nonebot_plugin_apscheduler').scheduler
-@auto_backup.scheduled_job('cron', 
-    day_of_week=BACKUP_DAY, hour=BACKUP_TIME, minute=00, 
-    timezone='UTC', id='db_backup')
+
+
+@auto_backup.scheduled_job('cron',
+                           day_of_week=BACKUP_DAY, hour=BACKUP_TIME, minute=00,
+                           timezone='UTC', id='db_backup')
 @logger.catch
 async def backup():
-    allow_backup:str = nonebot.get_driver().config.dict().get('backup', 'False')
+    allow_backup: str = nonebot.get_driver().config.dict().get('backup', 'False')
 
-    if allow_backup != 'True':
-        return
+    if allow_backup == 'True':
 
-    for job in auto_backup.get_jobs():
-        job.pause()
-    date = time.strftime('%Y%m%d',time.gmtime(time.time() + 8 * 60 * 60))  # 文件名时间用GTM+8
-    try:
-        os.mkdir(f'{BACKUP_PATH}/botDB_backup_{date}')
-    except FileExistsError:
-        pass
-    os.system(f'cp -r data {BACKUP_PATH}/botDB_backup_{date}')
+        for job in auto_backup.get_jobs():
+            job.pause()
+        date = time.strftime('%Y%m%d', time.gmtime(
+            time.time() + 8 * 60 * 60))  # 文件名时间用GTM+8
+        try:
+            os.mkdir(f'{BACKUP_PATH}/botDB_backup_{date}')
+        except FileExistsError:
+            pass
+        os.system(f'cp -r data {BACKUP_PATH}/botDB_backup_{date}')
 
     # 中断当前进程, 由systemd完成重启
     os.kill(os.getpid(), signal.SIGINT)
 
-    #for job in auto_backup.get_jobs():
+    # for job in auto_backup.get_jobs():
     #    job.resume()
