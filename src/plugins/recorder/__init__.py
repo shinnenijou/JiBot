@@ -14,8 +14,10 @@ from src.common.utils import get_datetime, send_to_admin
 DATA_DIR = os.path.join(get_driver().config.dict()['data_path'], 'recorder')
 CONFIG_FILE = os.path.join(DATA_DIR, 'config.json')
 RECORD_DIR = os.path.join(DATA_DIR, 'record')
-RECORD_LISTEN_INTERVAL = int(get_driver().config.dict()['record_listen_interval'])
-TEMP_DIR = os.path.join(get_driver().config.dict()['data_path'], 'recorder', 'temp')
+RECORD_LISTEN_INTERVAL = int(get_driver().config.dict()[
+                             'record_listen_interval'])
+TEMP_DIR = os.path.join(get_driver().config.dict()[
+                        'data_path'], 'recorder', 'temp')
 STREAMERS = {}
 
 if not os.path.exists(DATA_DIR):
@@ -70,7 +72,7 @@ async def try_record():
 
         # 监听对象记录一下日志
         if streamer_name not in STREAMERS:
-            logger.info("添加录像监听对象: ", streamer_name)
+            logger.info(f"添加录像监听对象: {streamer_name}")
             STREAMERS[streamer_name] = True
 
         live_status: dict = await listener.listen(record_config['platform'], record_config['id'])
