@@ -87,8 +87,8 @@ class Listener:
             ret['Result'] = False
             return ret
 
-        ret['Result'] = live_info.get('data', {}).get('live_status', 0) == 1
-        ret['Title'] = live_info.get('data', {}).get('title', '').replace(' ', '_')
+        ret['Result'] = live_info.get('room_info', {}).get('live_status', 0) == 1
+        ret['Title'] = live_info.get('room_info', {}).get('title', '').replace(' ', '_')
 
         return ret
 
