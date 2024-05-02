@@ -80,14 +80,15 @@ async def try_record():
         if 'upload_to' not in config['record_list'][streamer]:
             continue
 
-        logger.info(config['record_list'][streamer]['upload_to'])
-
         os.rename(os.path.abspath(path), os.path.abspath(os.path.join(RECORD_DIR, streamer, filename.replace(" ", "_"))))
         path = os.path.join(RECORD_DIR, streamer, filename.replace(" ", "_"))
 
-        thread = Thread(target=upload, args=(f"{config['record_list'][streamer]['upload_to']}/{streamer}", path))
-        thread.start()
-        task_manager.add_thread(thread)
+        destinations = config['record_list'][streamer]['upload_to'].split(';')
+
+        for destination in destinations:
+            thread = Thread(target=upload, args=(f"{config['record_list'][streamer]['upload_to']}/{streamer}", path))
+            thread.start()
+            task_manager.add_thread(thread)
 
     for streamer_name, record_config in config['record_list'].items():
         if not record_config.get('record', False):
@@ -134,7 +135,7 @@ async def try_record():
             out_path=out_path,
             running_flag=task_manager.add_recording(streamer_name),
             notice_group=record_config.get('notice_group', ''),
-            upload_to=f"{record_config.get('upload_to', '')}/{streamer_name}",
+            upload_to=record_config.get('upload_to', ''),
             options=record_config.get('options', {}),
             name=filename,
         )

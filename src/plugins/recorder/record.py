@@ -7,7 +7,6 @@ from nonebot import logger, get_driver
 
 import src.common.utils as utils
 
-
 # Constant
 RECORD_FORMAT = 'ts'
 TRANSCODE_FORMAT = 'mp4'
@@ -33,30 +32,44 @@ def send_to_bark(message: str):
         logger.error(f"Send message error: {str(e)}")
 
 
-def upload(upload_to, path):
+def upload(upload_to: str, path: str):
     if not upload_to:
         return
 
-    rclone_bin = get_driver().config.dict().get('rclone_bin', '/bin/rclone')
-
-    if not os.path.exists(rclone_bin):
-        logger.error("rclone bin not found.")
-        return
-
-    logger.info(f"Try to Upload: {path}")
-
     filename = path[path.rfind(os.path.sep) + 1:]
 
-    cmds = [rclone_bin, 'copyto', path,
-            f'{upload_to}/{filename}']
+    cmds = []
 
+    if upload_to.startswith('baidupan'):
+        bin_path = get_driver().config.dict().get('baidu_bin', '/bin/BaiduPCS-Go')
+
+        to_dir = upload_to.partition(':')[2]
+
+        if not os.path.exists(bin_path):
+            logger.error("baidu bin not found.")
+            return
+
+        cmds = [bin_path, "mkdir", to_dir, '&&', bin_path, 'upload', path, to_dir]
+
+    else:
+        bin_path = get_driver().config.dict().get('rclone_bin', '/bin/rclone')
+
+        if not os.path.exists(bin_path):
+            logger.error("rclone bin not found.")
+            return
+
+        cmds = [rclone_bin, 'copyto', path, f'{upload_to}/{filename}']
+
+    logger.info(f"Try to Upload: {path}")
     os.system(' '.join(cmd for cmd in cmds))
 
     size = os.path.getsize(path) / (1 * 1024 * 1024)
     send_to_bark(f"上传完成:\n{filename}\nsize:{size:.1f} Mb")
 
+
 class Recorder(Thread):
-    def __init__(self, streamer: str, live_url: str, out_path: str, running_flag: Event, notice_group: str, upload_to: str, options: dict[str, str], *args, **kwargs) -> None:
+    def __init__(self, streamer: str, live_url: str, out_path: str, running_flag: Event, notice_group: str,
+                 upload_to: str, options: dict[str, str], *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.streamer = streamer
@@ -132,7 +145,10 @@ class Recorder(Thread):
             os.remove(to_filename)
 
     def upload(self):
-        upload(self.upload_to, self.path)
+        destinations = self.upload_to.split(";")
+
+        for dst in destinations:
+            upload(dst + '/' + self.streamer, self.path)
 
     def send_to_group(self, message: str):
         bot = utils.safe_get_bot()
@@ -147,6 +163,3 @@ class Recorder(Thread):
             ))
         except Exception as e:
             logger.error(f"Send message error: {str(e)}")
-    
-
-
