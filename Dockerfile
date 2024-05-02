@@ -20,4 +20,6 @@ RUN pip install --upgrade -r requirements.txt
 
 EXPOSE 8080
 
+EXPOSE 33333
+
 CMD ["python3", "bot.py"]

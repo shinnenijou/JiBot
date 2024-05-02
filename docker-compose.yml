@@ -37,3 +37,18 @@ services:
     environment:
       - BASE_PATH=/srv/qsign/qsign/txlib/8.9.73
     restart: always
+    
+  recorder:
+    image: bililive/recorder:latest
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: /data/JiBot/data/recorder/record
+        target: /rec
+    ports:
+      - "33333:2356"
+      # 第一个 2356 是宿主机的端口，可以根据自己需求改动。
+      # 第二个 2356 是容器内的端口，不要修改。
+    environment:
+      - BREC_HTTP_BASIC_USER=
+      - BREC_HTTP_BASIC_PASS=
