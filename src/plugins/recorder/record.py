@@ -58,7 +58,7 @@ def upload(upload_to: str, path: str):
             logger.error("rclone bin not found.")
             return
 
-        cmds = [rclone_bin, 'copyto', path, f'{upload_to}/{filename}']
+        cmds = [bin_path, 'copyto', path, f'{upload_to}/{filename}']
 
     logger.info(f"Try to Upload: {path}")
     os.system(' '.join(cmd for cmd in cmds))

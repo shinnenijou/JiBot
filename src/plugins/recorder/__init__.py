@@ -86,7 +86,7 @@ async def try_record():
         destinations = config['record_list'][streamer]['upload_to'].split(';')
 
         for destination in destinations:
-            thread = Thread(target=upload, args=(f"{config['record_list'][streamer]['upload_to']}/{streamer}", path))
+            thread = Thread(target=upload, args=(f"{destination}/{streamer}", path))
             thread.start()
             task_manager.add_thread(thread)
 
