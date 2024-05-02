@@ -1,5 +1,6 @@
 import os
 import json
+import signal
 
 from nonebot import require, get_driver, logger
 
@@ -7,6 +8,7 @@ from src.plugins.recorder.listen import listener
 from src.plugins.recorder.record import Recorder
 from src.plugins.recorder.threads import task_manager
 from src.plugins.recorder.clean import cleaner
+from src.plugins.recorder.http_server import HttpServerProcess
 
 from src.common.utils import get_datetime, send_to_admin
 
@@ -35,6 +37,7 @@ if not os.path.exists(TEMP_DIR):
 
 # Add schedule task
 scheduler = require('nonebot_plugin_apscheduler').scheduler
+
 
 
 @scheduler.scheduled_job('interval', seconds=RECORD_LISTEN_INTERVAL, id='recorder', timezone='Asia/Shanghai')
@@ -68,6 +71,12 @@ async def try_record():
             continue
 
         if 'url' not in record_config:
+            continue
+
+        if 'rec' not in record_config:
+            continue
+
+        if record_config['rec'] != 'streamlink':
             continue
 
         # 监听对象记录一下日志
@@ -107,3 +116,24 @@ async def try_record():
         # 先启动后加入线程池
         recorder.start()
         task_manager.add_thread(recorder)
+
+
+http_server = None
+
+
+@get_driver().on_startup
+def startup():
+    global http_server
+    http_server = HttpServerProcess(
+        ip=get_driver().config.dict().get('record_http_ip', '127.0.0.1'),
+        port=get_driver().config.dict().get('record_http_port', '8080'),
+        reclone_bin=get_driver().config.dict().get('rclone_bin', '/bin/rclone'),
+        config_file=CONFIG_FILE,
+    )
+    http_server.start()
+
+
+@get_driver().on_shutdown
+def shutdown():
+    os.kill(http_server.pid, signal.SIGINT)
+    http_server.join()
