@@ -14,7 +14,7 @@ class Handler(CGIHTTPRequestHandler):
             if data['EventType'] != 'FileClosed':
                 raise TypeError("Event not supported")
 
-            relative_path = data.get('EventData', {}).get('RelativePath', None)
+            relative_path:str = data.get('EventData', {}).get('RelativePath', None)
 
             if relative_path in self.server.uploading:
                 raise OSError("File already uploaded")
@@ -27,7 +27,8 @@ class Handler(CGIHTTPRequestHandler):
             with open(self.server.config_file, "r", encoding="utf-8") as f:
                 config = json.load(f)
 
-            streamer = relative_path.split('/')[1]
+            streamer = relative_path.partition('/')[0]
+            filename = relative_path.partition('/')[2]
 
             if streamer not in config['record_list']:
                 raise FileNotFoundError("Config not found")
@@ -41,10 +42,10 @@ class Handler(CGIHTTPRequestHandler):
 
             self.server.uploading[relative_path] = True
 
-            file_path = os.path.join(os.path.join(DATA_DIR, 'record'), *relative_path.split('/'))
+            file_path = os.path.join(os.path.join(DATA_DIR, 'record'), streamer, filename)
 
             cmds = [rclone_bin, 'copyto', file_path,
-                    f"{streamer_config['upload_to']}/{relative_path.split('/')[-1]}"]
+                    f"{streamer_config['upload_to']}/{streamer}"]
 
             os.system(' '.join(cmd for cmd in cmds))
 
