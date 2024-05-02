@@ -52,6 +52,7 @@ class Handler(CGIHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(b"{\"Result\": \"Success\" }")
         except Exception as e:
+            logger.error(str(e))
             self.send_response(204)
             self.end_headers()
             self.wfile.write(bytes(str(e), "utf-8"))
