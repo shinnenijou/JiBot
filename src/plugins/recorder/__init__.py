@@ -131,6 +131,7 @@ def startup():
         config_file=CONFIG_FILE,
     )
     http_server.start()
+    logger.info(f"Recorder Http Server Listening at: http://{http_server.ip}:{http_server.port}")
 
 
 @get_driver().on_shutdown

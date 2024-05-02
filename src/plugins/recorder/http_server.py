@@ -72,5 +72,4 @@ class HttpServerProcess(Process):
 
     def run(self):
         with HttpServer((self.ip, self.port), Handler, self.reclone_bin, self.config_file) as httpd:
-            print('Server started on http://%s:%s' % (self.ip, self.port))
             httpd.serve_forever()
