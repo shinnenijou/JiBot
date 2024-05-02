@@ -69,9 +69,10 @@ async def try_record():
 
         streamer = relative_path.partition('/')[0]
         filename = relative_path.partition('/')[2]
-        path = os.path.join(RECORD_DIR, streamer, filename)
+        file_path = os.path.join(RECORD_DIR, streamer, filename)
+        xml_path = os.path.join(RECORD_DIR, streamer, os.path.splitext(filename)[0] + '.xml')
 
-        if not os.path.exists(path):
+        if not os.path.exists(file_path):
             continue
 
         if streamer not in config['record_list']:
@@ -80,15 +81,25 @@ async def try_record():
         if 'upload_to' not in config['record_list'][streamer]:
             continue
 
-        os.rename(os.path.abspath(path), os.path.abspath(os.path.join(RECORD_DIR, streamer, filename.replace(" ", "_"))))
-        path = os.path.join(RECORD_DIR, streamer, filename.replace(" ", "_"))
+        os.rename(file_path, file_path.replace(" ", "_"))
+        file_path = file_path.replace(" ", "_")
+
+        if os.path.exists(xml_path):
+            os.rename(xml_path, xml_path.replace(" ", "_"))
+            xml_path = xml_path.replace(" ", "_")
 
         destinations = config['record_list'][streamer]['upload_to'].split(';')
 
         for destination in destinations:
-            thread = Thread(target=upload, args=(f"{destination}/{streamer}", path))
+            thread = Thread(target=upload, args=(f"{destination}/{streamer}", file_path))
             thread.start()
             task_manager.add_thread(thread)
+
+            if os.path.exists(xml_path):
+                thread = Thread(target=upload, args=(f"{destination}/{streamer}", xml_path))
+                thread.start()
+                task_manager.add_thread(thread)
+
 
     for streamer_name, record_config in config['record_list'].items():
         if not record_config.get('record', False):
