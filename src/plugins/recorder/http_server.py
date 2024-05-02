@@ -3,6 +3,7 @@ from http.server import CGIHTTPRequestHandler
 import socketserver
 import json
 import os
+from nonebot import logger
 
 
 class Handler(CGIHTTPRequestHandler):
@@ -36,9 +37,13 @@ class Handler(CGIHTTPRequestHandler):
             if streamer_config['rec'] != 'bili_rec':
                 raise TypeError("Record not supported")
 
+            logger.info("Start to upload: " + relative_path)
+
             self.server.uploading[relative_path] = True
 
-            cmds = [rclone_bin, 'copyto', relative_path,
+            file_path = os.path.join(os.path.join(DATA_DIR, 'record'), *relative_path.split('/'))
+
+            cmds = [rclone_bin, 'copyto', file_path,
                     f"{streamer_config['upload_to']}/{relative_path.split('/')[-1]}"]
 
             os.system(' '.join(cmd for cmd in cmds))
