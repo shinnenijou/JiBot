@@ -3,7 +3,6 @@ from http.server import CGIHTTPRequestHandler
 import socketserver
 import json
 import os
-from nonebot import logger
 
 
 class Handler(CGIHTTPRequestHandler):
@@ -33,16 +32,14 @@ class Handler(CGIHTTPRequestHandler):
             if streamer not in config['record_list']:
                 raise FileNotFoundError("Config not found")
 
-            streamer_config = config['record_list']['streamer']
+            streamer_config = config['record_list'][streamer]
 
             if streamer_config['rec'] != 'bili_rec':
                 raise TypeError("Record not supported")
 
-            logger.info("Start to upload: " + relative_path)
-
             self.server.uploading[relative_path] = True
 
-            file_path = os.path.join(os.path.join(DATA_DIR, 'record'), streamer, filename)
+            file_path = os.path.join(self.server.root_path, streamer, filename)
 
             cmds = [rclone_bin, 'copyto', file_path,
                     f"{streamer_config['upload_to']}/{streamer}"]
@@ -53,7 +50,6 @@ class Handler(CGIHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(b"{\"Result\": \"Success\" }")
         except Exception as e:
-            logger.error(str(e))
             self.send_response(204)
             self.end_headers()
             self.wfile.write(bytes(str(e), "utf-8"))
@@ -61,22 +57,24 @@ class Handler(CGIHTTPRequestHandler):
 
 class HttpServer(socketserver.TCPServer):
 
-    def __init__(self, server_address, Handler, reclone_bin, config_file):
+    def __init__(self, server_address, Handler, reclone_bin, config_file, root_path):
         socketserver.TCPServer.__init__(self, server_address, Handler)
         self.reclone_bin = reclone_bin
         self.config_file = config_file
         self.uploading = {}
+        self.root_path = root_path
 
 
 class HttpServerProcess(Process):
 
-    def __init__(self, ip, port, reclone_bin, config_file):
+    def __init__(self, ip, port, reclone_bin, config_file, root_path):
         super().__init__()
         self.ip = ip
         self.port = port
         self.reclone_bin = reclone_bin
         self.config_file = config_file
+        self.root_path = root_path
 
     def run(self):
-        with HttpServer((self.ip, self.port), Handler, self.reclone_bin, self.config_file) as httpd:
+        with HttpServer((self.ip, self.port), Handler, self.reclone_bin, self.config_file, self.root_path) as httpd:
             httpd.serve_forever()

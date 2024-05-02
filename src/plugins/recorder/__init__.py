@@ -129,6 +129,7 @@ def startup():
         port=get_driver().config.dict().get('record_http_port', '8080'),
         reclone_bin=get_driver().config.dict().get('rclone_bin', '/bin/rclone'),
         config_file=CONFIG_FILE,
+        root_path=RECORD_DIR,
     )
     http_server.start()
     logger.info(f"Recorder Http Server Listening at: http://{http_server.ip}:{http_server.port}")
