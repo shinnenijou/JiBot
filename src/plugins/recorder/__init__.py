@@ -84,9 +84,8 @@ async def try_record():
 
         os.rename(os.path.abspath(path), os.path.abspath(os.path.join(RECORD_DIR, streamer, filename.replace(" ", "_"))))
         path = os.path.join(RECORD_DIR, streamer, filename.replace(" ", "_"))
-        logger.info("Start to upload: " + path)
 
-        thread = Thread(target=upload, args=(path, f"{config['record_list'][streamer]['upload_to']}/{streamer}"))
+        thread = Thread(target=upload, args=(f"{config['record_list'][streamer]['upload_to']}/{streamer}", path))
         thread.start()
         task_manager.add_thread(thread)
 
@@ -104,12 +103,6 @@ async def try_record():
             continue
 
         if 'url' not in record_config:
-            continue
-
-        if 'rec' not in record_config:
-            continue
-
-        if record_config['rec'] != 'streamlink':
             continue
 
         # 监听对象记录一下日志

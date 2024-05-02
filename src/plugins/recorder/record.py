@@ -45,7 +45,7 @@ def upload(upload_to, path):
 
     logger.info(f"Try to Upload: {path}")
 
-    filename = path[path.rfind('/'):]
+    filename = path[path.rfind(os.path.sep) + 1:]
 
     cmds = [rclone_bin, 'copyto', path,
             f'{upload_to}/{filename}']
