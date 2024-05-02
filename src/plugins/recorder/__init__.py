@@ -86,9 +86,6 @@ async def try_record():
         path = os.path.join(RECORD_DIR, streamer, filename.replace(" ", "_"))
         logger.info("Start to upload: " + path)
 
-        size = os.path.getsize(path) / (1 * 1024 * 1024)
-        send_to_bark(f"录像完成:\n{filename}\nsize:{size:.1f} Mb")
-
         thread = Thread(target=upload, args=(path, f"{config['record_list'][streamer]['upload_to']}/{streamer}"))
         thread.start()
         task_manager.add_thread(thread)

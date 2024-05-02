@@ -13,26 +13,6 @@ RECORD_FORMAT = 'ts'
 TRANSCODE_FORMAT = 'mp4'
 
 
-def upload(upload_to, path):
-    if not upload_to:
-        return
-
-    rclone_bin = get_driver().config.dict().get('rclone_bin', '/bin/rclone')
-
-    if not os.path.exists(rclone_bin):
-        logger.error("rclone bin not found.")
-        return
-
-    logger.info(f"Try to Upload: {path}")
-
-    filename = path[path.rfind('/'):]
-
-    cmds = [rclone_bin, 'copyto', path,
-            f'{upload_to}/{filename}']
-
-    os.system(' '.join(cmd for cmd in cmds))
-
-
 def send_to_bark(message: str):
     """
     将消息推送至Bark
@@ -52,6 +32,28 @@ def send_to_bark(message: str):
     except Exception as e:
         logger.error(f"Send message error: {str(e)}")
 
+
+def upload(upload_to, path):
+    if not upload_to:
+        return
+
+    rclone_bin = get_driver().config.dict().get('rclone_bin', '/bin/rclone')
+
+    if not os.path.exists(rclone_bin):
+        logger.error("rclone bin not found.")
+        return
+
+    logger.info(f"Try to Upload: {path}")
+
+    filename = path[path.rfind('/'):]
+
+    cmds = [rclone_bin, 'copyto', path,
+            f'{upload_to}/{filename}']
+
+    os.system(' '.join(cmd for cmd in cmds))
+
+    size = os.path.getsize(path) / (1 * 1024 * 1024)
+    send_to_bark(f"上传完成:\n{filename}\nsize:{size:.1f} Mb")
 
 class Recorder(Thread):
     def __init__(self, streamer: str, live_url: str, out_path: str, running_flag: Event, notice_group: str, upload_to: str, options: dict[str, str], *args, **kwargs) -> None:
