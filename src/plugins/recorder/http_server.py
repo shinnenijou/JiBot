@@ -40,8 +40,10 @@ class Handler(CGIHTTPRequestHandler):
             self.server.uploading[relative_path] = True
 
             file_path = os.path.join(self.server.root_path, streamer, filename)
+            os.rename(file_path, file_path.replace(" ", "_"))
+            file_path = file_path.replace(" ", "_")
 
-            cmds = [rclone_bin, 'copyto', file_path,
+            cmds = [rclone_bin, 'copyto', f"{file_path}",
                     f"{streamer_config['upload_to']}/{streamer}"]
 
             os.system(' '.join(cmd for cmd in cmds))
