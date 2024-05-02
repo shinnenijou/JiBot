@@ -13,6 +13,46 @@ RECORD_FORMAT = 'ts'
 TRANSCODE_FORMAT = 'mp4'
 
 
+def upload(upload_to, path):
+    if not upload_to:
+        return
+
+    rclone_bin = get_driver().config.dict().get('rclone_bin', '/bin/rclone')
+
+    if not os.path.exists(rclone_bin):
+        logger.error("rclone bin not found.")
+        return
+
+    logger.info(f"Try to Upload: {path}")
+
+    filename = path[path.rfind('/'):]
+
+    cmds = [rclone_bin, 'copyto', path,
+            f'{upload_to}/{filename}']
+
+    os.system(' '.join(cmd for cmd in cmds))
+
+
+def send_to_bark(message: str):
+    """
+    将消息推送至Bark
+    """
+    bark_url = get_driver().config.dict().get('bark_url', '')
+
+    if not bark_url:
+        return
+
+    async def _send_to_bark(message: str):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url=f"{bark_url}/JiBot/{message}") as resp:
+                await resp.json()
+
+    try:
+        asyncio.run(_send_to_bark(message))
+    except Exception as e:
+        logger.error(f"Send message error: {str(e)}")
+
+
 class Recorder(Thread):
     def __init__(self, streamer: str, live_url: str, out_path: str, running_flag: Event, notice_group: str, upload_to: str, options: dict[str, str], *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -59,7 +99,7 @@ class Recorder(Thread):
         filename = self.path[self.path.rfind('/'):]
         size = os.path.getsize(self.path) / (1 * 1024 * 1024)
         self.send_to_group(f"录像完成:\n{filename}\nsize:{size:.1f} Mb")
-        self.send_to_bark(f"录像完成:\n{filename}\nsize:{size:.1f} Mb")
+        send_to_bark(f"录像完成:\n{filename}\nsize:{size:.1f} Mb")
 
         # 上传
         self.upload()
@@ -90,23 +130,7 @@ class Recorder(Thread):
             os.remove(to_filename)
 
     def upload(self):
-        if not self.upload_to:
-            return
-
-        rclone_bin = get_driver().config.dict().get('rclone_bin', '/bin/rclone')
-
-        if not os.path.exists(rclone_bin):
-            logger.error("rclone bin not found.")
-            return
-
-        logger.info(f"Try to Upload: {self.path}")
-
-        filename = self.path[self.path.rfind('/'):]
-
-        cmds = [rclone_bin, 'copyto', self.path,
-                f'{self.upload_to}/{filename}']
-
-        os.system(' '.join(cmd for cmd in cmds))
+        upload(self.upload_to, self.path)
 
     def send_to_group(self, message: str):
         bot = utils.safe_get_bot()
@@ -122,21 +146,5 @@ class Recorder(Thread):
         except Exception as e:
             logger.error(f"Send message error: {str(e)}")
     
-    def send_to_bark(self, message: str):
-        """
-        将消息推送至Bark
-        """
-        bark_url = get_driver().config.dict().get('bark_url', '')
 
-        if not bark_url:
-            return
 
-        async def _send_to_bark(message: str):
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url=f"{bark_url}/JiBot/{message}") as resp:
-                    await resp.json()
-
-        try:
-            asyncio.run(_send_to_bark(message))
-        except Exception as e:
-            logger.error(f"Send message error: {str(e)}")

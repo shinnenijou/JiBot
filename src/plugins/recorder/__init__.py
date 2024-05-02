@@ -1,11 +1,13 @@
 import os
 import json
 import signal
+from multiprocessing import Queue
+from threading import Thread
 
 from nonebot import require, get_driver, logger
 
 from src.plugins.recorder.listen import listener
-from src.plugins.recorder.record import Recorder
+from src.plugins.recorder.record import Recorder, upload, send_to_bark
 from src.plugins.recorder.threads import task_manager
 from src.plugins.recorder.clean import cleaner
 from src.plugins.recorder.http_server import HttpServerProcess
@@ -38,12 +40,12 @@ if not os.path.exists(TEMP_DIR):
 # Add schedule task
 scheduler = require('nonebot_plugin_apscheduler').scheduler
 
-
+queue = Queue()
 
 @scheduler.scheduled_job('interval', seconds=RECORD_LISTEN_INTERVAL, id='recorder', timezone='Asia/Shanghai')
 async def try_record():
     try:
-        with open(CONFIG_FILE, 'r') as file:
+        with open(CONFIG_FILE, 'r', encoding="utf-8") as file:
             config: dict = json.loads(file.read())
     except:
         return
@@ -56,6 +58,40 @@ async def try_record():
 
     # clean disk
     cleaner.clean(RECORD_DIR)
+
+    # Upload bililive recorder's files
+    while not queue.empty():
+        data = queue.get()
+        relative_path = data.get('EventData', {}).get('RelativePath', '')
+
+        if not relative_path:
+            continue
+
+        streamer = relative_path.partition('/')[0]
+        filename = relative_path.partition('/')[2]
+        path = os.path.join(RECORD_DIR, streamer, filename)
+
+        if not os.path.exists(path):
+            continue
+
+        if streamer not in config['record_list']:
+            continue
+
+        if 'upload_to' not in config['record_list'][streamer]:
+            continue
+
+        logger.info(config['record_list'][streamer]['upload_to'])
+
+        os.rename(os.path.abspath(path), os.path.abspath(os.path.join(RECORD_DIR, streamer, filename.replace(" ", "_"))))
+        path = os.path.join(RECORD_DIR, streamer, filename.replace(" ", "_"))
+        logger.info("Start to upload: " + path)
+
+        size = os.path.getsize(path) / (1 * 1024 * 1024)
+        send_to_bark(f"录像完成:\n{filename}\nsize:{size:.1f} Mb")
+
+        thread = Thread(target=upload, args=(path, f"{config['record_list'][streamer]['upload_to']}/{streamer}"))
+        thread.start()
+        task_manager.add_thread(thread)
 
     for streamer_name, record_config in config['record_list'].items():
         if not record_config.get('record', False):
@@ -127,9 +163,7 @@ def startup():
     http_server = HttpServerProcess(
         ip=get_driver().config.dict().get('record_http_ip', '127.0.0.1'),
         port=get_driver().config.dict().get('record_http_port', '8080'),
-        reclone_bin=get_driver().config.dict().get('rclone_bin', '/bin/rclone'),
-        config_file=CONFIG_FILE,
-        root_path=RECORD_DIR,
+        output=queue
     )
     http_server.start()
     logger.info(f"Recorder Http Server Listening at: http://{http_server.ip}:{http_server.port}")
