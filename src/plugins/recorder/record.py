@@ -63,8 +63,9 @@ def upload(upload_to: str, path: str):
     logger.info(f"Try to Upload: {path}")
     os.system(' '.join(cmd for cmd in cmds))
 
-    size = os.path.getsize(path) / (1 * 1024 * 1024)
-    send_to_bark(f"上传完成:\n{filename}\nsize:{size:.1f} Mb")
+    if len(os.path.splitext(path)) >= 2 and os.path.splitext(path)[1] != '.xml':
+        size = os.path.getsize(path) / (1 * 1024 * 1024)
+        send_to_bark(f"上传完成:\n{filename}\nsize:{size:.1f} Mb")
 
 
 class Recorder(Thread):
