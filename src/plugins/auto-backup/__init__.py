@@ -40,8 +40,8 @@ async def backup():
             pass
         os.system(f'cp -r data {BACKUP_PATH}/botDB_backup_{date}')
 
-    # 中断当前进程, 由systemd完成重启
-    os.kill(os.getpid(), signal.SIGINT)
+        # 中断当前进程, 由systemd完成重启
+        os.kill(os.getpid(), signal.SIGINT)
 
     # for job in auto_backup.get_jobs():
     #    job.resume()
